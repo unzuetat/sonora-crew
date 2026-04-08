@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a1a2e">
+<title>Sonora Crew</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════
+   TOKENS
+══════════════════════════════════ */
+:root {
+  --bg: #f5f5f7;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --text: #1a1a2e;
+  --text-secondary: #6b7280;
+  --accent: #e8001a;
+  --accent-hover: #c50016;
+  --accent-soft: #fef2f2;
+  --border: #e5e7eb;
+  --border-focus: #e8001a;
+  --success: #10b981;
+  --success-soft: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-soft: #fffbeb;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
+  --radius: 10px;
+  --font: 'Inter', -apple-system, sans-serif;
+}
+.dark {
+  --bg: #0f0f1a;
+  --bg-card: #1a1a2e;
+  --bg-input: #252540;
+  --text: #e5e5ef;
+  --text-secondary: #9ca3af;
+  --accent: #ff3347;
+  --accent-hover: #ff1a30;
+  --accent-soft: #2a1a1e;
+  --border: #2d2d44;
+  --border-focus: #ff3347;
+  --success: #34d399;
+  --success-soft: #1a2e25;
+  --warning: #fbbf24;
+  --warning-soft: #2e2a1a;
+  --shadow: 0 1px 3px rgba(0,0,0,.3);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.4);
+}
+
+/* ══════════════════════════════════
+   RESET & BASE
+══════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background .3s, color .3s;
+}
+
+/* ══════════════════════════════════
+   SCREENS
+══════════════════════════════════ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ══════════════════════════════════
+   AUTH
+══════════════════════════════════ */
+#screen-auth {
+  min-height: 100vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#screen-auth.active { display: flex; }
+
+.auth-box {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+.auth-logo {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.auth-logo span { color: var(--accent); }
+.auth-sub {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 32px;
+}
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.auth-btn {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: .15s;
+  box-shadow: var(--shadow);
+}
+.auth-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+.auth-btn:active { transform: translateY(0); }
+
+/* ══════════════════════════════════
+   APP LAYOUT
+══════════════════════════════════ */
+#screen-app { padding-bottom: 80px; }
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.topbar-title span { color: var(--accent); }
+.topbar-user {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text-secondary);
+  transition: .15s;
+}
+.icon-btn:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+
+.wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
+
+/* ══════════════════════════════════
+   TABS
+══════════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: .15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.tab-content { display: none; }
+.tab-content.on { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ══════════════════════════════════
+   CARDS & FORMS
+══════════════════════════════════ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--border-focus);
+}
+.form-select { cursor: pointer; }
+.form-textarea { resize: vertical; min-height: 60px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.btn:hover { background: var(--accent-hover); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-danger { background: #dc2626; }
+.btn-danger:hover { background: #b91c1c; }
+
+/* ══════════════════════════════════
+   TABLE
+══════════════════════════════════ */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 700px;
+}
+thead th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+thead th:hover { color: var(--accent); }
+thead th .sort-icon { font-size: 10px; margin-left: 2px; }
+tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tbody tr:hover { background: var(--accent-soft); }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-viernes { background: #dbeafe; color: #1d4ed8; }
+.badge-sabado { background: #fef3c7; color: #92400e; }
+.badge-finde { background: #ede9fe; color: #6d28d9; }
+.dark .badge-viernes { background: #1e3a5f; color: #93c5fd; }
+.dark .badge-sabado { background: #3d2e0a; color: #fcd34d; }
+.dark .badge-finde { background: #2e1065; color: #c4b5fd; }
+
+.amount { font-weight: 600; font-variant-numeric: tabular-nums; }
+.obs-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.obs-cell:hover { white-space: normal; }
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-secondary);
+}
+.empty-state-icon { font-size: 40px; margin-bottom: 8px; }
+.empty-state-text { font-size: 14px; }
+
+/* ══════════════════════════════════
+   STATS
+══════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.stat-value.accent { color: var(--accent); }
+
+/* ══════════════════════════════════
+   DELETE CONFIRM
+══════════════════════════════════ */
+.del-row { display: flex; gap: 4px; align-items: center; }
+.del-confirm { display: none; gap: 4px; align-items: center; font-size: 11px; color: var(--text-secondary); }
+.del-confirm.show { display: flex; }
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════
+   BACKUP STATUS
+══════════════════════════════════ */
+.backup-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--bg);
+}
+.backup-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.backup-dot.off { background: var(--warning); }
+
+/* ══════════════════════════════════
+   SETTINGS PANEL
+══════════════════════════════════ */
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-label { flex: 1; }
+.settings-label-title { font-size: 13px; font-weight: 600; }
+.settings-label-desc { font-size: 12px; color: var(--text-secondary); }
+
+/* ══════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════ */
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .auth-grid { grid-template-columns: 1fr; }
+  .topbar-user { display: none; }
+  .wrap { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     TOAST
+══════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════ -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-box">
+    <div class="auth-logo">Sonora<span>Crew</span></div>
+    <div class="auth-sub" data-i18n="auth_sub">Panel de gestión · San Sonorín XI</div>
+    <div class="auth-grid" id="auth-grid"></div>
+    <div style="margin-top:20px">
+      <button class="icon-btn" id="auth-theme" title="Toggle theme" style="margin:0 auto">
+        <span id="auth-theme-icon">☽</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     APP SCREEN
+══════════════════════════════════ -->
+<div class="screen" id="screen-app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Sonora<span>Crew</span></div>
+      <div class="topbar-user" id="topbar-user"></div>
+    </div>
+    <div class="topbar-actions">
+      <div class="backup-status" id="backup-status">
+        <div class="backup-dot off" id="backup-dot"></div>
+        <span id="backup-label" data-i18n="backup_off">sin webhook</span>
+      </div>
+      <button class="icon-btn" id="btn-lang" title="ES/EN">EN</button>
+      <button class="icon-btn" id="btn-theme"><span id="theme-icon">☽</span></button>
+      <button class="icon-btn" id="btn-logout" title="Salir">✕</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn on" data-tab="payments" data-i18n="tab_payments">Pagos</button>
+      <button class="tab-btn" data-tab="settings" data-i18n="tab_settings">Ajustes</button>
+    </div>
+
+    <!-- ═══ TAB: PAGOS ═══ -->
+    <div class="tab-content on" id="tab-payments">
+      <!-- STATS -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_total">Total recaudado</div>
+          <div class="stat-value accent" id="stat-total">0 €</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_entries">Entradas vendidas</div>
+          <div class="stat-value" id="stat-entries">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_records">Registros</div>
+          <div class="stat-value" id="stat-records">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_avg">Media / entrada</div>
+          <div class="stat-value" id="stat-avg">0 €</div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <div class="card" id="payment-form-card">
+        <div class="card-title" data-i18n="new_payment">Nuevo pago</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_who_paid">Quién ha pagado</label>
+            <input class="form-input" id="f-who" type="text" placeholder="Nombre de quien paga">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_paid_to">A quién</label>
+            <select class="form-select" id="f-to"></select>
+          </div>
+        </div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_amount">Cantidad (€)</label>
+            <input class="form-input" id="f-amount" type="number" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_tickets">Nº entradas</label>
+            <input class="form-input" id="f-tickets" type="number" min="1" value="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_day">Día</label>
+            <select class="form-select" id="f-day">
+              <option value="viernes">Viernes</option>
+              <option value="sabado">Sábado</option>
+              <option value="finde" selected>Finde completo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_obs">Observaciones</label>
+            <input class="form-input" id="f-obs" type="text" placeholder="Opcional...">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn" id="btn-add" data-i18n="btn_register">Registrar pago</button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin-bottom:0" data-i18n="payments_list">Registro de pagos</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" id="btn-export" data-i18n="btn_export">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="payments-table">
+            <thead>
+              <tr>
+                <th data-sort="ts" data-i18n="th_date">Fecha <span class="sort-icon">↓</span></th>
+                <th data-sort="who" data-i18n="th_who">Quién paga</th>
+                <th data-sort="to" data-i18n="th_to">A quién</th>
+                <th data-sort="amount" data-i18n="th_amount">Cantidad</th>
+                <th data-sort="tickets" data-i18n="th_tickets">Entradas</th>
+                <th data-sort="day" data-i18n="th_day">Día</th>
+                <th data-i18n="th_obs">Obs.</th>
+                <th data-i18n="th_by">Registrado por</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="payments-body"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <div class="empty-state-text" data-i18n="empty">Aún no hay pagos registrados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: AJUSTES ═══ -->
+    <div class="tab-content" id="tab-settings">
+      <div class="card">
+        <div class="card-title" data-i18n="settings_backup">Backup automático</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title" data-i18n="webhook_title">Webhook URL</div>
+            <div class="settings-label-desc" data-i18n="webhook_desc">URL de Google Apps Script u otro endpoint. Cada pago nuevo se enviará aquí automáticamente.</div>
+          </div>
+        </div>
+        <div class="form-row full" style="margin-top:8px">
+          <div class="form-group">
+            <input class="form-input" id="f-webhook" type="url" placeholder="https://script.google.com/macros/s/...">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-sm" id="btn-save-webhook" data-i18n="btn_save_webhook">Guardar webhook</button>
+          <button class="btn btn-secondary btn-sm" id="btn-test-webhook" data-i18n="btn_test_webhook">Probar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="settings_crew">Equipo organizador</div>
+        <div id="crew-list"></div>
+        <div class="form-row" style="margin-top:12px">
+          <div class="form-group">
+            <input class="form-input" id="f-new-member" type="text" placeholder="Nuevo miembro..." data-i18n-placeholder="placeholder_new_member">
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <button class="btn btn-sm btn-secondary" id="btn-add-member" data-i18n="btn_add_member">Añadir</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="settings_danger">Zona peligrosa</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title" data-i18n="resync_title">Re-sincronizar backup</div>
+            <div class="settings-label-desc" data-i18n="resync_desc">Envía TODOS los pagos existentes al webhook. Útil si configuraste el webhook después de registrar pagos.</div>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="btn-resync" data-i18n="btn_resync">Enviar todo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FIREBASE
+══════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, deleteDoc, doc,
+  onSnapshot, query, orderBy, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyDcGB33_ApiA8O2JdGf2nZ_Ob_3DLTxLxM",
+  authDomain:        "sonora-xi.firebaseapp.com",
+  projectId:         "sonora-xi",
+  storageBucket:     "sonora-xi.firebasestorage.app",
+  messagingSenderId: "805583969323",
+  appId:             "1:805583969323:web:c896edfd0f3f719ef79e6e"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+/* ══════════════════════════════════
+   CONFIG
+══════════════════════════════════ */
+const STORAGE_KEY = 'sonora_crew';
+const DEFAULT_CREW = ['Telmo', 'Org2', 'Org3', 'Org4', 'Org5', 'Org6', 'Org7'];
+
+function loadConfig() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const defaults = { user: null, webhook: '', crew: DEFAULT_CREW, lang: 'es', dark: false };
+  if (!raw) return defaults;
+  try { return { ...defaults, ...JSON.parse(raw) }; } catch { return defaults; }
+}
+function saveConfig(cfg) { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); }
+let CFG = loadConfig();
+
+/* ══════════════════════════════════
+   i18n
+══════════════════════════════════ */
+const I18N = {
+  es: {
+    auth_sub: 'Panel de gestión · San Sonorín XI',
+    tab_payments: 'Pagos', tab_settings: 'Ajustes',
+    stat_total: 'Total recaudado', stat_entries: 'Entradas vendidas',
+    stat_records: 'Registros', stat_avg: 'Media / entrada',
+    new_payment: 'Nuevo pago',
+    lbl_who_paid: 'Quién ha pagado', lbl_paid_to: 'A quién',
+    lbl_amount: 'Cantidad (€)', lbl_tickets: 'Nº entradas',
+    lbl_day: 'Día', lbl_obs: 'Observaciones',
+    btn_register: 'Registrar pago', btn_export: 'Exportar CSV',
+    payments_list: 'Registro de pagos',
+    th_date: 'Fecha', th_who: 'Quién paga', th_to: 'A quién',
+    th_amount: 'Cantidad', th_tickets: 'Entradas', th_day: 'Día',
+    th_obs: 'Obs.', th_by: 'Registrado por',
+    empty: 'Aún no hay pagos registrados',
+    settings_backup: 'Backup automático',
+    webhook_title: 'Webhook URL',
+    webhook_desc: 'URL de Google Apps Script u otro endpoint. Cada pago nuevo se enviará aquí automáticamente.',
+    btn_save_webhook: 'Guardar webhook', btn_test_webhook: 'Probar',
+    settings_crew: 'Equipo organizador',
+    placeholder_new_member: 'Nuevo miembro...',
+    btn_add_member: 'Añadir',
+    settings_danger: 'Zona peligrosa',
+    resync_title: 'Re-sincronizar backup',
+    resync_desc: 'Envía TODOS los pagos existentes al webhook. Útil si configuraste el webhook después de registrar pagos.',
+    btn_resync: 'Enviar todo',
+    backup_on: 'backup activo', backup_off: 'sin webhook',
+    day_viernes: 'Viernes', day_sabado: 'Sábado', day_finde: 'Finde completo',
+    toast_saved: 'Pago registrado', toast_deleted: 'Pago eliminado',
+    toast_webhook_saved: 'Webhook guardado', toast_webhook_ok: 'Webhook OK — respuesta recibida',
+    toast_webhook_fail: 'Error al conectar con el webhook',
+    toast_backup_ok: 'Backup enviado correctamente', toast_backup_fail: 'Error en el backup',
+    toast_resync: 'Re-sincronización completada',
+    toast_fill: 'Rellena quién paga y la cantidad',
+    toast_member_exists: 'Ya existe ese miembro',
+    confirm_delete: '¿Seguro?',
+  },
+  en: {
+    auth_sub: 'Management panel · San Sonorín XI',
+    tab_payments: 'Payments', tab_settings: 'Settings',
+    stat_total: 'Total collected', stat_entries: 'Tickets sold',
+    stat_records: 'Records', stat_avg: 'Avg / ticket',
+    new_payment: 'New payment',
+    lbl_who_paid: 'Who paid', lbl_paid_to: 'Paid to',
+    lbl_amount: 'Amount (€)', lbl_tickets: 'Nº tickets',
+    lbl_day: 'Day', lbl_obs: 'Notes',
+    btn_register: 'Register payment', btn_export: 'Export CSV',
+    payments_list: 'Payment records',
+    th_date: 'Date', th_who: 'Who paid', th_to: 'Paid to',
+    th_amount: 'Amount', th_tickets: 'Tickets', th_day: 'Day',
+    th_obs: 'Notes', th_by: 'Registered by',
+    empty: 'No payments registered yet',
+    settings_backup: 'Auto backup',
+    webhook_title: 'Webhook URL',
+    webhook_desc: 'Google Apps Script URL or other endpoint. Every new payment will be sent here automatically.',
+    btn_save_webhook: 'Save webhook', btn_test_webhook: 'Test',
+    settings_crew: 'Crew members',
+    placeholder_new_member: 'New member...',
+    btn_add_member: 'Add',
+    settings_danger: 'Danger zone',
+    resync_title: 'Re-sync backup',
+    resync_desc: 'Sends ALL existing payments to the webhook. Useful if you set up the webhook after registering payments.',
+    btn_resync: 'Send all',
+    backup_on: 'backup active', backup_off: 'no webhook',
+    day_viernes: 'Friday', day_sabado: 'Saturday', day_finde: 'Full weekend',
+    toast_saved: 'Payment registered', toast_deleted: 'Payment deleted',
+    toast_webhook_saved: 'Webhook saved', toast_webhook_ok: 'Webhook OK — response received',
+    toast_webhook_fail: 'Failed to connect to webhook',
+    toast_backup_ok: 'Backup sent successfully', toast_backup_fail: 'Backup error',
+    toast_resync: 'Re-sync completed',
+    toast_fill: 'Fill in who paid and the amount',
+    toast_member_exists: 'Member already exists',
+    confirm_delete: 'Sure?',
+  }
+};
+
+function t(key) { return (I18N[CFG.lang] || I18N.es)[key] || key; }
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  // day select
+  const daySelect = document.getElementById('f-day');
+  if (daySelect) {
+    daySelect.options[0].textContent = t('day_viernes');
+    daySelect.options[1].textContent = t('day_sabado');
+    daySelect.options[2].textContent = t('day_finde');
+  }
+  document.getElementById('btn-lang').textContent = CFG.lang === 'es' ? 'EN' : 'ES';
+}
+
+/* ══════════════════════════════════
+   THEME
+══════════════════════════════════ */
+function applyTheme() {
+  document.body.classList.toggle('dark', CFG.dark);
+  document.getElementById('theme-icon').textContent = CFG.dark ? '☀' : '☽';
+  document.getElementById('auth-theme-icon').textContent = CFG.dark ? '☀' : '☽';
+  document.querySelector('meta[name="theme-color"]').content = CFG.dark ? '#0f0f1a' : '#f5f5f7';
+}
+function toggleTheme() { CFG.dark = !CFG.dark; saveConfig(CFG); applyTheme(); }
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+/* ══════════════════════════════════
+   AUTH
+══════════════════════════════════ */
+function renderAuth() {
+  const grid = document.getElementById('auth-grid');
+  grid.innerHTML = '';
+  CFG.crew.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'auth-btn';
+    btn.textContent = name;
+    btn.addEventListener('click', () => login(name));
+    grid.appendChild(btn);
+  });
+}
+function login(name) {
+  CFG.user = name;
+  saveConfig(CFG);
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('topbar-user').textContent = name;
+  renderCrewSelect();
+}
+function logout() {
+  CFG.user = null;
+  saveConfig(CFG);
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-auth').classList.add('active');
+}
+
+/* ══════════════════════════════════
+   CREW SELECT (paid to)
+══════════════════════════════════ */
+function renderCrewSelect() {
+  const sel = document.getElementById('f-to');
+  sel.innerHTML = '';
+  CFG.crew.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (name === CFG.user) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+/* ══════════════════════════════════
+   CREW SETTINGS
+══════════════════════════════════ */
+function renderCrewList() {
+  const el = document.getElementById('crew-list');
+  el.innerHTML = '';
+  CFG.crew.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'settings-row';
+    row.innerHTML = `
+      <div class="settings-label"><div class="settings-label-title">${esc(name)}</div></div>
+      <button class="btn btn-sm btn-secondary btn-del-member" data-idx="${i}">✕</button>
+    `;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('.btn-del-member').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      if (CFG.crew.length <= 1) return;
+      CFG.crew.splice(idx, 1);
+      saveConfig(CFG);
+      renderCrewList();
+      renderCrewSelect();
+      renderAuth();
+    });
+  });
+}
+
+document.getElementById('btn-add-member').addEventListener('click', () => {
+  const inp = document.getElementById('f-new-member');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (CFG.crew.some(c => c.toLowerCase() === name.toLowerCase())) {
+    toast(t('toast_member_exists'));
+    return;
+  }
+  CFG.crew.push(name);
+  saveConfig(CFG);
+  inp.value = '';
+  renderCrewList();
+  renderCrewSelect();
+  renderAuth();
+});
+
+/* ══════════════════════════════════
+   WEBHOOK / BACKUP
+══════════════════════════════════ */
+function updateBackupUI() {
+  const hasWebhook = !!CFG.webhook;
+  document.getElementById('backup-dot').className = 'backup-dot' + (hasWebhook ? '' : ' off');
+  document.getElementById('backup-label').textContent = hasWebhook ? t('backup_on') : t('backup_off');
+}
+
+async function sendToWebhook(data) {
+  if (!CFG.webhook) return false;
+  try {
+    await fetch(CFG.webhook, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return true;
+  } catch (e) {
+    console.warn('Webhook error:', e);
+    return false;
+  }
+}
+
+document.getElementById('btn-save-webhook').addEventListener('click', () => {
+  CFG.webhook = document.getElementById('f-webhook').value.trim();
+  saveConfig(CFG);
+  updateBackupUI();
+  toast(t('toast_webhook_saved'));
+});
+
+document.getElementById('btn-test-webhook').addEventListener('click', async () => {
+  const url = document.getElementById('f-webhook').value.trim();
+  if (!url) { toast(t('toast_webhook_fail')); return; }
+  const ok = await sendToWebhook({ test: true, ts: Date.now(), from: 'SonoraCrew' });
+  toast(ok ? t('toast_webhook_ok') : t('toast_webhook_fail'));
+});
+
+document.getElementById('btn-resync').addEventListener('click', async () => {
+  if (!CFG.webhook) { toast(t('toast_webhook_fail')); return; }
+  const snap = await getDocs(query(collection(db, 'crew_payments'), orderBy('ts', 'asc')));
+  const all = [];
+  snap.forEach(ds => all.push({ id: ds.id, ...ds.data() }));
+  await sendToWebhook({ resync: true, payments: all, ts: Date.now() });
+  toast(t('toast_resync') + ` (${all.length})`);
+});
+
+/* ══════════════════════════════════
+   PAYMENTS
+══════════════════════════════════ */
+let payments = [];
+let sortField = 'ts';
+let sortDir = 'desc';
+
+function initPayments() {
+  onSnapshot(query(collection(db, 'crew_payments'), orderBy('ts', 'desc')), snap => {
+    payments = [];
+    snap.forEach(ds => payments.push({ id: ds.id, ...ds.data() }));
+    renderPayments();
+    updateStats();
+  }, err => {
+    console.warn('Payments listener error:', err);
+  });
+}
+
+function renderPayments() {
+  const tbody = document.getElementById('payments-body');
+  const empty = document.getElementById('empty-state');
+  tbody.innerHTML = '';
+
+  if (!payments.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Sort
+  const sorted = [...payments].sort((a, b) => {
+    let va = a[sortField], vb = b[sortField];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  sorted.forEach(p => {
+    const tr = document.createElement('tr');
+    const date = new Date(p.ts);
+    const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+      + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const dayClass = `badge-${p.day}`;
+    const dayLabel = p.day === 'viernes' ? t('day_viernes') : p.day === 'sabado' ? t('day_sabado') : t('day_finde');
+
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-size:12px;color:var(--text-secondary)">${dateStr}</td>
+      <td style="font-weight:600">${esc(p.who)}</td>
+      <td>${esc(p.to)}</td>
+      <td class="amount">${p.amount.toFixed(2)} €</td>
+      <td style="text-align:center">${p.tickets}</td>
+      <td><span class="badge ${dayClass}">${dayLabel}</span></td>
+      <td class="obs-cell" title="${esc(p.obs || '')}">${esc(p.obs || '—')}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${esc(p.registeredBy || '')}</td>
+      <td>
+        <div class="del-row">
+          <button class="btn btn-sm btn-secondary btn-del" data-id="${p.id}">✕</button>
+          <div class="del-confirm" id="dc-${p.id}">
+            <span>${t('confirm_delete')}</span>
+            <button class="btn btn-sm btn-danger btn-del-yes" data-id="${p.id}">Sí</button>
+            <button class="btn btn-sm btn-secondary btn-del-no" data-id="${p.id}">No</button>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Delete handlers
+  tbody.querySelectorAll('.btn-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dc = document.getElementById('dc-' + btn.dataset.id);
+      btn.style.display = 'none';
+      dc.classList.add('show');
+    });
+  });
+  tbody.querySelectorAll('.btn-del-yes').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteDoc(doc(db, 'crew_payments', btn.dataset.id));
+      toast(t('toast_deleted'));
+    });
+  });
+  tbody.querySelectorAll('.btn-del-no').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dc = document.getElementById('dc-' + btn.dataset.id);
+      dc.classList.remove('show');
+      dc.previousElementSibling.style.display = '';
+    });
+  });
+}
+
+function updateStats() {
+  const total = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  const entries = payments.reduce((s, p) => s + (p.tickets || 0), 0);
+  const avg = entries > 0 ? total / entries : 0;
+  document.getElementById('stat-total').textContent = total.toFixed(2) + ' €';
+  document.getElementById('stat-entries').textContent = entries;
+  document.getElementById('stat-records').textContent = payments.length;
+  document.getElementById('stat-avg').textContent = avg.toFixed(2) + ' €';
+}
+
+// Sort headers
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const field = th.dataset.sort;
+    if (sortField === field) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortField = field; sortDir = 'asc'; }
+    document.querySelectorAll('thead th .sort-icon').forEach(s => s.textContent = '');
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = sortDir === 'asc' ? '↑' : '↓';
+    renderPayments();
+  });
+});
+
+// Add payment
+document.getElementById('btn-add').addEventListener('click', async () => {
+  const who = document.getElementById('f-who').value.trim();
+  const to = document.getElementById('f-to').value;
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  const tickets = parseInt(document.getElementById('f-tickets').value) || 1;
+  const day = document.getElementById('f-day').value;
+  const obs = document.getElementById('f-obs').value.trim();
+
+  if (!who || !amount || amount <= 0) {
+    toast(t('toast_fill'));
+    return;
+  }
+
+  const btn = document.getElementById('btn-add');
+  btn.disabled = true;
+
+  const payment = {
+    who, to, amount, tickets, day, obs,
+    registeredBy: CFG.user,
+    ts: Date.now()
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, 'crew_payments'), payment);
+    // Backup
+    if (CFG.webhook) {
+      const ok = await sendToWebhook({ action: 'new_payment', ...payment, firebaseId: docRef.id });
+      if (!ok) toast(t('toast_backup_fail'));
+    }
+    // Reset form
+    document.getElementById('f-who').value = '';
+    document.getElementById('f-amount').value = '';
+    document.getElementById('f-tickets').value = '1';
+    document.getElementById('f-obs').value = '';
+    toast(t('toast_saved'));
+  } catch (e) {
+    console.error('Add payment error:', e);
+    toast('Error: ' + e.message);
+  }
+  btn.disabled = false;
+});
+
+// Export CSV
+document.getElementById('btn-export').addEventListener('click', () => {
+  if (!payments.length) return;
+  const headers = ['Fecha', 'Quién paga', 'A quién', 'Cantidad', 'Entradas', 'Día', 'Observaciones', 'Registrado por'];
+  const rows = payments.map(p => {
+    const date = new Date(p.ts).toLocaleString('es-ES');
+    return [date, p.who, p.to, p.amount, p.tickets, p.day, p.obs || '', p.registeredBy || '']
+      .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+  const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sonora-crew-pagos-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ══════════════════════════════════
+   TABS
+══════════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('on');
+  });
+});
+
+/* ══════════════════════════════════
+   EVENT LISTENERS
+══════════════════════════════════ */
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+document.getElementById('auth-theme').addEventListener('click', toggleTheme);
+document.getElementById('btn-logout').addEventListener('click', logout);
+
+document.getElementById('btn-lang').addEventListener('click', () => {
+  CFG.lang = CFG.lang === 'es' ? 'en' : 'es';
+  saveConfig(CFG);
+  applyI18n();
+  renderPayments();
+  updateBackupUI();
+});
+
+/* ══════════════════════════════════
+   UTILS
+══════════════════════════════════ */
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+applyTheme();
+applyI18n();
+renderAuth();
+renderCrewList();
+
+// Webhook field
+document.getElementById('f-webhook').value = CFG.webhook || '';
+updateBackupUI();
+
+// Auto-login if user saved
+if (CFG.user && CFG.crew.includes(CFG.user)) {
+  login(CFG.user);
+} else {
+  document.getElementById('screen-auth').classList.add('active');
+}
+
+// Init payments listener
+initPayments();
+
+</script>
+</body>
+</html>
