@@ -1109,10 +1109,11 @@ const db = getFirestore(fbApp);
 ══════════════════════════════════ */
 const STORAGE_KEY = 'sonora_crew';
 const DEFAULT_CREW = ['Panda', 'Dsastre', 'Gurke', 'Droglo', 'Madalena', 'Cizette', 'Francis'];
+const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwow1eAN2ww4aZF0QtsKPC7JO0KODKFltwhpEJRKCT7NoRJPLpq5PKagggGoQIF1gjy_A/exec';
 
 function loadConfig() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  const defaults = { user: null, webhook: '', crew: DEFAULT_CREW, lang: 'es', dark: false };
+  const defaults = { user: null, webhook: DEFAULT_WEBHOOK, crew: DEFAULT_CREW, lang: 'es', dark: false };
   if (!raw) return defaults;
   try { return { ...defaults, ...JSON.parse(raw) }; } catch { return defaults; }
 }
