@@ -92,7 +92,8 @@ body {
   letter-spacing: -1px;
   margin-bottom: 4px;
 }
-.auth-logo span { color: var(--accent); }
+.logo-orgia { color: #f59e0b; }
+.logo-sonora { color: #8b5cf6; margin-left: 6px; }
 .auth-sub {
   color: var(--text-secondary);
   font-size: 13px;
@@ -150,7 +151,6 @@ body {
   font-weight: 700;
   letter-spacing: -0.5px;
 }
-.topbar-title span { color: var(--accent); }
 .topbar-user {
   font-size: 12px;
   color: var(--text-secondary);
@@ -552,6 +552,8 @@ tbody tr:hover { background: var(--accent-soft); }
 .dark .rama-montaje    { background: #450a0a; color: #fca5a5; }
 .dark .rama-desmontaje { background: #500724; color: #f9a8d4; }
 .dark .rama-cartel     { background: #1e1b4b; color: #a5b4fc; }
+.rama-otros      { background: #f3f4f6; color: #4b5563; }
+.dark .rama-otros      { background: #374151; color: #d1d5db; }
 
 .priority-alta    { border-left: 3px solid var(--warning); }
 .priority-urgente { border-left: 3px solid var(--accent); }
@@ -599,6 +601,94 @@ tbody tr:hover { background: var(--accent-soft); }
 .exp-reembolsar { background: var(--accent-soft); color: var(--accent); }
 
 /* ══════════════════════════════════
+   CREW CHIPS (multi-select)
+══════════════════════════════════ */
+.crew-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-input);
+  min-height: 38px;
+  align-items: center;
+}
+.crew-chip {
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: .15s;
+  user-select: none;
+}
+.crew-chip:hover { border-color: var(--accent); color: var(--accent); }
+.crew-chip.on { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+
+/* ══════════════════════════════════
+   TASK ASSIGN BUTTON
+══════════════════════════════════ */
+.btn-assign {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: .15s;
+}
+.btn-assign:hover { border-color: #8b5cf6; color: #8b5cf6; }
+
+/* ══════════════════════════════════
+   DECISIONS
+══════════════════════════════════ */
+.dec-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: .15s;
+}
+.dec-card:hover { box-shadow: var(--shadow-lg); }
+.dec-card.dec-en_debate { border-left: 3px solid var(--warning); }
+.dec-card.dec-descartada { opacity: .5; border-left: 3px solid var(--text-secondary); }
+.dec-card.dec-aprobada { border-left: 3px solid var(--success); }
+.dec-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.dec-detail {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+.dec-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.dec-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.dec-aprobada { background: var(--success-soft); color: var(--success); }
+.dec-en_debate { background: var(--warning-soft); color: var(--warning); }
+.dec-descartada { background: var(--bg); color: var(--text-secondary); }
+
+/* ══════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════ */
 @media (max-width: 600px) {
@@ -625,7 +715,7 @@ tbody tr:hover { background: var(--accent-soft); }
 ══════════════════════════════════ -->
 <div class="screen active" id="screen-auth">
   <div class="auth-box">
-    <div class="auth-logo">Orgía<span>Sonora</span></div>
+    <div class="auth-logo"><span class="logo-orgia">Orgía</span><span class="logo-sonora">Sonora</span></div>
     <div class="auth-sub" data-i18n="auth_sub">Panel de gestión · San Sonorín XI</div>
     <div class="auth-grid" id="auth-grid"></div>
     <div style="margin-top:20px">
@@ -643,8 +733,8 @@ tbody tr:hover { background: var(--accent-soft); }
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-title">Orgía<span>Sonora</span></div>
-      <div class="topbar-user" id="topbar-user"></div>
+      <div class="topbar-title"><span class="logo-orgia">Orgía</span><span class="logo-sonora">Sonora</span></div>
+      <div class="topbar-user">eres: <strong id="topbar-user"></strong></div>
     </div>
     <div class="topbar-actions">
       <div class="backup-status" id="backup-status">
@@ -662,6 +752,7 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="tab-btn on" data-tab="payments" data-i18n="tab_payments">Pagos</button>
       <button class="tab-btn" data-tab="tasks" data-i18n="tab_tasks">Tareas</button>
       <button class="tab-btn" data-tab="expenses" data-i18n="tab_expenses">Gastos</button>
+      <button class="tab-btn" data-tab="decisions" data-i18n="tab_decisions">Decisiones</button>
       <button class="tab-btn" data-tab="settings" data-i18n="tab_settings">Ajustes</button>
     </div>
 
@@ -789,8 +880,8 @@ tbody tr:hover { background: var(--accent-soft); }
             <select class="form-select" id="ft-rama"></select>
           </div>
           <div class="form-group">
-            <label class="form-label" data-i18n="lbl_task_assigned">Responsable</label>
-            <select class="form-select" id="ft-assigned"></select>
+            <label class="form-label" data-i18n="lbl_task_assigned">Responsable(s)</label>
+            <div class="crew-chips" id="ft-assigned"></div>
           </div>
           <div class="form-group">
             <label class="form-label" data-i18n="lbl_task_priority">Prioridad</label>
@@ -909,6 +1000,50 @@ tbody tr:hover { background: var(--accent-soft); }
           <div class="empty-state-icon">💸</div>
           <div class="empty-state-text" data-i18n="expenses_empty">No hay gastos registrados</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: DECISIONES ═══ -->
+    <div class="tab-content" id="tab-decisions">
+      <!-- DECISION FORM -->
+      <div class="card">
+        <div class="card-title" data-i18n="new_decision">Nueva decisión</div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_dec_title">Tema</label>
+            <input class="form-input" id="fd-title" type="text" placeholder="Qué se ha decidido...">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_dec_detail">Detalle / contexto</label>
+            <textarea class="form-textarea" id="fd-detail" placeholder="Por qué se ha tomado esta decisión, qué alternativas se barajaron..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_dec_rama">Rama</label>
+            <select class="form-select" id="fd-rama"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_dec_status">Estado</label>
+            <select class="form-select" id="fd-status">
+              <option value="aprobada">Aprobada</option>
+              <option value="en_debate">En debate</option>
+              <option value="descartada">Descartada</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn" id="btn-add-decision" data-i18n="btn_add_decision">Registrar decisión</button>
+        </div>
+      </div>
+
+      <!-- DECISION LIST -->
+      <div id="decision-list"></div>
+      <div class="empty-state" id="decisions-empty">
+        <div class="empty-state-icon">📜</div>
+        <div class="empty-state-text" data-i18n="decisions_empty">No hay decisiones registradas</div>
       </div>
     </div>
 
@@ -1037,7 +1172,7 @@ const I18N = {
     tasks_empty: 'No hay tareas todavía',
     rama_sonido: 'Sonido', rama_local: 'Local', rama_logistica: 'Logística',
     rama_decoracion: 'Decoración', rama_montaje: 'Montaje',
-    rama_desmontaje: 'Desmontaje', rama_cartel: 'Cartel/Artistas',
+    rama_desmontaje: 'Desmontaje', rama_cartel: 'Cartel/Artistas', rama_otros: 'Otros',
     status_pendiente: 'Pendiente', status_en_curso: 'En curso', status_hecho: 'Hecho',
     priority_normal: 'Normal', priority_alta: 'Alta', priority_urgente: 'Urgente',
     new_expense: 'Nuevo gasto',
@@ -1056,6 +1191,18 @@ const I18N = {
     toast_fill_task: 'Escribe qué hay que hacer',
     toast_fill_expense: 'Rellena concepto y cantidad',
     all: 'Todas',
+    tab_decisions: 'Decisiones',
+    new_decision: 'Nueva decisión',
+    lbl_dec_title: 'Tema', lbl_dec_detail: 'Detalle / contexto',
+    lbl_dec_rama: 'Rama', lbl_dec_status: 'Estado',
+    btn_add_decision: 'Registrar decisión',
+    decisions_empty: 'No hay decisiones registradas',
+    dec_aprobada: 'Aprobada', dec_en_debate: 'En debate', dec_descartada: 'Descartada',
+    toast_decision_added: 'Decisión registrada',
+    toast_decision_deleted: 'Decisión eliminada',
+    toast_fill_decision: 'Escribe el tema de la decisión',
+    sin_asignar: 'Sin asignar',
+    btn_me: 'Me la pido',
   },
   en: {
     auth_sub: 'Choose your fighter',
@@ -1503,10 +1650,11 @@ const RAMAS = [
   { id: 'montaje',    key: 'rama_montaje',    css: 'rama-montaje' },
   { id: 'desmontaje', key: 'rama_desmontaje', css: 'rama-desmontaje' },
   { id: 'cartel',     key: 'rama_cartel',     css: 'rama-cartel' },
+  { id: 'otros',      key: 'rama_otros',      css: 'rama-otros' },
 ];
 const RAMA_COLORS = {
   sonido: '#3b82f6', local: '#f59e0b', logistica: '#10b981',
-  decoracion: '#8b5cf6', montaje: '#ef4444', desmontaje: '#ec4899', cartel: '#6366f1'
+  decoracion: '#8b5cf6', montaje: '#ef4444', desmontaje: '#ec4899', cartel: '#6366f1', otros: '#6b7280'
 };
 
 function populateRamaSelect(selectId) {
@@ -1529,6 +1677,22 @@ function populateCrewSelect(selectId) {
     if (name === CFG.user) opt.selected = true;
     sel.appendChild(opt);
   });
+}
+function renderCrewChips(containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  CFG.crew.forEach(name => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'crew-chip';
+    chip.textContent = name;
+    chip.dataset.name = name;
+    chip.addEventListener('click', () => chip.classList.toggle('on'));
+    el.appendChild(chip);
+  });
+}
+function getSelectedCrew(containerId) {
+  return [...document.querySelectorAll(`#${containerId} .crew-chip.on`)].map(c => c.dataset.name);
 }
 
 /* ══════════════════════════════════
@@ -1592,6 +1756,16 @@ function renderTasks() {
   filtered.forEach(task => {
     const rama = RAMAS.find(r => r.id === task.rama) || RAMAS[0];
     const isDone = task.status === 'hecho';
+    const assigned = Array.isArray(task.assigned) ? task.assigned : (task.assigned ? [task.assigned] : []);
+    const hasAssigned = assigned.length > 0;
+    const isMine = assigned.includes(CFG.user);
+    const assignedHtml = hasAssigned
+      ? assigned.map(a => `<span class="task-meta-item" style="font-weight:500">${esc(a)}</span>`).join(' ')
+      : `<span class="task-meta-item" style="opacity:.5">${t('sin_asignar')}</span>`;
+    const claimBtn = (!isMine && !isDone)
+      ? `<button class="btn-assign btn-task-claim" data-id="${task.id}">${t('btn_me')}</button>`
+      : '';
+
     const card = document.createElement('div');
     card.className = 'task-card' + (isDone ? ' done' : '') + (task.priority !== 'normal' ? ' priority-' + task.priority : '');
 
@@ -1601,7 +1775,7 @@ function renderTasks() {
         <div class="task-title ${isDone ? 'struck' : ''}">${esc(task.title)}</div>
         <div class="task-meta">
           <span class="badge-rama ${rama.css}">${t(rama.key)}</span>
-          <span class="task-meta-item">→ ${esc(task.assigned)}</span>
+          <span style="margin-right:2px">→</span> ${assignedHtml} ${claimBtn}
           ${task.priority !== 'normal' ? `<span class="badge ${task.priority === 'urgente' ? 'badge-viernes' : 'badge-sabado'}" style="font-size:10px">${t('priority_' + task.priority)}</span>` : ''}
           ${task.status === 'en_curso' ? `<span class="badge badge-finde" style="font-size:10px">${t('status_en_curso')}</span>` : ''}
         </div>
@@ -1638,6 +1812,19 @@ function renderTasks() {
     });
   });
 
+  // Claim ("Me la pido")
+  list.querySelectorAll('.btn-task-claim').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      const current = Array.isArray(task.assigned) ? task.assigned : (task.assigned ? [task.assigned] : []);
+      if (!current.includes(CFG.user)) {
+        await updateDoc(doc(db, 'crew_tasks', id), { assigned: [...current, CFG.user] });
+      }
+    });
+  });
+
   // Delete
   list.querySelectorAll('.btn-task-del').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -1655,10 +1842,11 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
   const btn = document.getElementById('btn-add-task');
   btn.disabled = true;
 
+  const assigned = getSelectedCrew('ft-assigned');
   await addDoc(collection(db, 'crew_tasks'), {
     title,
     rama: document.getElementById('ft-rama').value,
-    assigned: document.getElementById('ft-assigned').value,
+    assigned,
     priority: document.getElementById('ft-priority').value,
     notes: document.getElementById('ft-notes').value.trim(),
     status: 'pendiente',
@@ -1668,6 +1856,7 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
 
   document.getElementById('ft-title').value = '';
   document.getElementById('ft-notes').value = '';
+  document.querySelectorAll('#ft-assigned .crew-chip').forEach(c => c.classList.remove('on'));
   toast(t('toast_task_added'));
   btn.disabled = false;
 });
@@ -1832,6 +2021,92 @@ document.getElementById('btn-export-expenses').addEventListener('click', () => {
 });
 
 /* ══════════════════════════════════
+   DECISIONS
+══════════════════════════════════ */
+let decisions = [];
+
+function initDecisions() {
+  onSnapshot(query(collection(db, 'crew_decisions'), orderBy('ts', 'desc')), snap => {
+    decisions = [];
+    snap.forEach(ds => decisions.push({ id: ds.id, ...ds.data() }));
+    renderDecisions();
+  }, err => console.warn('Decisions listener:', err));
+}
+
+function renderDecisions() {
+  const list = document.getElementById('decision-list');
+  const empty = document.getElementById('decisions-empty');
+  list.innerHTML = '';
+
+  if (!decisions.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  decisions.forEach(d => {
+    const rama = RAMAS.find(r => r.id === d.rama) || RAMAS[0];
+    const date = new Date(d.ts);
+    const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const statusLabel = t('dec_' + d.status);
+    const card = document.createElement('div');
+    card.className = 'dec-card dec-' + d.status;
+
+    card.innerHTML = `
+      <div class="dec-title">${esc(d.title)}</div>
+      ${d.detail ? `<div class="dec-detail">${esc(d.detail)}</div>` : ''}
+      <div class="dec-meta">
+        <span class="badge-rama ${rama.css}">${t(rama.key)}</span>
+        <span class="dec-status dec-${d.status}">${statusLabel}</span>
+        <span>${dateStr} · ${esc(d.createdBy || '')}</span>
+        <button class="btn btn-sm btn-secondary btn-dec-status" data-id="${d.id}" data-status="${d.status}" style="padding:2px 8px;font-size:10px">
+          ${d.status === 'en_debate' ? '✓ Aprobar' : d.status === 'aprobada' ? '↩ Reabrir' : '↩ Reabrir'}
+        </button>
+        <button class="btn btn-sm btn-secondary btn-dec-del" data-id="${d.id}" style="padding:2px 8px;font-size:10px">✕</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // Status toggle
+  list.querySelectorAll('.btn-dec-status').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const current = btn.dataset.status;
+      const next = current === 'en_debate' ? 'aprobada' : current === 'aprobada' ? 'en_debate' : 'en_debate';
+      await updateDoc(doc(db, 'crew_decisions', btn.dataset.id), { status: next });
+    });
+  });
+
+  // Delete
+  list.querySelectorAll('.btn-dec-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteDoc(doc(db, 'crew_decisions', btn.dataset.id));
+      toast(t('toast_decision_deleted'));
+    });
+  });
+}
+
+// Add decision
+document.getElementById('btn-add-decision').addEventListener('click', async () => {
+  const title = document.getElementById('fd-title').value.trim();
+  if (!title) { toast(t('toast_fill_decision')); return; }
+
+  const btn = document.getElementById('btn-add-decision');
+  btn.disabled = true;
+
+  await addDoc(collection(db, 'crew_decisions'), {
+    title,
+    detail: document.getElementById('fd-detail').value.trim(),
+    rama: document.getElementById('fd-rama').value,
+    status: document.getElementById('fd-status').value,
+    createdBy: CFG.user,
+    ts: Date.now()
+  });
+
+  document.getElementById('fd-title').value = '';
+  document.getElementById('fd-detail').value = '';
+  toast(t('toast_decision_added'));
+  btn.disabled = false;
+});
+
+/* ══════════════════════════════════
    TABS
 ══════════════════════════════════ */
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1882,11 +2157,13 @@ if (CFG.user && CFG.crew.includes(CFG.user) && getVerified().includes(CFG.user))
 initPayments();
 initTasks();
 initExpenses();
+initDecisions();
 
 // Populate selects
 populateRamaSelect('ft-rama');
 populateRamaSelect('fe-rama');
-populateCrewSelect('ft-assigned');
+populateRamaSelect('fd-rama');
+renderCrewChips('ft-assigned');
 populateCrewSelect('fe-paidby');
 renderTaskFilters();
 
