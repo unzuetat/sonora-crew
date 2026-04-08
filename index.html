@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1a1a2e">
-<title>Sonora Crew</title>
+<title>Orgía Sonora</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════
@@ -449,6 +449,156 @@ tbody tr:hover { background: var(--accent-soft); }
 .settings-label-desc { font-size: 12px; color: var(--text-secondary); }
 
 /* ══════════════════════════════════
+   CHIPS (filter pills)
+══════════════════════════════════ */
+.chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: .15s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ══════════════════════════════════
+   TASKS
+══════════════════════════════════ */
+.task-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: .15s;
+}
+.task-card:hover { box-shadow: var(--shadow-lg); }
+.task-card.done { opacity: .5; }
+.task-check {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  font-size: 13px;
+  color: transparent;
+  transition: .15s;
+}
+.task-check:hover { border-color: var(--success); }
+.task-check.checked {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: 14px; font-weight: 500; }
+.task-title.struck { text-decoration: line-through; color: var(--text-secondary); }
+.task-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  align-items: center;
+}
+.task-meta-item {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.task-notes {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-style: italic;
+}
+.task-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.badge-rama {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+.rama-sonido     { background: #dbeafe; color: #1d4ed8; }
+.rama-local      { background: #fef3c7; color: #92400e; }
+.rama-logistica  { background: #d1fae5; color: #065f46; }
+.rama-decoracion { background: #ede9fe; color: #6d28d9; }
+.rama-montaje    { background: #fee2e2; color: #991b1b; }
+.rama-desmontaje { background: #fce7f3; color: #9d174d; }
+.rama-cartel     { background: #e0e7ff; color: #3730a3; }
+.dark .rama-sonido     { background: #1e3a5f; color: #93c5fd; }
+.dark .rama-local      { background: #3d2e0a; color: #fcd34d; }
+.dark .rama-logistica  { background: #064e3b; color: #6ee7b7; }
+.dark .rama-decoracion { background: #2e1065; color: #c4b5fd; }
+.dark .rama-montaje    { background: #450a0a; color: #fca5a5; }
+.dark .rama-desmontaje { background: #500724; color: #f9a8d4; }
+.dark .rama-cartel     { background: #1e1b4b; color: #a5b4fc; }
+
+.priority-alta    { border-left: 3px solid var(--warning); }
+.priority-urgente { border-left: 3px solid var(--accent); }
+
+/* ══════════════════════════════════
+   EXPENSE BREAKDOWN
+══════════════════════════════════ */
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.breakdown-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+.breakdown-amount {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 70px;
+  text-align: right;
+}
+
+.exp-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.exp-pagado    { background: var(--success-soft); color: var(--success); }
+.exp-pendiente { background: var(--warning-soft); color: var(--warning); }
+.exp-reembolsar { background: var(--accent-soft); color: var(--accent); }
+
+/* ══════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════ */
 @media (max-width: 600px) {
@@ -458,6 +608,8 @@ tbody tr:hover { background: var(--accent-soft); }
   .auth-grid { grid-template-columns: 1fr; }
   .topbar-user { display: none; }
   .wrap { padding: 12px; }
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab-btn { white-space: nowrap; flex-shrink: 0; }
 }
 </style>
 </head>
@@ -473,7 +625,7 @@ tbody tr:hover { background: var(--accent-soft); }
 ══════════════════════════════════ -->
 <div class="screen active" id="screen-auth">
   <div class="auth-box">
-    <div class="auth-logo">Sonora<span>Crew</span></div>
+    <div class="auth-logo">Orgía<span>Sonora</span></div>
     <div class="auth-sub" data-i18n="auth_sub">Panel de gestión · San Sonorín XI</div>
     <div class="auth-grid" id="auth-grid"></div>
     <div style="margin-top:20px">
@@ -491,7 +643,7 @@ tbody tr:hover { background: var(--accent-soft); }
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-title">Sonora<span>Crew</span></div>
+      <div class="topbar-title">Orgía<span>Sonora</span></div>
       <div class="topbar-user" id="topbar-user"></div>
     </div>
     <div class="topbar-actions">
@@ -499,7 +651,6 @@ tbody tr:hover { background: var(--accent-soft); }
         <div class="backup-dot off" id="backup-dot"></div>
         <span id="backup-label" data-i18n="backup_off">sin webhook</span>
       </div>
-      <button class="icon-btn" id="btn-lang" title="ES/EN">EN</button>
       <button class="icon-btn" id="btn-theme"><span id="theme-icon">☽</span></button>
       <button class="icon-btn" id="btn-logout" title="Salir">✕</button>
     </div>
@@ -509,6 +660,8 @@ tbody tr:hover { background: var(--accent-soft); }
     <!-- TABS -->
     <div class="tabs">
       <button class="tab-btn on" data-tab="payments" data-i18n="tab_payments">Pagos</button>
+      <button class="tab-btn" data-tab="tasks" data-i18n="tab_tasks">Tareas</button>
+      <button class="tab-btn" data-tab="expenses" data-i18n="tab_expenses">Gastos</button>
       <button class="tab-btn" data-tab="settings" data-i18n="tab_settings">Ajustes</button>
     </div>
 
@@ -609,6 +762,156 @@ tbody tr:hover { background: var(--accent-soft); }
       </div>
     </div>
 
+    <!-- ═══ TAB: TAREAS ═══ -->
+    <div class="tab-content" id="tab-tasks">
+      <!-- FILTERS -->
+      <div class="card" style="padding:14px 16px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span class="form-label" style="margin:0" data-i18n="filter_rama">Rama:</span>
+          <div class="chip-row" id="task-rama-filters"></div>
+          <span class="form-label" style="margin:0 0 0 8px" data-i18n="filter_status">Estado:</span>
+          <div class="chip-row" id="task-status-filters"></div>
+        </div>
+      </div>
+
+      <!-- TASK FORM -->
+      <div class="card" id="task-form-card">
+        <div class="card-title" data-i18n="new_task">Nueva tarea</div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label" data-i18n="lbl_task_title">Tarea</label>
+            <input class="form-input" id="ft-title" type="text" placeholder="Qué hay que hacer...">
+          </div>
+        </div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_task_rama">Rama</label>
+            <select class="form-select" id="ft-rama"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_task_assigned">Responsable</label>
+            <select class="form-select" id="ft-assigned"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_task_priority">Prioridad</label>
+            <select class="form-select" id="ft-priority">
+              <option value="normal">Normal</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_task_notes">Notas</label>
+            <input class="form-input" id="ft-notes" type="text" placeholder="Detalles opcionales...">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn" id="btn-add-task" data-i18n="btn_add_task">Añadir tarea</button>
+        </div>
+      </div>
+
+      <!-- TASK LIST -->
+      <div id="task-list"></div>
+      <div class="empty-state" id="tasks-empty">
+        <div class="empty-state-icon">📝</div>
+        <div class="empty-state-text" data-i18n="tasks_empty">No hay tareas todavía</div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: GASTOS ═══ -->
+    <div class="tab-content" id="tab-expenses">
+      <!-- STATS -->
+      <div class="stats-grid" id="expense-stats">
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_exp_total">Total gastado</div>
+          <div class="stat-value accent" id="stat-exp-total">0 €</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_exp_records">Gastos</div>
+          <div class="stat-value" id="stat-exp-records">0</div>
+        </div>
+      </div>
+
+      <!-- PER-RAMA BREAKDOWN -->
+      <div class="card" id="expense-breakdown-card">
+        <div class="card-title" data-i18n="exp_breakdown">Desglose por rama</div>
+        <div id="expense-breakdown"></div>
+      </div>
+
+      <!-- EXPENSE FORM -->
+      <div class="card">
+        <div class="card-title" data-i18n="new_expense">Nuevo gasto</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_exp_concept">Concepto</label>
+            <input class="form-input" id="fe-concept" type="text" placeholder="Qué se ha comprado...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_exp_rama">Rama</label>
+            <select class="form-select" id="fe-rama"></select>
+          </div>
+        </div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_exp_amount">Cantidad (€)</label>
+            <input class="form-input" id="fe-amount" type="number" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_exp_paid_by">Pagado por</label>
+            <select class="form-select" id="fe-paidby"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_exp_status">Estado</label>
+            <select class="form-select" id="fe-status">
+              <option value="pagado">Pagado</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="reembolsar">A reembolsar</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_exp_notes">Notas</label>
+            <input class="form-input" id="fe-notes" type="text" placeholder="Opcional...">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn" id="btn-add-expense" data-i18n="btn_add_expense">Registrar gasto</button>
+        </div>
+      </div>
+
+      <!-- EXPENSE TABLE -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin-bottom:0" data-i18n="exp_list">Registro de gastos</div>
+          <button class="btn btn-secondary btn-sm" id="btn-export-expenses" data-i18n="btn_export_exp">Exportar CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="th_date">Fecha</th>
+                <th data-i18n="th_exp_concept">Concepto</th>
+                <th data-i18n="th_exp_rama">Rama</th>
+                <th data-i18n="th_amount">Cantidad</th>
+                <th data-i18n="th_exp_paidby">Pagado por</th>
+                <th data-i18n="th_exp_status">Estado</th>
+                <th data-i18n="th_obs">Notas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="expenses-body"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="expenses-empty">
+          <div class="empty-state-icon">💸</div>
+          <div class="empty-state-text" data-i18n="expenses_empty">No hay gastos registrados</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ TAB: AJUSTES ═══ -->
     <div class="tab-content" id="tab-settings">
       <div class="card">
@@ -630,18 +933,6 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-title" data-i18n="settings_crew">Equipo organizador</div>
-        <div id="crew-list"></div>
-        <div class="form-row" style="margin-top:12px">
-          <div class="form-group">
-            <input class="form-input" id="f-new-member" type="text" placeholder="Nuevo miembro..." data-i18n-placeholder="placeholder_new_member">
-          </div>
-          <div class="form-group" style="justify-content:flex-end">
-            <button class="btn btn-sm btn-secondary" id="btn-add-member" data-i18n="btn_add_member">Añadir</button>
-          </div>
-        </div>
-      </div>
 
       <div class="card">
         <div class="card-title" data-i18n="settings_danger">Zona peligrosa</div>
@@ -663,7 +954,7 @@ tbody tr:hover { background: var(--accent-soft); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, doc,
+  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc,
   onSnapshot, query, orderBy, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -682,7 +973,7 @@ const db = getFirestore(fbApp);
    CONFIG
 ══════════════════════════════════ */
 const STORAGE_KEY = 'sonora_crew';
-const DEFAULT_CREW = ['Telmo', 'Org2', 'Org3', 'Org4', 'Org5', 'Org6', 'Org7'];
+const DEFAULT_CREW = ['Panda', 'Dsastre', 'Gurke', 'Droglo', 'Madalena', 'Cizette', 'Francis'];
 
 function loadConfig() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -698,7 +989,7 @@ let CFG = loadConfig();
 ══════════════════════════════════ */
 const I18N = {
   es: {
-    auth_sub: 'Panel de gestión · San Sonorín XI',
+    auth_sub: 'Choose your fighter',
     tab_payments: 'Pagos', tab_settings: 'Ajustes',
     stat_total: 'Total recaudado', stat_entries: 'Entradas vendidas',
     stat_records: 'Registros', stat_avg: 'Media / entrada',
@@ -733,9 +1024,41 @@ const I18N = {
     toast_fill: 'Rellena quién paga y la cantidad',
     toast_member_exists: 'Ya existe ese miembro',
     confirm_delete: '¿Seguro?',
+    auth_password: 'Primera vez — introduce tu contraseña',
+    auth_back: 'Volver',
+    auth_enter: 'Entrar',
+    auth_wrong: 'Contraseña incorrecta',
+    tab_tasks: 'Tareas', tab_expenses: 'Gastos',
+    filter_rama: 'Rama:', filter_status: 'Estado:',
+    new_task: 'Nueva tarea',
+    lbl_task_title: 'Tarea', lbl_task_rama: 'Rama',
+    lbl_task_assigned: 'Responsable', lbl_task_priority: 'Prioridad',
+    lbl_task_notes: 'Notas', btn_add_task: 'Añadir tarea',
+    tasks_empty: 'No hay tareas todavía',
+    rama_sonido: 'Sonido', rama_local: 'Local', rama_logistica: 'Logística',
+    rama_decoracion: 'Decoración', rama_montaje: 'Montaje',
+    rama_desmontaje: 'Desmontaje', rama_cartel: 'Cartel/Artistas',
+    status_pendiente: 'Pendiente', status_en_curso: 'En curso', status_hecho: 'Hecho',
+    priority_normal: 'Normal', priority_alta: 'Alta', priority_urgente: 'Urgente',
+    new_expense: 'Nuevo gasto',
+    lbl_exp_concept: 'Concepto', lbl_exp_rama: 'Rama',
+    lbl_exp_amount: 'Cantidad (€)', lbl_exp_paid_by: 'Pagado por',
+    lbl_exp_status: 'Estado', lbl_exp_notes: 'Notas',
+    btn_add_expense: 'Registrar gasto', btn_export_exp: 'Exportar CSV',
+    exp_list: 'Registro de gastos', exp_breakdown: 'Desglose por rama',
+    stat_exp_total: 'Total gastado', stat_exp_records: 'Gastos',
+    expenses_empty: 'No hay gastos registrados',
+    exp_pagado: 'Pagado', exp_pendiente: 'Pendiente', exp_reembolsar: 'A reembolsar',
+    th_exp_concept: 'Concepto', th_exp_rama: 'Rama',
+    th_exp_paidby: 'Pagado por', th_exp_status: 'Estado',
+    toast_task_added: 'Tarea añadida', toast_task_deleted: 'Tarea eliminada',
+    toast_expense_added: 'Gasto registrado', toast_expense_deleted: 'Gasto eliminado',
+    toast_fill_task: 'Escribe qué hay que hacer',
+    toast_fill_expense: 'Rellena concepto y cantidad',
+    all: 'Todas',
   },
   en: {
-    auth_sub: 'Management panel · San Sonorín XI',
+    auth_sub: 'Choose your fighter',
     tab_payments: 'Payments', tab_settings: 'Settings',
     stat_total: 'Total collected', stat_entries: 'Tickets sold',
     stat_records: 'Records', stat_avg: 'Avg / ticket',
@@ -770,6 +1093,38 @@ const I18N = {
     toast_fill: 'Fill in who paid and the amount',
     toast_member_exists: 'Member already exists',
     confirm_delete: 'Sure?',
+    auth_password: 'First time — enter your password',
+    auth_back: 'Back',
+    auth_enter: 'Enter',
+    auth_wrong: 'Wrong password',
+    tab_tasks: 'Tasks', tab_expenses: 'Expenses',
+    filter_rama: 'Area:', filter_status: 'Status:',
+    new_task: 'New task',
+    lbl_task_title: 'Task', lbl_task_rama: 'Area',
+    lbl_task_assigned: 'Assigned to', lbl_task_priority: 'Priority',
+    lbl_task_notes: 'Notes', btn_add_task: 'Add task',
+    tasks_empty: 'No tasks yet',
+    rama_sonido: 'Sound', rama_local: 'Venue', rama_logistica: 'Logistics',
+    rama_decoracion: 'Decoration', rama_montaje: 'Setup',
+    rama_desmontaje: 'Teardown', rama_cartel: 'Poster/Artists',
+    status_pendiente: 'Pending', status_en_curso: 'In progress', status_hecho: 'Done',
+    priority_normal: 'Normal', priority_alta: 'High', priority_urgente: 'Urgent',
+    new_expense: 'New expense',
+    lbl_exp_concept: 'Concept', lbl_exp_rama: 'Area',
+    lbl_exp_amount: 'Amount (€)', lbl_exp_paid_by: 'Paid by',
+    lbl_exp_status: 'Status', lbl_exp_notes: 'Notes',
+    btn_add_expense: 'Register expense', btn_export_exp: 'Export CSV',
+    exp_list: 'Expense records', exp_breakdown: 'Breakdown by area',
+    stat_exp_total: 'Total spent', stat_exp_records: 'Expenses',
+    expenses_empty: 'No expenses registered yet',
+    exp_pagado: 'Paid', exp_pendiente: 'Pending', exp_reembolsar: 'To reimburse',
+    th_exp_concept: 'Concept', th_exp_rama: 'Area',
+    th_exp_paidby: 'Paid by', th_exp_status: 'Status',
+    toast_task_added: 'Task added', toast_task_deleted: 'Task deleted',
+    toast_expense_added: 'Expense registered', toast_expense_deleted: 'Expense deleted',
+    toast_fill_task: 'Write what needs to be done',
+    toast_fill_expense: 'Fill in concept and amount',
+    all: 'All',
   }
 };
 
@@ -788,7 +1143,6 @@ function applyI18n() {
     daySelect.options[1].textContent = t('day_sabado');
     daySelect.options[2].textContent = t('day_finde');
   }
-  document.getElementById('btn-lang').textContent = CFG.lang === 'es' ? 'EN' : 'ES';
 }
 
 /* ══════════════════════════════════
@@ -817,16 +1171,69 @@ function toast(msg) {
 /* ══════════════════════════════════
    AUTH
 ══════════════════════════════════ */
+const CREW_PASS = {
+  gurke: 'carlos', panda: 'hugo', cizette: 'clara',
+  madalena: 'elena', francis: 'telmo', dsastre: 'victor', droglo: 'pablo'
+};
+const VERIFIED_KEY = 'sonora_crew_verified';
+function getVerified() {
+  try { return JSON.parse(localStorage.getItem(VERIFIED_KEY) || '[]'); } catch { return []; }
+}
+function setVerified(name) {
+  const v = getVerified();
+  if (!v.includes(name)) { v.push(name); localStorage.setItem(VERIFIED_KEY, JSON.stringify(v)); }
+}
+
 function renderAuth() {
   const grid = document.getElementById('auth-grid');
   grid.innerHTML = '';
+  const verified = getVerified();
   CFG.crew.forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'auth-btn';
     btn.textContent = name;
-    btn.addEventListener('click', () => login(name));
+    btn.addEventListener('click', () => {
+      if (verified.includes(name)) {
+        login(name);
+      } else {
+        showPasswordPrompt(name);
+      }
+    });
     grid.appendChild(btn);
   });
+}
+
+function showPasswordPrompt(name) {
+  const grid = document.getElementById('auth-grid');
+  grid.innerHTML = `
+    <div style="grid-column:1/-1;text-align:center">
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">${esc(name)}</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">${t('auth_password')}</div>
+      <input class="form-input" id="auth-pass" type="password" placeholder="••••••"
+             style="max-width:200px;margin:0 auto 12px;text-align:center;font-size:18px;letter-spacing:4px">
+      <div id="auth-error" style="font-size:12px;color:var(--accent);min-height:20px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn btn-secondary btn-sm" id="auth-back">${t('auth_back')}</button>
+        <button class="btn btn-sm" id="auth-enter">${t('auth_enter')}</button>
+      </div>
+    </div>
+  `;
+  const passInput = document.getElementById('auth-pass');
+  passInput.focus();
+  document.getElementById('auth-back').addEventListener('click', renderAuth);
+  const tryLogin = () => {
+    const val = passInput.value.toLowerCase().trim();
+    if (val === CREW_PASS[name.toLowerCase()]) {
+      setVerified(name);
+      login(name);
+    } else {
+      document.getElementById('auth-error').textContent = t('auth_wrong');
+      passInput.value = '';
+      passInput.focus();
+    }
+  };
+  document.getElementById('auth-enter').addEventListener('click', tryLogin);
+  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 }
 function login(name) {
   CFG.user = name;
@@ -858,49 +1265,6 @@ function renderCrewSelect() {
   });
 }
 
-/* ══════════════════════════════════
-   CREW SETTINGS
-══════════════════════════════════ */
-function renderCrewList() {
-  const el = document.getElementById('crew-list');
-  el.innerHTML = '';
-  CFG.crew.forEach((name, i) => {
-    const row = document.createElement('div');
-    row.className = 'settings-row';
-    row.innerHTML = `
-      <div class="settings-label"><div class="settings-label-title">${esc(name)}</div></div>
-      <button class="btn btn-sm btn-secondary btn-del-member" data-idx="${i}">✕</button>
-    `;
-    el.appendChild(row);
-  });
-  el.querySelectorAll('.btn-del-member').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.idx);
-      if (CFG.crew.length <= 1) return;
-      CFG.crew.splice(idx, 1);
-      saveConfig(CFG);
-      renderCrewList();
-      renderCrewSelect();
-      renderAuth();
-    });
-  });
-}
-
-document.getElementById('btn-add-member').addEventListener('click', () => {
-  const inp = document.getElementById('f-new-member');
-  const name = inp.value.trim();
-  if (!name) return;
-  if (CFG.crew.some(c => c.toLowerCase() === name.toLowerCase())) {
-    toast(t('toast_member_exists'));
-    return;
-  }
-  CFG.crew.push(name);
-  saveConfig(CFG);
-  inp.value = '';
-  renderCrewList();
-  renderCrewSelect();
-  renderAuth();
-});
 
 /* ══════════════════════════════════
    WEBHOOK / BACKUP
@@ -1129,6 +1493,345 @@ document.getElementById('btn-export').addEventListener('click', () => {
 });
 
 /* ══════════════════════════════════
+   RAMAS
+══════════════════════════════════ */
+const RAMAS = [
+  { id: 'sonido',     key: 'rama_sonido',     css: 'rama-sonido' },
+  { id: 'local',      key: 'rama_local',      css: 'rama-local' },
+  { id: 'logistica',  key: 'rama_logistica',  css: 'rama-logistica' },
+  { id: 'decoracion', key: 'rama_decoracion', css: 'rama-decoracion' },
+  { id: 'montaje',    key: 'rama_montaje',    css: 'rama-montaje' },
+  { id: 'desmontaje', key: 'rama_desmontaje', css: 'rama-desmontaje' },
+  { id: 'cartel',     key: 'rama_cartel',     css: 'rama-cartel' },
+];
+const RAMA_COLORS = {
+  sonido: '#3b82f6', local: '#f59e0b', logistica: '#10b981',
+  decoracion: '#8b5cf6', montaje: '#ef4444', desmontaje: '#ec4899', cartel: '#6366f1'
+};
+
+function populateRamaSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '';
+  RAMAS.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = t(r.key);
+    sel.appendChild(opt);
+  });
+}
+function populateCrewSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '';
+  CFG.crew.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (name === CFG.user) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+/* ══════════════════════════════════
+   TASKS
+══════════════════════════════════ */
+let tasks = [];
+let taskFilterRama = 'all';
+let taskFilterStatus = 'all';
+
+function initTasks() {
+  onSnapshot(query(collection(db, 'crew_tasks'), orderBy('ts', 'desc')), snap => {
+    tasks = [];
+    snap.forEach(ds => tasks.push({ id: ds.id, ...ds.data() }));
+    renderTasks();
+  }, err => console.warn('Tasks listener:', err));
+}
+
+function renderTaskFilters() {
+  // Rama filters
+  const ramaEl = document.getElementById('task-rama-filters');
+  ramaEl.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (taskFilterRama === 'all' ? ' on' : '');
+  allChip.textContent = t('all');
+  allChip.addEventListener('click', () => { taskFilterRama = 'all'; renderTaskFilters(); renderTasks(); });
+  ramaEl.appendChild(allChip);
+  RAMAS.forEach(r => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (taskFilterRama === r.id ? ' on' : '');
+    chip.textContent = t(r.key);
+    chip.addEventListener('click', () => { taskFilterRama = r.id; renderTaskFilters(); renderTasks(); });
+    ramaEl.appendChild(chip);
+  });
+  // Status filters
+  const statusEl = document.getElementById('task-status-filters');
+  statusEl.innerHTML = '';
+  ['all', 'pendiente', 'en_curso', 'hecho'].forEach(s => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (taskFilterStatus === s ? ' on' : '');
+    chip.textContent = s === 'all' ? t('all') : t('status_' + s);
+    chip.addEventListener('click', () => { taskFilterStatus = s; renderTaskFilters(); renderTasks(); });
+    statusEl.appendChild(chip);
+  });
+}
+
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  const empty = document.getElementById('tasks-empty');
+  list.innerHTML = '';
+
+  let filtered = tasks;
+  if (taskFilterRama !== 'all') filtered = filtered.filter(t => t.rama === taskFilterRama);
+  if (taskFilterStatus !== 'all') filtered = filtered.filter(t => t.status === taskFilterStatus);
+
+  if (!filtered.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  filtered.forEach(task => {
+    const rama = RAMAS.find(r => r.id === task.rama) || RAMAS[0];
+    const isDone = task.status === 'hecho';
+    const card = document.createElement('div');
+    card.className = 'task-card' + (isDone ? ' done' : '') + (task.priority !== 'normal' ? ' priority-' + task.priority : '');
+
+    card.innerHTML = `
+      <div class="task-check ${isDone ? 'checked' : ''}" data-id="${task.id}">✓</div>
+      <div class="task-body">
+        <div class="task-title ${isDone ? 'struck' : ''}">${esc(task.title)}</div>
+        <div class="task-meta">
+          <span class="badge-rama ${rama.css}">${t(rama.key)}</span>
+          <span class="task-meta-item">→ ${esc(task.assigned)}</span>
+          ${task.priority !== 'normal' ? `<span class="badge ${task.priority === 'urgente' ? 'badge-viernes' : 'badge-sabado'}" style="font-size:10px">${t('priority_' + task.priority)}</span>` : ''}
+          ${task.status === 'en_curso' ? `<span class="badge badge-finde" style="font-size:10px">${t('status_en_curso')}</span>` : ''}
+        </div>
+        ${task.notes ? `<div class="task-notes">${esc(task.notes)}</div>` : ''}
+      </div>
+      <div class="task-actions">
+        <button class="btn btn-sm btn-secondary btn-task-status" data-id="${task.id}" data-status="${task.status}" title="Cambiar estado">
+          ${task.status === 'pendiente' ? '▶' : task.status === 'en_curso' ? '✓' : '↩'}
+        </button>
+        <button class="btn btn-sm btn-secondary btn-task-del" data-id="${task.id}">✕</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // Check toggle (quick done/undone)
+  list.querySelectorAll('.task-check').forEach(el => {
+    el.addEventListener('click', async () => {
+      const id = el.dataset.id;
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      const newStatus = task.status === 'hecho' ? 'pendiente' : 'hecho';
+      await updateDoc(doc(db, 'crew_tasks', id), { status: newStatus });
+    });
+  });
+
+  // Status cycle: pendiente -> en_curso -> hecho -> pendiente
+  list.querySelectorAll('.btn-task-status').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const current = btn.dataset.status;
+      const next = current === 'pendiente' ? 'en_curso' : current === 'en_curso' ? 'hecho' : 'pendiente';
+      await updateDoc(doc(db, 'crew_tasks', id), { status: next });
+    });
+  });
+
+  // Delete
+  list.querySelectorAll('.btn-task-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteDoc(doc(db, 'crew_tasks', btn.dataset.id));
+      toast(t('toast_task_deleted'));
+    });
+  });
+}
+
+// Add task
+document.getElementById('btn-add-task').addEventListener('click', async () => {
+  const title = document.getElementById('ft-title').value.trim();
+  if (!title) { toast(t('toast_fill_task')); return; }
+
+  const btn = document.getElementById('btn-add-task');
+  btn.disabled = true;
+
+  await addDoc(collection(db, 'crew_tasks'), {
+    title,
+    rama: document.getElementById('ft-rama').value,
+    assigned: document.getElementById('ft-assigned').value,
+    priority: document.getElementById('ft-priority').value,
+    notes: document.getElementById('ft-notes').value.trim(),
+    status: 'pendiente',
+    createdBy: CFG.user,
+    ts: Date.now()
+  });
+
+  document.getElementById('ft-title').value = '';
+  document.getElementById('ft-notes').value = '';
+  toast(t('toast_task_added'));
+  btn.disabled = false;
+});
+
+/* ══════════════════════════════════
+   EXPENSES
+══════════════════════════════════ */
+let expenses = [];
+
+function initExpenses() {
+  onSnapshot(query(collection(db, 'crew_expenses'), orderBy('ts', 'desc')), snap => {
+    expenses = [];
+    snap.forEach(ds => expenses.push({ id: ds.id, ...ds.data() }));
+    renderExpenses();
+    updateExpenseStats();
+    renderExpenseBreakdown();
+  }, err => console.warn('Expenses listener:', err));
+}
+
+function renderExpenses() {
+  const tbody = document.getElementById('expenses-body');
+  const empty = document.getElementById('expenses-empty');
+  tbody.innerHTML = '';
+
+  if (!expenses.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  expenses.forEach(e => {
+    const tr = document.createElement('tr');
+    const date = new Date(e.ts);
+    const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+      + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const rama = RAMAS.find(r => r.id === e.rama) || RAMAS[0];
+    const statusClass = 'exp-' + e.status;
+    const statusLabel = t('exp_' + e.status);
+
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-size:12px;color:var(--text-secondary)">${dateStr}</td>
+      <td style="font-weight:500">${esc(e.concept)}</td>
+      <td><span class="badge-rama ${rama.css}">${t(rama.key)}</span></td>
+      <td class="amount">${e.amount.toFixed(2)} €</td>
+      <td>${esc(e.paidBy)}</td>
+      <td><span class="exp-status ${statusClass}">${statusLabel}</span></td>
+      <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
+      <td>
+        <div class="del-row">
+          <button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button>
+          <div class="del-confirm" id="dce-${e.id}">
+            <span>${t('confirm_delete')}</span>
+            <button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button>
+            <button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.btn-del-exp').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dc = document.getElementById('dce-' + btn.dataset.id);
+      btn.style.display = 'none';
+      dc.classList.add('show');
+    });
+  });
+  tbody.querySelectorAll('.btn-del-exp-yes').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteDoc(doc(db, 'crew_expenses', btn.dataset.id));
+      toast(t('toast_expense_deleted'));
+    });
+  });
+  tbody.querySelectorAll('.btn-del-exp-no').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dc = document.getElementById('dce-' + btn.dataset.id);
+      dc.classList.remove('show');
+      dc.previousElementSibling.style.display = '';
+    });
+  });
+}
+
+function updateExpenseStats() {
+  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  document.getElementById('stat-exp-total').textContent = total.toFixed(2) + ' €';
+  document.getElementById('stat-exp-records').textContent = expenses.length;
+}
+
+function renderExpenseBreakdown() {
+  const el = document.getElementById('expense-breakdown');
+  el.innerHTML = '';
+  const totals = {};
+  RAMAS.forEach(r => totals[r.id] = 0);
+  expenses.forEach(e => { if (totals[e.rama] !== undefined) totals[e.rama] += e.amount || 0; });
+  const max = Math.max(...Object.values(totals), 1);
+
+  RAMAS.forEach(r => {
+    const amount = totals[r.id];
+    const pct = (amount / max) * 100;
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `
+      <span class="badge-rama ${r.css}" style="min-width:80px;text-align:center">${t(r.key)}</span>
+      <div class="breakdown-bar-wrap">
+        <div class="breakdown-bar" style="width:${pct}%;background:${RAMA_COLORS[r.id]}"></div>
+      </div>
+      <span class="breakdown-amount">${amount.toFixed(2)} €</span>
+    `;
+    el.appendChild(row);
+  });
+}
+
+// Add expense
+document.getElementById('btn-add-expense').addEventListener('click', async () => {
+  const concept = document.getElementById('fe-concept').value.trim();
+  const amount = parseFloat(document.getElementById('fe-amount').value);
+  if (!concept || !amount || amount <= 0) { toast(t('toast_fill_expense')); return; }
+
+  const btn = document.getElementById('btn-add-expense');
+  btn.disabled = true;
+
+  const expense = {
+    concept,
+    rama: document.getElementById('fe-rama').value,
+    amount,
+    paidBy: document.getElementById('fe-paidby').value,
+    status: document.getElementById('fe-status').value,
+    notes: document.getElementById('fe-notes').value.trim(),
+    registeredBy: CFG.user,
+    ts: Date.now()
+  };
+
+  await addDoc(collection(db, 'crew_expenses'), expense);
+  // Backup
+  if (CFG.webhook) {
+    await sendToWebhook({ action: 'new_expense', ...expense });
+  }
+
+  document.getElementById('fe-concept').value = '';
+  document.getElementById('fe-amount').value = '';
+  document.getElementById('fe-notes').value = '';
+  toast(t('toast_expense_added'));
+  btn.disabled = false;
+});
+
+// Export expenses CSV
+document.getElementById('btn-export-expenses').addEventListener('click', () => {
+  if (!expenses.length) return;
+  const headers = ['Fecha', 'Concepto', 'Rama', 'Cantidad', 'Pagado por', 'Estado', 'Notas', 'Registrado por'];
+  const rows = expenses.map(e => {
+    const date = new Date(e.ts).toLocaleString('es-ES');
+    const ramaLabel = (RAMAS.find(r => r.id === e.rama) || {}).id || e.rama;
+    return [date, e.concept, ramaLabel, e.amount, e.paidBy, e.status, e.notes || '', e.registeredBy || '']
+      .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+  const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sonora-crew-gastos-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ══════════════════════════════════
    TABS
 ══════════════════════════════════ */
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1147,13 +1850,6 @@ document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 document.getElementById('auth-theme').addEventListener('click', toggleTheme);
 document.getElementById('btn-logout').addEventListener('click', logout);
 
-document.getElementById('btn-lang').addEventListener('click', () => {
-  CFG.lang = CFG.lang === 'es' ? 'en' : 'es';
-  saveConfig(CFG);
-  applyI18n();
-  renderPayments();
-  updateBackupUI();
-});
 
 /* ══════════════════════════════════
    UTILS
@@ -1168,21 +1864,31 @@ function esc(s) {
 applyTheme();
 applyI18n();
 renderAuth();
-renderCrewList();
 
 // Webhook field
 document.getElementById('f-webhook').value = CFG.webhook || '';
 updateBackupUI();
 
-// Auto-login if user saved
-if (CFG.user && CFG.crew.includes(CFG.user)) {
+// Auto-login only if user saved AND verified
+if (CFG.user && CFG.crew.includes(CFG.user) && getVerified().includes(CFG.user)) {
   login(CFG.user);
 } else {
+  CFG.user = null;
+  saveConfig(CFG);
   document.getElementById('screen-auth').classList.add('active');
 }
 
-// Init payments listener
+// Init data listeners
 initPayments();
+initTasks();
+initExpenses();
+
+// Populate selects
+populateRamaSelect('ft-rama');
+populateRamaSelect('fe-rama');
+populateCrewSelect('ft-assigned');
+populateCrewSelect('fe-paidby');
+renderTaskFilters();
 
 </script>
 </body>
