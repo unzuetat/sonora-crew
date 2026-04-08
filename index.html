@@ -1843,21 +1843,25 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
   btn.disabled = true;
 
   const assigned = getSelectedCrew('ft-assigned');
-  await addDoc(collection(db, 'crew_tasks'), {
-    title,
-    rama: document.getElementById('ft-rama').value,
-    assigned,
-    priority: document.getElementById('ft-priority').value,
-    notes: document.getElementById('ft-notes').value.trim(),
-    status: 'pendiente',
-    createdBy: CFG.user,
-    ts: Date.now()
-  });
-
-  document.getElementById('ft-title').value = '';
-  document.getElementById('ft-notes').value = '';
-  document.querySelectorAll('#ft-assigned .crew-chip').forEach(c => c.classList.remove('on'));
-  toast(t('toast_task_added'));
+  try {
+    await addDoc(collection(db, 'crew_tasks'), {
+      title,
+      rama: document.getElementById('ft-rama').value,
+      assigned,
+      priority: document.getElementById('ft-priority').value,
+      notes: document.getElementById('ft-notes').value.trim(),
+      status: 'pendiente',
+      createdBy: CFG.user,
+      ts: Date.now()
+    });
+    document.getElementById('ft-title').value = '';
+    document.getElementById('ft-notes').value = '';
+    document.querySelectorAll('#ft-assigned .crew-chip').forEach(c => c.classList.remove('on'));
+    toast(t('toast_task_added'));
+  } catch (e) {
+    console.error('Add task error:', e);
+    toast('Error: ' + e.message);
+  }
   btn.disabled = false;
 });
 
@@ -2091,18 +2095,22 @@ document.getElementById('btn-add-decision').addEventListener('click', async () =
   const btn = document.getElementById('btn-add-decision');
   btn.disabled = true;
 
-  await addDoc(collection(db, 'crew_decisions'), {
-    title,
-    detail: document.getElementById('fd-detail').value.trim(),
-    rama: document.getElementById('fd-rama').value,
-    status: document.getElementById('fd-status').value,
-    createdBy: CFG.user,
-    ts: Date.now()
-  });
-
-  document.getElementById('fd-title').value = '';
-  document.getElementById('fd-detail').value = '';
-  toast(t('toast_decision_added'));
+  try {
+    await addDoc(collection(db, 'crew_decisions'), {
+      title,
+      detail: document.getElementById('fd-detail').value.trim(),
+      rama: document.getElementById('fd-rama').value,
+      status: document.getElementById('fd-status').value,
+      createdBy: CFG.user,
+      ts: Date.now()
+    });
+    document.getElementById('fd-title').value = '';
+    document.getElementById('fd-detail').value = '';
+    toast(t('toast_decision_added'));
+  } catch (e) {
+    console.error('Add decision error:', e);
+    toast('Error: ' + e.message);
+  }
   btn.disabled = false;
 });
 
