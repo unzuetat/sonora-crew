@@ -202,10 +202,10 @@ body {
   cursor: pointer;
   transition: .15s;
 }
-.tab-btn:hover { color: var(--text); }
+.tab-btn:not(.on) { opacity: .55; }
+.tab-btn:hover { opacity: 1; }
 .tab-btn.on {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  border-bottom-color: currentColor;
   font-weight: 600;
 }
 .tab-content { display: none; }
@@ -987,13 +987,13 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="icon-btn" id="btn-logout" title="Salir">✕</button>
     </div>
     <div class="tabs" style="width:100%;border-top:1px solid var(--border);margin-top:4px;padding-top:0">
-      <button class="tab-btn on" data-tab="payments" data-i18n="tab_payments">Pagos</button>
-      <button class="tab-btn" data-tab="expenses" data-i18n="tab_expenses">Gastos</button>
-      <button class="tab-btn" data-tab="tasks" data-i18n="tab_tasks">Tareas</button>
-      <button class="tab-btn" data-tab="polls" data-i18n="tab_polls">Encuestas</button>
-      <button class="tab-btn" data-tab="decisions" data-i18n="tab_decisions">Decisiones</button>
-      <button class="tab-btn" data-tab="lineup" data-i18n="tab_lineup">Lineup</button>
-      <button class="tab-btn" data-tab="settings" data-i18n="tab_settings">Ajustes</button>
+      <button class="tab-btn on" data-tab="payments" style="color:#2563eb">Pagos</button>
+      <button class="tab-btn" data-tab="expenses" style="color:#2563eb">Gastos</button>
+      <button class="tab-btn" data-tab="tasks" style="color:#b45309">Tareas</button>
+      <button class="tab-btn" data-tab="decisions" style="color:#b45309">Decisiones</button>
+      <button class="tab-btn" data-tab="polls" style="color:#047857">Encuestas</button>
+      <button class="tab-btn" data-tab="lineup" style="color:#7c3aed">Lineup</button>
+      <button class="tab-btn" data-tab="settings">Ajustes</button>
     </div>
   </div>
 
@@ -1515,6 +1515,7 @@ tbody tr:hover { background: var(--accent-soft); }
             <div class="settings-label-desc">Descarga un JSON con todos los datos: pagos, gastos, tareas, decisiones, encuestas, lineup.</div>
           </div>
           <button class="btn btn-sm btn-secondary" id="btn-full-backup">Descargar JSON</button>
+          <button class="btn btn-sm btn-secondary" id="btn-backup-drive" style="margin-left:4px">Enviar a Drive</button>
         </div>
       </div>
     </div>
@@ -2132,23 +2133,27 @@ document.getElementById('btn-add').addEventListener('click', async () => {
 });
 
 // Export CSV
-// Full backup
-document.getElementById('btn-full-backup').addEventListener('click', async () => {
-  toast('Generando backup...');
+// Full backup — shared helper
+async function buildFullBackup() {
   const colNames = ['payments', 'expenses', 'tasks', 'decisions', 'polls', 'lineup_djs', 'lineup_proposals'];
   const backup = { exportedAt: new Date().toISOString(), edition: localStorage.getItem('sonora_edition') || 'SAN SONORÍN XI', prefix: EDITION_PREFIX };
   for (const name of colNames) {
-    const fullName = EDITION_PREFIX + '_' + name;
     const snap = await getDocs(eCol(name));
-    backup[fullName] = [];
-    snap.forEach(ds => backup[fullName].push({ id: ds.id, ...ds.data() }));
+    backup[name] = [];
+    snap.forEach(ds => backup[name].push({ id: ds.id, ...ds.data() }));
   }
-  // Config doc
   try {
     const cfgSnap = await getDocs(eCol('lineup_config'));
-    backup[EDITION_PREFIX + '_lineup_config'] = [];
-    cfgSnap.forEach(ds => backup[EDITION_PREFIX + '_lineup_config'].push({ id: ds.id, ...ds.data() }));
-  } catch(e) { backup[EDITION_PREFIX + '_lineup_config'] = []; }
+    backup.lineup_config = [];
+    cfgSnap.forEach(ds => backup.lineup_config.push({ id: ds.id, ...ds.data() }));
+  } catch(e) { backup.lineup_config = []; }
+  return backup;
+}
+
+// Download JSON
+document.getElementById('btn-full-backup').addEventListener('click', async () => {
+  toast('Generando backup...');
+  const backup = await buildFullBackup();
   const json = JSON.stringify(backup, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -2158,6 +2163,24 @@ document.getElementById('btn-full-backup').addEventListener('click', async () =>
   a.click();
   URL.revokeObjectURL(url);
   toast('Backup descargado');
+});
+
+// Send full backup to Drive via webhook
+document.getElementById('btn-backup-drive').addEventListener('click', async () => {
+  const webhookUrl = CFG.webhook || DEFAULT_WEBHOOK;
+  if (!webhookUrl) { toast('Configura el webhook primero'); return; }
+  toast('Enviando backup a Drive...');
+  const backup = await buildFullBackup();
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'full_backup', ...backup })
+    });
+    toast('Backup enviado a Drive');
+  } catch(e) {
+    toast('Error al enviar backup');
+  }
 });
 
 // Bote % persistence
