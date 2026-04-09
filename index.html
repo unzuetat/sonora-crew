@@ -187,8 +187,7 @@ body {
 .tabs {
   display: flex;
   gap: 4px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
   padding-bottom: 0;
 }
 .tab-btn {
@@ -293,6 +292,19 @@ body {
 .btn-danger { background: #dc2626; }
 .btn-danger:hover { background: #b91c1c; }
 
+.collapsible-header {
+  display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+}
+.collapsible-header .card-title { margin-bottom: 0; }
+.collapsible-body { display: none; margin-top: 12px; }
+.collapsible-body.open { display: block; }
+.collapse-toggle {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 12px; color: var(--text-secondary); transition: .15s;
+}
+.collapse-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
 /* ══════════════════════════════════
    TABLE
 ══════════════════════════════════ */
@@ -379,10 +391,11 @@ tbody tr:hover { background: var(--accent-soft); }
   letter-spacing: .5px;
 }
 .stat-value {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .stat-value.accent { color: var(--accent); }
 
@@ -687,6 +700,234 @@ tbody tr:hover { background: var(--accent-soft); }
 .dec-aprobada { background: var(--success-soft); color: var(--success); }
 .dec-en_debate { background: var(--warning-soft); color: var(--warning); }
 .dec-descartada { background: var(--bg); color: var(--text-secondary); }
+.dec-detail.truncated { max-height: 3.2em; overflow: hidden; cursor: pointer; position: relative; }
+.dec-detail.truncated::after {
+  content: '... ver más'; position: absolute; bottom: 0; right: 0;
+  background: linear-gradient(90deg, transparent, var(--bg-card) 40%);
+  padding-left: 20px; font-size: 11px; color: var(--accent); font-style: normal;
+}
+#tab-decisions .dec-detail.truncated::after { background: linear-gradient(90deg, transparent, #fffbeb 40%); }
+.dark #tab-decisions .dec-detail.truncated::after { background: linear-gradient(90deg, transparent, #1a1708 40%); }
+
+/* ══════════════════════════════════
+   TAB TINTS
+══════════════════════════════════ */
+#tab-payments .card, #tab-payments .stat-card,
+#tab-expenses .card, #tab-expenses .stat-card { background: #eff6ff; border-color: #93c5fd44; }
+.dark #tab-payments .card, .dark #tab-payments .stat-card,
+.dark #tab-expenses .card, .dark #tab-expenses .stat-card { background: #0f1a2e; border-color: #1e3a5f44; }
+#tab-payments .card-title, #tab-expenses .card-title { color: #2563eb; }
+.dark #tab-payments .card-title, .dark #tab-expenses .card-title { color: #93c5fd; }
+
+#tab-tasks .card, #tab-tasks .stat-card,
+#tab-decisions .card, #tab-decisions .stat-card { background: #fffbeb; border-color: #fcd34d44; }
+.dark #tab-tasks .card, .dark #tab-tasks .stat-card,
+.dark #tab-decisions .card, .dark #tab-decisions .stat-card { background: #1a1708; border-color: #3d2e0a44; }
+#tab-tasks .card-title, #tab-decisions .card-title { color: #b45309; }
+.dark #tab-tasks .card-title, .dark #tab-decisions .card-title { color: #fcd34d; }
+
+#tab-lineup .card, #tab-lineup .stat-card { background: #f3f0ff; border-color: #d8b4fe44; }
+.dark #tab-lineup .card, .dark #tab-lineup .stat-card { background: #1a1530; border-color: #4c1d9544; }
+#tab-lineup .card-title { color: #7c3aed; }
+.dark #tab-lineup .card-title { color: #c4b5fd; }
+
+#tab-polls .card, #tab-polls .stat-card { background: #ecfdf5; border-color: #6ee7b744; }
+.dark #tab-polls .card, .dark #tab-polls .stat-card { background: #0a1a14; border-color: #064e3b44; }
+#tab-polls .card-title { color: #047857; }
+.dark #tab-polls .card-title { color: #6ee7b7; }
+
+/* ══════════════════════════════════
+   LINEUP
+══════════════════════════════════ */
+.lineup-pool { display: flex; flex-wrap: wrap; gap: 8px; }
+.lineup-dj {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; min-width: 140px; position: relative;
+}
+.lineup-dj-name { font-size: 14px; font-weight: 600; }
+.lineup-dj-style { font-size: 11px; color: #8b5cf6; font-weight: 500; margin-top: 2px; }
+.lineup-dj-comments { font-size: 11px; color: var(--text-secondary); margin-top: 2px; font-style: italic; }
+.lineup-dj-del {
+  position: absolute; top: 4px; right: 4px; background: none; border: none;
+  font-size: 12px; color: var(--text-secondary); cursor: pointer;
+  padding: 2px 4px; border-radius: 4px; line-height: 1;
+}
+.lineup-dj-del:hover { color: var(--accent); background: var(--accent-soft); }
+
+.lineup-day-header {
+  font-size: 15px; font-weight: 700; padding: 10px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.lineup-day-hours { font-size: 12px; font-weight: 400; color: var(--text-secondary); }
+
+.lineup-slot {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 6px;
+  background: var(--bg-card); min-height: 52px; transition: .15s;
+}
+.lineup-slot:hover { box-shadow: var(--shadow); }
+.lineup-slot-time {
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+  min-width: 110px; color: var(--text-secondary);
+}
+.lineup-slot-dur { font-size: 10px; color: var(--text-secondary); font-weight: 400; }
+.lineup-slot-content { flex: 1; display: flex; align-items: center; gap: 8px; position: relative; }
+.lineup-slot .lineup-dj { flex: 1; min-width: 0; }
+
+.lineup-assign-btn {
+  background: none; border: 1px dashed var(--border); border-radius: 6px;
+  padding: 6px 12px; font-family: var(--font); font-size: 12px;
+  color: var(--text-secondary); cursor: pointer; transition: .15s;
+}
+.lineup-assign-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+
+.lineup-picker {
+  position: absolute; top: 100%; left: 0; min-width: 220px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: var(--shadow-lg);
+  z-index: 50; max-height: 200px; overflow-y: auto; margin-top: 4px;
+}
+.lineup-picker-item {
+  padding: 8px 12px; cursor: pointer; font-size: 13px;
+  border-bottom: 1px solid var(--border); transition: .1s;
+}
+.lineup-picker-item:last-child { border-bottom: none; }
+.lineup-picker-item:hover { background: var(--accent-soft); color: var(--accent); }
+.lineup-picker-style { font-size: 11px; color: #8b5cf6; margin-left: 6px; }
+
+.lineup-config-day {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px; margin-bottom: 8px;
+}
+.lineup-config-day-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600; margin-bottom: 8px;
+}
+.lineup-config-day-times { font-size: 12px; font-weight: 400; color: var(--text-secondary); flex: 1; }
+.lineup-config-day-del {
+  background: none; border: none; font-size: 14px;
+  color: var(--text-secondary); cursor: pointer; padding: 2px 6px;
+}
+.lineup-config-day-del:hover { color: var(--accent); }
+
+.lineup-config-slots { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.lineup-config-slot {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  background: var(--bg-card); border: 1px solid var(--border);
+}
+.lineup-config-slot-move {
+  background: none; border: none; font-size: 11px;
+  color: var(--text-secondary); cursor: pointer; padding: 0 1px; line-height: 1;
+  opacity: .4; font-family: var(--font);
+}
+.lineup-config-slot-move:hover { opacity: 1; color: #8b5cf6; }
+.lineup-config-slot-del {
+  background: none; border: none; font-size: 10px;
+  color: var(--text-secondary); cursor: pointer; padding: 0 2px; line-height: 1;
+}
+.lineup-config-slot-del:hover { color: var(--accent); }
+
+.lineup-add-slot-row { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.lineup-add-slot-btn, .lineup-cfg-add-slot {
+  padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;
+  border: 1px dashed var(--border); background: none;
+  color: var(--text-secondary); cursor: pointer; font-family: var(--font); transition: .15s;
+}
+.lineup-add-slot-btn:hover, .lineup-cfg-add-slot:hover { border-color: #8b5cf6; color: #8b5cf6; }
+
+.lineup-day-time-info { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.lineup-day-time-info.over { color: var(--accent); }
+
+.lineup-proposal-bar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.lineup-like-btn {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-family: var(--font); font-size: 12px;
+  color: var(--text-secondary); cursor: pointer; transition: .15s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.lineup-like-btn:hover { border-color: #e8001a; color: #e8001a; }
+.lineup-like-btn.liked { background: #fef2f2; border-color: #e8001a; color: #e8001a; font-weight: 600; }
+.dark .lineup-like-btn.liked { background: #2a1a1e; }
+.lineup-likes {
+  display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
+  font-size: 11px; color: var(--text-secondary); margin-top: 2px;
+}
+.lineup-like-name {
+  padding: 1px 6px; border-radius: 10px; font-size: 10px; font-weight: 500;
+  background: #fef2f2; color: #e8001a; border: 1px solid #fecaca;
+}
+.dark .lineup-like-name { background: #2a1a1e; border-color: #5a2a2e; }
+
+.lineup-compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lineup-compare-table th {
+  text-align: left; padding: 8px 10px; font-size: 11px;
+  font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 2px solid var(--border); white-space: nowrap;
+}
+.lineup-compare-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.lineup-compare-table tr:hover td { background: var(--accent-soft); }
+.lineup-compare-dj { font-weight: 500; }
+.lineup-compare-style { font-size: 10px; color: #8b5cf6; display: block; }
+.lineup-compare-empty { color: var(--text-secondary); font-style: italic; font-size: 12px; }
+
+.lineup-remainder {
+  font-size: 11px; color: var(--warning);
+  padding: 4px 8px; background: var(--warning-soft);
+  border-radius: 6px; margin-top: 4px; display: inline-block;
+}
+
+/* ══════════════════════════════════
+   POLLS
+══════════════════════════════════ */
+.poll-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px; margin-bottom: 10px; transition: .15s;
+}
+.poll-card:hover { box-shadow: var(--shadow-lg); }
+.poll-card.poll-mayoria { border-left: 4px solid #f59e0b; }
+.poll-card.poll-consenso { border-left: 4px solid #10b981; }
+.poll-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.poll-author { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
+.poll-votes { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.poll-vote-chip {
+  padding: 4px 10px; border-radius: 14px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-secondary); cursor: pointer; transition: .15s; user-select: none;
+}
+.poll-vote-chip:hover { border-color: #10b981; color: #10b981; }
+.poll-vote-chip.voted { background: #10b981; color: #fff; border-color: #10b981; }
+.poll-status-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 600;
+}
+.poll-badge-mayoria { background: var(--warning-soft); color: var(--warning); }
+.poll-badge-consenso { background: var(--success-soft); color: var(--success); }
+.poll-badge-abierta { background: var(--bg); color: var(--text-secondary); }
+.poll-meta {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  font-size: 11px; color: var(--text-secondary);
+}
+
+/* ══════════════════════════════════
+   CHANGELOG
+══════════════════════════════════ */
+.changelog-toggle {
+  font-size: 10px; color: var(--text-secondary); cursor: pointer;
+  border: none; background: none; padding: 2px 0; font-family: var(--font);
+}
+.changelog-toggle:hover { color: var(--accent); }
+.changelog-list {
+  font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+  max-height: 120px; overflow-y: auto;
+}
+.changelog-entry { padding: 2px 0; border-bottom: 1px solid var(--border); }
+.changelog-entry:last-child { border-bottom: none; }
 
 /* ══════════════════════════════════
    RESPONSIVE
@@ -730,10 +971,11 @@ tbody tr:hover { background: var(--accent-soft); }
      APP SCREEN
 ══════════════════════════════════ -->
 <div class="screen" id="screen-app">
-  <!-- TOPBAR -->
-  <div class="topbar">
+  <!-- TOPBAR + TABS -->
+  <div class="topbar" style="flex-wrap:wrap;gap:4px 0">
     <div class="topbar-left">
       <div class="topbar-title"><span class="logo-orgia">Orgía</span><span class="logo-sonora">Sonora</span></div>
+      <div id="edition-label" style="font-size:11px;color:var(--text-secondary);font-weight:500;letter-spacing:.5px;cursor:pointer;border-bottom:1px dashed var(--border)" title="Click para editar edición">SAN SONORÍN XI</div>
       <div class="topbar-user">eres: <strong id="topbar-user"></strong></div>
     </div>
     <div class="topbar-actions">
@@ -744,17 +986,18 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="icon-btn" id="btn-theme"><span id="theme-icon">☽</span></button>
       <button class="icon-btn" id="btn-logout" title="Salir">✕</button>
     </div>
+    <div class="tabs" style="width:100%;border-top:1px solid var(--border);margin-top:4px;padding-top:0">
+      <button class="tab-btn on" data-tab="payments" data-i18n="tab_payments">Pagos</button>
+      <button class="tab-btn" data-tab="expenses" data-i18n="tab_expenses">Gastos</button>
+      <button class="tab-btn" data-tab="tasks" data-i18n="tab_tasks">Tareas</button>
+      <button class="tab-btn" data-tab="polls" data-i18n="tab_polls">Encuestas</button>
+      <button class="tab-btn" data-tab="decisions" data-i18n="tab_decisions">Decisiones</button>
+      <button class="tab-btn" data-tab="lineup" data-i18n="tab_lineup">Lineup</button>
+      <button class="tab-btn" data-tab="settings" data-i18n="tab_settings">Ajustes</button>
+    </div>
   </div>
 
   <div class="wrap">
-    <!-- TABS -->
-    <div class="tabs">
-      <button class="tab-btn on" data-tab="payments" data-i18n="tab_payments">Pagos</button>
-      <button class="tab-btn" data-tab="tasks" data-i18n="tab_tasks">Tareas</button>
-      <button class="tab-btn" data-tab="expenses" data-i18n="tab_expenses">Gastos</button>
-      <button class="tab-btn" data-tab="decisions" data-i18n="tab_decisions">Decisiones</button>
-      <button class="tab-btn" data-tab="settings" data-i18n="tab_settings">Ajustes</button>
-    </div>
 
     <!-- ═══ TAB: PAGOS ═══ -->
     <div class="tab-content on" id="tab-payments">
@@ -769,18 +1012,29 @@ tbody tr:hover { background: var(--accent-soft); }
           <div class="stat-value" id="stat-entries">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label" data-i18n="stat_records">Registros</div>
-          <div class="stat-value" id="stat-records">0</div>
+          <div class="stat-label">Para presupuesto</div>
+          <div class="stat-value" id="stat-presupuesto">0 €</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label" data-i18n="stat_avg">Media / entrada</div>
-          <div class="stat-value" id="stat-avg">0 €</div>
+          <div class="stat-label">Bote acumulado</div>
+          <div class="stat-value" id="stat-bote" style="color:#8b5cf6">0 €</div>
+        </div>
+      </div>
+      <div class="card" style="padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="form-label" style="margin:0">% de cada entrada destinado a bote:</span>
+          <input class="form-input" id="f-bote-pct" type="number" min="0" max="100" step="1" value="0" style="width:70px;padding:6px 8px;text-align:center">
+          <span class="form-label" style="margin:0">%</span>
         </div>
       </div>
 
       <!-- FORM -->
       <div class="card" id="payment-form-card">
-        <div class="card-title" data-i18n="new_payment">Nuevo pago</div>
+        <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
+          <div class="card-title" data-i18n="new_payment">Nuevo pago</div>
+          <button class="collapse-toggle" type="button">＋</button>
+        </div>
+        <div class="collapsible-body">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" data-i18n="lbl_who_paid">Quién ha pagado</label>
@@ -818,6 +1072,7 @@ tbody tr:hover { background: var(--accent-soft); }
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
           <button class="btn" id="btn-add" data-i18n="btn_register">Registrar pago</button>
         </div>
+        </div><!-- /collapsible-body -->
       </div>
 
       <!-- TABLE -->
@@ -856,18 +1111,29 @@ tbody tr:hover { background: var(--accent-soft); }
     <!-- ═══ TAB: TAREAS ═══ -->
     <div class="tab-content" id="tab-tasks">
       <!-- FILTERS -->
-      <div class="card" style="padding:14px 16px">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span class="form-label" style="margin:0" data-i18n="filter_rama">Rama:</span>
+      <div style="margin-bottom:16px">
+        <button class="btn btn-sm btn-secondary" onclick="var b=document.getElementById('task-filters-body');b.style.display=b.style.display==='none'?'':'none';this.textContent=b.style.display==='none'?'Filtrar ▾':'Filtrar ▴'" style="font-size:12px;background:var(--warning-soft);border-color:var(--warning);color:var(--warning)">Filtrar ▾</button>
+        <div id="task-filters-body" style="display:none;margin-top:8px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center">
+          <span class="form-label" style="margin:0;white-space:nowrap">Rama:</span>
           <div class="chip-row" id="task-rama-filters"></div>
-          <span class="form-label" style="margin:0 0 0 8px" data-i18n="filter_status">Estado:</span>
+          <span class="form-label" style="margin:0;white-space:nowrap">Estado:</span>
           <div class="chip-row" id="task-status-filters"></div>
+          <span class="form-label" style="margin:0;white-space:nowrap">Responsable:</span>
+          <div class="chip-row" id="task-assigned-filters"></div>
+          <span class="form-label" style="margin:0;white-space:nowrap">Prioridad:</span>
+          <div class="chip-row" id="task-priority-filters"></div>
+          </div>
         </div>
       </div>
 
       <!-- TASK FORM -->
       <div class="card" id="task-form-card">
-        <div class="card-title" data-i18n="new_task">Nueva tarea</div>
+        <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
+          <div class="card-title" data-i18n="new_task">Nueva tarea</div>
+          <button class="collapse-toggle" type="button">＋</button>
+        </div>
+        <div class="collapsible-body">
         <div class="form-row">
           <div class="form-group" style="grid-column:1/-1">
             <label class="form-label" data-i18n="lbl_task_title">Tarea</label>
@@ -901,6 +1167,7 @@ tbody tr:hover { background: var(--accent-soft); }
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
           <button class="btn" id="btn-add-task" data-i18n="btn_add_task">Añadir tarea</button>
         </div>
+        </div><!-- /collapsible-body -->
       </div>
 
       <!-- TASK LIST -->
@@ -923,6 +1190,41 @@ tbody tr:hover { background: var(--accent-soft); }
           <div class="stat-label" data-i18n="stat_exp_records">Gastos</div>
           <div class="stat-value" id="stat-exp-records">0</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Presupuesto</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <input class="form-input" id="f-budget" type="number" min="0" step="1" placeholder="0" style="width:90px;padding:6px 8px;font-size:16px;font-weight:700">
+            <span style="font-size:14px;font-weight:600">€</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Disponible</div>
+          <div class="stat-value" id="stat-exp-remaining">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bote previo</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <input class="form-input" id="f-bote-prev" type="number" min="0" step="1" placeholder="0" style="width:90px;padding:6px 8px;font-size:16px;font-weight:700;color:#8b5cf6">
+            <span style="font-size:14px;font-weight:600">€</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bote generado</div>
+          <div class="stat-value" id="stat-exp-bote-gen" style="color:#8b5cf6">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bote total</div>
+          <div class="stat-value" id="stat-exp-bote-total" style="color:#8b5cf6">—</div>
+        </div>
+      </div>
+      <div class="card" id="budget-bar-card" style="padding:10px 16px;display:none">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px">
+          <span id="budget-bar-label">0 / 0 €</span>
+          <span id="budget-bar-pct">0%</span>
+        </div>
+        <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden">
+          <div id="budget-bar" style="height:100%;border-radius:4px;background:var(--accent);transition:width .4s;width:0%"></div>
+        </div>
       </div>
 
       <!-- PER-RAMA BREAKDOWN -->
@@ -933,7 +1235,11 @@ tbody tr:hover { background: var(--accent-soft); }
 
       <!-- EXPENSE FORM -->
       <div class="card">
-        <div class="card-title" data-i18n="new_expense">Nuevo gasto</div>
+        <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
+          <div class="card-title" data-i18n="new_expense">Nuevo gasto</div>
+          <button class="collapse-toggle" type="button">＋</button>
+        </div>
+        <div class="collapsible-body">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" data-i18n="lbl_exp_concept">Concepto</label>
@@ -971,6 +1277,7 @@ tbody tr:hover { background: var(--accent-soft); }
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
           <button class="btn" id="btn-add-expense" data-i18n="btn_add_expense">Registrar gasto</button>
         </div>
+        </div><!-- /collapsible-body -->
       </div>
 
       <!-- EXPENSE TABLE -->
@@ -1005,6 +1312,19 @@ tbody tr:hover { background: var(--accent-soft); }
 
     <!-- ═══ TAB: DECISIONES ═══ -->
     <div class="tab-content" id="tab-decisions">
+      <!-- FILTERS -->
+      <div style="margin-bottom:16px">
+        <button class="btn btn-sm btn-secondary" onclick="var b=document.getElementById('dec-filters-body');b.style.display=b.style.display==='none'?'':'none';this.textContent=b.style.display==='none'?'Filtrar ▾':'Filtrar ▴'" style="font-size:12px;background:var(--warning-soft);border-color:var(--warning);color:var(--warning)">Filtrar ▾</button>
+        <div id="dec-filters-body" style="display:none;margin-top:8px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center">
+            <span class="form-label" style="margin:0;white-space:nowrap">Rama:</span>
+            <div class="chip-row" id="dec-rama-filters"></div>
+            <span class="form-label" style="margin:0;white-space:nowrap">Estado:</span>
+            <div class="chip-row" id="dec-status-filters"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- DECISION FORM -->
       <div class="card">
         <div class="card-title" data-i18n="new_decision">Nueva decisión</div>
@@ -1047,6 +1367,117 @@ tbody tr:hover { background: var(--accent-soft); }
       </div>
     </div>
 
+    <!-- ═══ TAB: ENCUESTAS ═══ -->
+    <div class="tab-content" id="tab-polls">
+      <div class="card">
+        <div class="card-title" data-i18n="new_poll">Nueva encuesta</div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_poll_topic">Tema</label>
+            <input class="form-input" id="fp-topic" type="text" placeholder="¿Qué se vota?">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_poll_detail">Detalle (opcional)</label>
+            <input class="form-input" id="fp-detail" type="text" placeholder="Contexto extra...">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-sm" id="btn-add-poll" data-i18n="btn_add_poll">Proponer</button>
+        </div>
+      </div>
+      <div id="poll-list"></div>
+      <div class="empty-state" id="polls-empty">
+        <div class="empty-state-icon">🗳️</div>
+        <div class="empty-state-text" data-i18n="polls_empty">No hay encuestas todavía</div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: LINEUP ═══ -->
+    <div class="tab-content" id="tab-lineup">
+      <!-- CONFIG -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="card-title" style="margin-bottom:0" data-i18n="lineup_config">Configuración del evento</div>
+          <button class="btn btn-sm btn-secondary" id="btn-toggle-lineup-config">▾</button>
+        </div>
+        <div id="lineup-config-body" style="margin-top:12px">
+          <div id="lineup-days-list"></div>
+          <div class="form-row triple" style="margin-top:8px">
+            <div class="form-group">
+              <label class="form-label" data-i18n="lineup_day_label">Nombre del día</label>
+              <input class="form-input" id="fl-day-label" type="text" placeholder="Ej: Viernes">
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lineup_day_start">Hora inicio</label>
+              <input class="form-input" id="fl-day-start" type="time" value="23:00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lineup_day_end">Hora fin</label>
+              <input class="form-input" id="fl-day-end" type="time" value="06:00">
+            </div>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="btn-add-lineup-day" data-i18n="lineup_add_day">+ Añadir día</button>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+            <button class="btn btn-sm btn-danger" id="btn-reset-lineup" data-i18n="lineup_reset">Reset lineup</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_lineup_hours">Horas totales</div>
+          <div class="stat-value accent" id="stat-lineup-hours">0h</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="stat_lineup_djs">DJs en pool</div>
+          <div class="stat-value" id="stat-lineup-djs">0</div>
+        </div>
+      </div>
+
+      <!-- ADD DJ -->
+      <div class="card">
+        <div class="card-title" data-i18n="lineup_add_dj">Añadir DJ</div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lineup_dj_name">Nombre</label>
+            <input class="form-input" id="fl-dj-name" type="text" placeholder="DJ / Artista">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lineup_dj_style">Estilo</label>
+            <input class="form-input" id="fl-dj-style" type="text" placeholder="Techno, House...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lineup_dj_comments">Notas</label>
+            <input class="form-input" id="fl-dj-comments" type="text" placeholder="Opcional">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-sm" id="btn-add-dj" data-i18n="lineup_btn_add_dj">Añadir DJ</button>
+        </div>
+      </div>
+
+      <!-- POOL -->
+      <div class="card">
+        <div class="card-title"><span data-i18n="lineup_pool">Pool de DJs</span> (<span id="lineup-pool-count">0</span>)</div>
+        <div class="lineup-pool" id="lineup-pool"></div>
+        <div class="empty-state" id="lineup-pool-empty">
+          <div class="empty-state-icon">🎧</div>
+          <div class="empty-state-text" data-i18n="lineup_pool_empty">Añade DJs para empezar</div>
+        </div>
+      </div>
+
+      <!-- PROPOSALS -->
+      <div class="card">
+        <div class="card-title" data-i18n="lineup_proposals">Propuestas</div>
+        <div class="lineup-proposal-bar" id="lineup-proposal-bar"></div>
+        <div id="lineup-proposal-board"></div>
+        <div id="lineup-compare-view" style="display:none"></div>
+      </div>
+    </div>
+
     <!-- ═══ TAB: AJUSTES ═══ -->
     <div class="tab-content" id="tab-settings">
       <div class="card">
@@ -1078,6 +1509,13 @@ tbody tr:hover { background: var(--accent-soft); }
           </div>
           <button class="btn btn-sm btn-secondary" id="btn-resync" data-i18n="btn_resync">Enviar todo</button>
         </div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Generar backup completo</div>
+            <div class="settings-label-desc">Descarga un JSON con todos los datos: pagos, gastos, tareas, decisiones, encuestas, lineup.</div>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="btn-full-backup">Descargar JSON</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1089,8 +1527,8 @@ tbody tr:hover { background: var(--accent-soft); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc,
-  onSnapshot, query, orderBy, getDocs
+  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, setDoc,
+  onSnapshot, query, orderBy, getDocs, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1103,6 +1541,19 @@ const firebaseConfig = {
 };
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
+
+/* ══════════════════════════════════
+   EDITION PREFIX
+══════════════════════════════════ */
+let EDITION_PREFIX = localStorage.getItem('sonora_active_prefix') || 'crew';
+function eCol(name) { return collection(db, EDITION_PREFIX + '_' + name); }
+function eDoc(colName, docId) { return doc(db, EDITION_PREFIX + '_' + colName, docId); }
+
+let unsubscribers = [];
+function clearListeners() {
+  unsubscribers.forEach(fn => fn());
+  unsubscribers = [];
+}
 
 /* ══════════════════════════════════
    CONFIG
@@ -1204,6 +1655,34 @@ const I18N = {
     toast_fill_decision: 'Escribe el tema de la decisión',
     sin_asignar: 'Sin asignar',
     btn_me: 'Me la pido',
+    tab_lineup: 'Lineup',
+    lineup_config: 'Configuración del evento',
+    lineup_day_label: 'Nombre del día', lineup_day_start: 'Hora inicio', lineup_day_end: 'Hora fin',
+    lineup_add_day: '+ Añadir día',
+    lineup_reset: 'Reset lineup',
+    lineup_add_dj: 'Añadir DJ', lineup_dj_name: 'Nombre',
+    lineup_dj_style: 'Estilo', lineup_dj_comments: 'Notas',
+    lineup_btn_add_dj: 'Añadir DJ',
+    lineup_pool: 'Pool de DJs', lineup_pool_empty: 'Añade DJs para empezar',
+    lineup_assign: '+ asignar', lineup_no_djs: 'No hay DJs disponibles en esta propuesta',
+    lineup_proposals: 'Propuestas',
+    lineup_no_proposals: 'Crea una propuesta para montar tu lineup',
+    lineup_config_first: 'Configura los días y añade slots para empezar',
+    stat_lineup_hours: 'Horas totales', stat_lineup_slots: 'Slots',
+    stat_lineup_djs: 'DJs en pool', stat_lineup_remaining: 'Horas libres',
+    toast_dj_added: 'DJ añadido', toast_dj_deleted: 'DJ eliminado',
+    toast_lineup_saved: 'Config guardada', toast_lineup_reset: 'Lineup reseteado',
+    toast_fill_dj: 'Escribe el nombre del DJ',
+    toast_proposal_created: 'Propuesta creada', toast_proposal_deleted: 'Propuesta eliminada',
+    toast_liked: 'Like guardado', toast_like_own: 'No puedes votar tu propia propuesta',
+    tab_polls: 'Encuestas', new_poll: 'Nueva encuesta',
+    lbl_poll_topic: 'Tema', lbl_poll_detail: 'Detalle (opcional)',
+    btn_add_poll: 'Proponer', polls_empty: 'No hay encuestas todavía',
+    toast_poll_added: 'Encuesta creada', toast_poll_deleted: 'Encuesta eliminada',
+    toast_fill_poll: 'Escribe el tema de la encuesta',
+    poll_abierta: 'Abierta', poll_mayoria: 'Mayoría', poll_consenso: 'Consenso',
+    lineup_confirm_reset: '¿Resetear todo el lineup? Se borrarán DJs, propuestas y configuración.',
+    lineup_fill_day: 'Rellena nombre, hora inicio y fin',
   },
   en: {
     auth_sub: 'Choose your fighter',
@@ -1273,6 +1752,34 @@ const I18N = {
     toast_fill_task: 'Write what needs to be done',
     toast_fill_expense: 'Fill in concept and amount',
     all: 'All',
+    tab_lineup: 'Lineup',
+    lineup_config: 'Event configuration',
+    lineup_day_label: 'Day name', lineup_day_start: 'Start time', lineup_day_end: 'End time',
+    lineup_add_day: '+ Add day',
+    lineup_reset: 'Reset lineup',
+    lineup_add_dj: 'Add DJ', lineup_dj_name: 'Name',
+    lineup_dj_style: 'Style', lineup_dj_comments: 'Notes',
+    lineup_btn_add_dj: 'Add DJ',
+    lineup_pool: 'DJ Pool', lineup_pool_empty: 'Add DJs to get started',
+    lineup_assign: '+ assign', lineup_no_djs: 'No DJs available in this proposal',
+    lineup_proposals: 'Proposals',
+    lineup_no_proposals: 'Create a proposal to start building your lineup',
+    lineup_config_first: 'Configure days and add slots to get started',
+    stat_lineup_hours: 'Total hours', stat_lineup_slots: 'Slots',
+    stat_lineup_djs: 'DJs in pool', stat_lineup_remaining: 'Free hours',
+    toast_dj_added: 'DJ added', toast_dj_deleted: 'DJ deleted',
+    toast_lineup_saved: 'Config saved', toast_lineup_reset: 'Lineup reset',
+    toast_fill_dj: 'Enter DJ name',
+    toast_proposal_created: 'Proposal created', toast_proposal_deleted: 'Proposal deleted',
+    toast_liked: 'Like saved', toast_like_own: 'You can\'t vote your own proposal',
+    tab_polls: 'Polls', new_poll: 'New poll',
+    lbl_poll_topic: 'Topic', lbl_poll_detail: 'Detail (optional)',
+    btn_add_poll: 'Propose', polls_empty: 'No polls yet',
+    toast_poll_added: 'Poll created', toast_poll_deleted: 'Poll deleted',
+    toast_fill_poll: 'Enter the poll topic',
+    poll_abierta: 'Open', poll_mayoria: 'Majority', poll_consenso: 'Consensus',
+    lineup_confirm_reset: 'Reset entire lineup? DJs, proposals and config will be deleted.',
+    lineup_fill_day: 'Fill in name, start and end time',
   }
 };
 
@@ -1455,7 +1962,7 @@ document.getElementById('btn-test-webhook').addEventListener('click', async () =
 
 document.getElementById('btn-resync').addEventListener('click', async () => {
   if (!CFG.webhook) { toast(t('toast_webhook_fail')); return; }
-  const snap = await getDocs(query(collection(db, 'crew_payments'), orderBy('ts', 'asc')));
+  const snap = await getDocs(query(eCol('payments'), orderBy('ts', 'asc')));
   const all = [];
   snap.forEach(ds => all.push({ id: ds.id, ...ds.data() }));
   await sendToWebhook({ resync: true, payments: all, ts: Date.now() });
@@ -1470,7 +1977,7 @@ let sortField = 'ts';
 let sortDir = 'desc';
 
 function initPayments() {
-  onSnapshot(query(collection(db, 'crew_payments'), orderBy('ts', 'desc')), snap => {
+  const unsub = onSnapshot(query(eCol('payments'), orderBy('ts', 'desc')), snap => {
     payments = [];
     snap.forEach(ds => payments.push({ id: ds.id, ...ds.data() }));
     renderPayments();
@@ -1478,6 +1985,7 @@ function initPayments() {
   }, err => {
     console.warn('Payments listener error:', err);
   });
+  unsubscribers.push(unsub);
 }
 
 function renderPayments() {
@@ -1542,7 +2050,7 @@ function renderPayments() {
   });
   tbody.querySelectorAll('.btn-del-yes').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await deleteDoc(doc(db, 'crew_payments', btn.dataset.id));
+      await deleteDoc(eDoc('payments', btn.dataset.id));
       toast(t('toast_deleted'));
     });
   });
@@ -1558,11 +2066,13 @@ function renderPayments() {
 function updateStats() {
   const total = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const entries = payments.reduce((s, p) => s + (p.tickets || 0), 0);
-  const avg = entries > 0 ? total / entries : 0;
+  const botePct = parseFloat(document.getElementById('f-bote-pct').value) || 0;
+  const bote = total * (botePct / 100);
+  const presupuesto = total - bote;
   document.getElementById('stat-total').textContent = total.toFixed(2) + ' €';
   document.getElementById('stat-entries').textContent = entries;
-  document.getElementById('stat-records').textContent = payments.length;
-  document.getElementById('stat-avg').textContent = avg.toFixed(2) + ' €';
+  document.getElementById('stat-presupuesto').textContent = presupuesto.toFixed(2) + ' €';
+  document.getElementById('stat-bote').textContent = bote.toFixed(2) + ' €';
 }
 
 // Sort headers
@@ -1602,7 +2112,7 @@ document.getElementById('btn-add').addEventListener('click', async () => {
   };
 
   try {
-    const docRef = await addDoc(collection(db, 'crew_payments'), payment);
+    const docRef = await addDoc(eCol('payments'), payment);
     // Backup
     if (CFG.webhook) {
       const ok = await sendToWebhook({ action: 'new_payment', ...payment, firebaseId: docRef.id });
@@ -1619,6 +2129,42 @@ document.getElementById('btn-add').addEventListener('click', async () => {
     toast('Error: ' + e.message);
   }
   btn.disabled = false;
+});
+
+// Export CSV
+// Full backup
+document.getElementById('btn-full-backup').addEventListener('click', async () => {
+  toast('Generando backup...');
+  const colNames = ['payments', 'expenses', 'tasks', 'decisions', 'polls', 'lineup_djs', 'lineup_proposals'];
+  const backup = { exportedAt: new Date().toISOString(), edition: localStorage.getItem('sonora_edition') || 'SAN SONORÍN XI', prefix: EDITION_PREFIX };
+  for (const name of colNames) {
+    const fullName = EDITION_PREFIX + '_' + name;
+    const snap = await getDocs(eCol(name));
+    backup[fullName] = [];
+    snap.forEach(ds => backup[fullName].push({ id: ds.id, ...ds.data() }));
+  }
+  // Config doc
+  try {
+    const cfgSnap = await getDocs(eCol('lineup_config'));
+    backup[EDITION_PREFIX + '_lineup_config'] = [];
+    cfgSnap.forEach(ds => backup[EDITION_PREFIX + '_lineup_config'].push({ id: ds.id, ...ds.data() }));
+  } catch(e) { backup[EDITION_PREFIX + '_lineup_config'] = []; }
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sonora-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup descargado');
+});
+
+// Bote % persistence
+document.getElementById('f-bote-pct').value = localStorage.getItem('sonora_bote_pct') || '0';
+document.getElementById('f-bote-pct').addEventListener('input', () => {
+  localStorage.setItem('sonora_bote_pct', document.getElementById('f-bote-pct').value);
+  updateStats();
 });
 
 // Export CSV
@@ -1702,13 +2248,16 @@ function getSelectedCrew(containerId) {
 let tasks = [];
 let taskFilterRama = 'all';
 let taskFilterStatus = 'all';
+let taskFilterAssigned = 'all';
+let taskFilterPriority = 'all';
 
 function initTasks() {
-  onSnapshot(query(collection(db, 'crew_tasks'), orderBy('ts', 'desc')), snap => {
+  const unsub = onSnapshot(query(eCol('tasks'), orderBy('ts', 'desc')), snap => {
     tasks = [];
     snap.forEach(ds => tasks.push({ id: ds.id, ...ds.data() }));
     renderTasks();
   }, err => console.warn('Tasks listener:', err));
+  unsubscribers.push(unsub);
 }
 
 function renderTaskFilters() {
@@ -1737,6 +2286,36 @@ function renderTaskFilters() {
     chip.addEventListener('click', () => { taskFilterStatus = s; renderTaskFilters(); renderTasks(); });
     statusEl.appendChild(chip);
   });
+  // Assigned filters
+  const assignEl = document.getElementById('task-assigned-filters');
+  assignEl.innerHTML = '';
+  ['all', ...CFG.crew].forEach(name => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (taskFilterAssigned === name ? ' on' : '');
+    chip.textContent = name === 'all' ? t('all') : name;
+    chip.addEventListener('click', () => { taskFilterAssigned = name; renderTaskFilters(); renderTasks(); });
+    assignEl.appendChild(chip);
+  });
+  // Priority filters
+  const prioEl = document.getElementById('task-priority-filters');
+  prioEl.innerHTML = '';
+  ['all', 'normal', 'alta', 'urgente'].forEach(p => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (taskFilterPriority === p ? ' on' : '');
+    chip.textContent = p === 'all' ? t('all') : t('priority_' + p);
+    chip.addEventListener('click', () => { taskFilterPriority = p; renderTaskFilters(); renderTasks(); });
+    prioEl.appendChild(chip);
+  });
+}
+
+function renderChangelogHtml(changelog) {
+  if (!changelog || !changelog.length) return '';
+  const entries = changelog.slice().reverse().map(e => {
+    const d = new Date(e.ts);
+    const ds = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    return `<div class="changelog-entry">${esc(e.by)} cambió ${esc(e.field)}: "${esc(e.from)}" → "${esc(e.to)}" · ${ds}</div>`;
+  }).join('');
+  return `<button class="changelog-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">▸ historial (${changelog.length})</button><div class="changelog-list" style="display:none">${entries}</div>`;
 }
 
 function renderTasks() {
@@ -1747,6 +2326,11 @@ function renderTasks() {
   let filtered = tasks;
   if (taskFilterRama !== 'all') filtered = filtered.filter(t => t.rama === taskFilterRama);
   if (taskFilterStatus !== 'all') filtered = filtered.filter(t => t.status === taskFilterStatus);
+  if (taskFilterAssigned !== 'all') filtered = filtered.filter(t => {
+    const a = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+    return a.includes(taskFilterAssigned);
+  });
+  if (taskFilterPriority !== 'all') filtered = filtered.filter(t => t.priority === taskFilterPriority);
 
   if (!filtered.length) {
     empty.style.display = 'block';
@@ -1781,8 +2365,10 @@ function renderTasks() {
           ${task.status === 'en_curso' ? `<span class="badge badge-finde" style="font-size:10px">${t('status_en_curso')}</span>` : ''}
         </div>
         ${task.notes ? `<div class="task-notes">${esc(task.notes)}</div>` : ''}
+        ${renderChangelogHtml(task.changelog)}
       </div>
       <div class="task-actions">
+        <button class="btn btn-sm btn-secondary btn-task-edit" data-id="${task.id}" title="Editar">✎</button>
         <button class="btn btn-sm btn-secondary btn-task-status" data-id="${task.id}" data-status="${task.status}" title="Cambiar estado">
           ${task.status === 'pendiente' ? '▶' : task.status === 'en_curso' ? '✓' : '↩'}
         </button>
@@ -1792,6 +2378,67 @@ function renderTasks() {
     list.appendChild(card);
   });
 
+  // Edit task inline
+  list.querySelectorAll('.btn-task-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      const card = btn.closest('.task-card');
+      const ramaOpts = RAMAS.map(r => `<option value="${r.id}" ${task.rama === r.id ? 'selected' : ''}>${t(r.key)}</option>`).join('');
+      const prioOpts = ['normal','alta','urgente'].map(p => `<option value="${p}" ${task.priority === p ? 'selected' : ''}>${t('priority_' + p)}</option>`).join('');
+
+      card.innerHTML = `
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;padding:4px 0">
+          <input class="form-input edit-task-title" value="${esc(task.title)}" style="font-size:13px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <select class="form-select edit-task-rama" style="font-size:12px;padding:4px 8px">${ramaOpts}</select>
+            <select class="form-select edit-task-priority" style="font-size:12px;padding:4px 8px">${prioOpts}</select>
+          </div>
+          <input class="form-input edit-task-notes" value="${esc(task.notes || '')}" placeholder="Notas..." style="font-size:12px">
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary btn-task-save" data-id="${id}">Guardar</button>
+            <button class="btn btn-sm btn-secondary btn-task-cancel">Cancelar</button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector('.btn-task-cancel').addEventListener('click', () => renderTasks());
+      card.querySelector('.btn-task-save').addEventListener('click', async () => {
+        const newTitle = card.querySelector('.edit-task-title').value.trim();
+        const newRama = card.querySelector('.edit-task-rama').value;
+        const newPriority = card.querySelector('.edit-task-priority').value;
+        const newNotes = card.querySelector('.edit-task-notes').value.trim();
+        if (!newTitle) { toast('El título no puede estar vacío'); return; }
+
+        const changes = {};
+        const logEntries = [];
+        const now = Date.now();
+        if (newTitle !== task.title) { changes.title = newTitle; logEntries.push({ field: 'título', from: task.title, to: newTitle, by: CFG.user, ts: now }); }
+        if (newRama !== task.rama) { const oldR = RAMAS.find(r=>r.id===task.rama); const newR = RAMAS.find(r=>r.id===newRama); changes.rama = newRama; logEntries.push({ field: 'rama', from: t(oldR?.key||''), to: t(newR?.key||''), by: CFG.user, ts: now }); }
+        if (newPriority !== task.priority) { changes.priority = newPriority; logEntries.push({ field: 'prioridad', from: t('priority_'+task.priority), to: t('priority_'+newPriority), by: CFG.user, ts: now }); }
+        if (newNotes !== (task.notes || '')) { changes.notes = newNotes; logEntries.push({ field: 'notas', from: task.notes || '', to: newNotes, by: CFG.user, ts: now }); }
+
+        if (!Object.keys(changes).length) { renderTasks(); return; }
+        // Append changelog entries
+        for (const entry of logEntries) {
+          changes.changelog = arrayUnion(entry);
+        }
+        // arrayUnion merges, but multiple calls overwrite — build manually
+        const existingLog = task.changelog || [];
+        changes.changelog = [...existingLog, ...logEntries];
+
+        try {
+          await updateDoc(eDoc('tasks', id), changes);
+          toast('Tarea actualizada');
+        } catch (e) {
+          console.error('Edit task error:', e);
+          toast('Error: ' + e.message);
+        }
+      });
+    });
+  });
+
   // Check toggle (quick done/undone)
   list.querySelectorAll('.task-check').forEach(el => {
     el.addEventListener('click', async () => {
@@ -1799,7 +2446,7 @@ function renderTasks() {
       const task = tasks.find(t => t.id === id);
       if (!task) return;
       const newStatus = task.status === 'hecho' ? 'pendiente' : 'hecho';
-      await updateDoc(doc(db, 'crew_tasks', id), { status: newStatus });
+      await updateDoc(eDoc('tasks', id), { status: newStatus });
     });
   });
 
@@ -1809,7 +2456,7 @@ function renderTasks() {
       const id = btn.dataset.id;
       const current = btn.dataset.status;
       const next = current === 'pendiente' ? 'en_curso' : current === 'en_curso' ? 'hecho' : 'pendiente';
-      await updateDoc(doc(db, 'crew_tasks', id), { status: next });
+      await updateDoc(eDoc('tasks', id), { status: next });
     });
   });
 
@@ -1821,7 +2468,7 @@ function renderTasks() {
       if (!task) return;
       const current = Array.isArray(task.assigned) ? task.assigned : (task.assigned ? [task.assigned] : []);
       if (!current.includes(CFG.user)) {
-        await updateDoc(doc(db, 'crew_tasks', id), { assigned: [...current, CFG.user] });
+        await updateDoc(eDoc('tasks', id), { assigned: [...current, CFG.user] });
       }
     });
   });
@@ -1829,7 +2476,7 @@ function renderTasks() {
   // Delete
   list.querySelectorAll('.btn-task-del').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await deleteDoc(doc(db, 'crew_tasks', btn.dataset.id));
+      await deleteDoc(eDoc('tasks', btn.dataset.id));
       toast(t('toast_task_deleted'));
     });
   });
@@ -1845,7 +2492,7 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
 
   const assigned = getSelectedCrew('ft-assigned');
   try {
-    await addDoc(collection(db, 'crew_tasks'), {
+    await addDoc(eCol('tasks'), {
       title,
       rama: document.getElementById('ft-rama').value,
       assigned,
@@ -1872,13 +2519,14 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
 let expenses = [];
 
 function initExpenses() {
-  onSnapshot(query(collection(db, 'crew_expenses'), orderBy('ts', 'desc')), snap => {
+  const unsub = onSnapshot(query(eCol('expenses'), orderBy('ts', 'desc')), snap => {
     expenses = [];
     snap.forEach(ds => expenses.push({ id: ds.id, ...ds.data() }));
     renderExpenses();
     updateExpenseStats();
     renderExpenseBreakdown();
   }, err => console.warn('Expenses listener:', err));
+  unsubscribers.push(unsub);
 }
 
 function renderExpenses() {
@@ -1929,7 +2577,7 @@ function renderExpenses() {
   });
   tbody.querySelectorAll('.btn-del-exp-yes').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await deleteDoc(doc(db, 'crew_expenses', btn.dataset.id));
+      await deleteDoc(eDoc('expenses', btn.dataset.id));
       toast(t('toast_expense_deleted'));
     });
   });
@@ -1946,6 +2594,37 @@ function updateExpenseStats() {
   const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
   document.getElementById('stat-exp-total').textContent = total.toFixed(2) + ' €';
   document.getElementById('stat-exp-records').textContent = expenses.length;
+  updateBudgetBar(total);
+}
+
+function updateBudgetBar(total) {
+  const budget = parseFloat(document.getElementById('f-budget').value) || 0;
+  const remaining = budget - total;
+  const remEl = document.getElementById('stat-exp-remaining');
+  const barCard = document.getElementById('budget-bar-card');
+
+  // Calculate bote
+  const botePct = parseFloat(localStorage.getItem('sonora_bote_pct') || '0');
+  const payTotal = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  const boteGen = payTotal * (botePct / 100);
+  const botePrev = parseFloat(document.getElementById('f-bote-prev').value) || 0;
+  const boteTotal = botePrev + boteGen;
+  document.getElementById('stat-exp-bote-gen').textContent = boteGen > 0 ? boteGen.toFixed(2) + ' €' : '—';
+  document.getElementById('stat-exp-bote-total').textContent = boteTotal > 0 ? boteTotal.toFixed(2) + ' €' : '—';
+
+  if (budget > 0) {
+    remEl.textContent = remaining.toFixed(2) + ' €';
+    remEl.style.color = remaining < 0 ? 'var(--accent)' : '';
+    barCard.style.display = '';
+    const pct = Math.min(100, (total / budget) * 100);
+    document.getElementById('budget-bar').style.width = pct + '%';
+    document.getElementById('budget-bar').style.background = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--warning)' : 'var(--success)';
+    document.getElementById('budget-bar-label').textContent = total.toFixed(0) + ' / ' + budget.toFixed(0) + ' €';
+    document.getElementById('budget-bar-pct').textContent = pct.toFixed(0) + '%';
+  } else {
+    remEl.textContent = '—';
+    barCard.style.display = 'none';
+  }
 }
 
 function renderExpenseBreakdown() {
@@ -1992,7 +2671,7 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
     ts: Date.now()
   };
 
-  await addDoc(collection(db, 'crew_expenses'), expense);
+  await addDoc(eCol('expenses'), expense);
   // Backup
   if (CFG.webhook) {
     await sendToWebhook({ action: 'new_expense', ...expense });
@@ -2006,6 +2685,20 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
 });
 
 // Export expenses CSV
+// Budget + bote previo inputs
+document.getElementById('f-budget').value = localStorage.getItem('sonora_budget') || '';
+document.getElementById('f-budget').addEventListener('input', () => {
+  localStorage.setItem('sonora_budget', document.getElementById('f-budget').value);
+  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  updateBudgetBar(total);
+});
+document.getElementById('f-bote-prev').value = localStorage.getItem('sonora_bote_prev') || '';
+document.getElementById('f-bote-prev').addEventListener('input', () => {
+  localStorage.setItem('sonora_bote_prev', document.getElementById('f-bote-prev').value);
+  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  updateBudgetBar(total);
+});
+
 document.getElementById('btn-export-expenses').addEventListener('click', () => {
   if (!expenses.length) return;
   const headers = ['Fecha', 'Concepto', 'Rama', 'Cantidad', 'Pagado por', 'Estado', 'Notas', 'Registrado por'];
@@ -2029,13 +2722,40 @@ document.getElementById('btn-export-expenses').addEventListener('click', () => {
    DECISIONS
 ══════════════════════════════════ */
 let decisions = [];
+let decFilterRama = 'all';
+let decFilterStatus = 'all';
 
 function initDecisions() {
-  onSnapshot(query(collection(db, 'crew_decisions'), orderBy('ts', 'desc')), snap => {
+  const unsub = onSnapshot(query(eCol('decisions'), orderBy('ts', 'desc')), snap => {
     decisions = [];
     snap.forEach(ds => decisions.push({ id: ds.id, ...ds.data() }));
+    renderDecisionFilters();
     renderDecisions();
   }, err => console.warn('Decisions listener:', err));
+  unsubscribers.push(unsub);
+}
+
+function renderDecisionFilters() {
+  // Rama
+  const ramaEl = document.getElementById('dec-rama-filters');
+  ramaEl.innerHTML = '';
+  [{ id: 'all', label: t('all') }, ...RAMAS.map(r => ({ id: r.id, label: t(r.key) }))].forEach(r => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (decFilterRama === r.id ? ' on' : '');
+    chip.textContent = r.label;
+    chip.addEventListener('click', () => { decFilterRama = r.id; renderDecisionFilters(); renderDecisions(); });
+    ramaEl.appendChild(chip);
+  });
+  // Status
+  const statusEl = document.getElementById('dec-status-filters');
+  statusEl.innerHTML = '';
+  ['all', 'aprobada', 'en_debate', 'descartada'].forEach(s => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (decFilterStatus === s ? ' on' : '');
+    chip.textContent = s === 'all' ? t('all') : t('dec_' + s);
+    chip.addEventListener('click', () => { decFilterStatus = s; renderDecisionFilters(); renderDecisions(); });
+    statusEl.appendChild(chip);
+  });
 }
 
 function renderDecisions() {
@@ -2043,31 +2763,99 @@ function renderDecisions() {
   const empty = document.getElementById('decisions-empty');
   list.innerHTML = '';
 
-  if (!decisions.length) { empty.style.display = 'block'; return; }
+  let filtered = decisions;
+  if (decFilterRama !== 'all') filtered = filtered.filter(d => d.rama === decFilterRama);
+  if (decFilterStatus !== 'all') filtered = filtered.filter(d => d.status === decFilterStatus);
+
+  if (!filtered.length) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
-  decisions.forEach(d => {
+  filtered.forEach(d => {
     const rama = RAMAS.find(r => r.id === d.rama) || RAMAS[0];
     const date = new Date(d.ts);
     const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const statusLabel = t('dec_' + d.status);
+    const isLong = d.detail && d.detail.length > 120;
     const card = document.createElement('div');
     card.className = 'dec-card dec-' + d.status;
 
     card.innerHTML = `
       <div class="dec-title">${esc(d.title)}</div>
-      ${d.detail ? `<div class="dec-detail">${esc(d.detail)}</div>` : ''}
+      ${d.detail ? `<div class="dec-detail ${isLong ? 'truncated' : ''}">${esc(d.detail)}</div>` : ''}
       <div class="dec-meta">
         <span class="badge-rama ${rama.css}">${t(rama.key)}</span>
         <span class="dec-status dec-${d.status}">${statusLabel}</span>
         <span>${dateStr} · ${esc(d.createdBy || '')}</span>
+        <button class="btn btn-sm btn-secondary btn-dec-edit" data-id="${d.id}" style="padding:2px 8px;font-size:10px">✎</button>
         <button class="btn btn-sm btn-secondary btn-dec-status" data-id="${d.id}" data-status="${d.status}" style="padding:2px 8px;font-size:10px">
           ${d.status === 'en_debate' ? '✓ Aprobar' : d.status === 'aprobada' ? '↩ Reabrir' : '↩ Reabrir'}
         </button>
         <button class="btn btn-sm btn-secondary btn-dec-del" data-id="${d.id}" style="padding:2px 8px;font-size:10px">✕</button>
       </div>
+      ${renderChangelogHtml(d.changelog)}
     `;
     list.appendChild(card);
+  });
+
+  // Edit decision inline
+  list.querySelectorAll('.btn-dec-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const dec = decisions.find(d => d.id === id);
+      if (!dec) return;
+      const card = btn.closest('.dec-card');
+      const ramaOpts = RAMAS.map(r => `<option value="${r.id}" ${dec.rama === r.id ? 'selected' : ''}>${t(r.key)}</option>`).join('');
+      const statusOpts = ['aprobada','en_debate','descartada'].map(s => `<option value="${s}" ${dec.status === s ? 'selected' : ''}>${t('dec_' + s)}</option>`).join('');
+
+      card.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px;padding:4px 0">
+          <input class="form-input edit-dec-title" value="${esc(dec.title)}" style="font-size:13px">
+          <textarea class="form-input edit-dec-detail" rows="3" style="font-size:12px;resize:vertical">${esc(dec.detail || '')}</textarea>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <select class="form-select edit-dec-rama" style="font-size:12px;padding:4px 8px">${ramaOpts}</select>
+            <select class="form-select edit-dec-status" style="font-size:12px;padding:4px 8px">${statusOpts}</select>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-primary btn-dec-save" data-id="${id}">Guardar</button>
+            <button class="btn btn-sm btn-secondary btn-dec-cancel">Cancelar</button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector('.btn-dec-cancel').addEventListener('click', () => renderDecisions());
+      card.querySelector('.btn-dec-save').addEventListener('click', async () => {
+        const newTitle = card.querySelector('.edit-dec-title').value.trim();
+        const newDetail = card.querySelector('.edit-dec-detail').value.trim();
+        const newRama = card.querySelector('.edit-dec-rama').value;
+        const newStatus = card.querySelector('.edit-dec-status').value;
+        if (!newTitle) { toast('El título no puede estar vacío'); return; }
+
+        const changes = {};
+        const logEntries = [];
+        const now = Date.now();
+        if (newTitle !== dec.title) { changes.title = newTitle; logEntries.push({ field: 'título', from: dec.title, to: newTitle, by: CFG.user, ts: now }); }
+        if (newDetail !== (dec.detail || '')) { changes.detail = newDetail; logEntries.push({ field: 'detalle', from: dec.detail || '', to: newDetail, by: CFG.user, ts: now }); }
+        if (newRama !== dec.rama) { const oldR = RAMAS.find(r=>r.id===dec.rama); const newR = RAMAS.find(r=>r.id===newRama); changes.rama = newRama; logEntries.push({ field: 'rama', from: t(oldR?.key||''), to: t(newR?.key||''), by: CFG.user, ts: now }); }
+        if (newStatus !== dec.status) { changes.status = newStatus; logEntries.push({ field: 'estado', from: t('dec_'+dec.status), to: t('dec_'+newStatus), by: CFG.user, ts: now }); }
+
+        if (!Object.keys(changes).length) { renderDecisions(); return; }
+        const existingLog = dec.changelog || [];
+        changes.changelog = [...existingLog, ...logEntries];
+
+        try {
+          await updateDoc(eDoc('decisions', id), changes);
+          toast('Decisión actualizada');
+        } catch (e) {
+          console.error('Edit decision error:', e);
+          toast('Error: ' + e.message);
+        }
+      });
+    });
+  });
+
+  // Expand truncated details
+  list.querySelectorAll('.dec-detail.truncated').forEach(el => {
+    el.addEventListener('click', () => el.classList.remove('truncated'));
   });
 
   // Status toggle
@@ -2075,14 +2863,14 @@ function renderDecisions() {
     btn.addEventListener('click', async () => {
       const current = btn.dataset.status;
       const next = current === 'en_debate' ? 'aprobada' : current === 'aprobada' ? 'en_debate' : 'en_debate';
-      await updateDoc(doc(db, 'crew_decisions', btn.dataset.id), { status: next });
+      await updateDoc(eDoc('decisions', btn.dataset.id), { status: next });
     });
   });
 
   // Delete
   list.querySelectorAll('.btn-dec-del').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await deleteDoc(doc(db, 'crew_decisions', btn.dataset.id));
+      await deleteDoc(eDoc('decisions', btn.dataset.id));
       toast(t('toast_decision_deleted'));
     });
   });
@@ -2097,7 +2885,7 @@ document.getElementById('btn-add-decision').addEventListener('click', async () =
   btn.disabled = true;
 
   try {
-    await addDoc(collection(db, 'crew_decisions'), {
+    await addDoc(eCol('decisions'), {
       title,
       detail: document.getElementById('fd-detail').value.trim(),
       rama: document.getElementById('fd-rama').value,
@@ -2113,6 +2901,729 @@ document.getElementById('btn-add-decision').addEventListener('click', async () =
     toast('Error: ' + e.message);
   }
   btn.disabled = false;
+});
+
+/* ══════════════════════════════════
+   POLLS
+══════════════════════════════════ */
+let polls = [];
+
+function initPolls() {
+  const unsub = onSnapshot(query(eCol('polls'), orderBy('ts', 'desc')), snap => {
+    polls = [];
+    snap.forEach(ds => polls.push({ id: ds.id, ...ds.data() }));
+    renderPolls();
+  }, err => console.warn('Polls listener:', err));
+  unsubscribers.push(unsub);
+}
+
+function getPollStatus(poll) {
+  const count = (poll.votes || []).length;
+  if (count >= 7) return 'consenso';
+  if (count >= 4) return 'mayoria';
+  return 'abierta';
+}
+
+function renderPolls() {
+  const list = document.getElementById('poll-list');
+  const empty = document.getElementById('polls-empty');
+  list.innerHTML = '';
+
+  if (!polls.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  polls.forEach(poll => {
+    const votes = poll.votes || [];
+    const status = getPollStatus(poll);
+    const date = new Date(poll.ts);
+    const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+    const card = document.createElement('div');
+    card.className = 'poll-card' + (status !== 'abierta' ? ' poll-' + status : '');
+
+    card.innerHTML = `
+      <div class="poll-title">${esc(poll.topic)}</div>
+      ${poll.detail ? `<div class="poll-author" style="font-style:italic;margin-bottom:6px">${esc(poll.detail)}</div>` : ''}
+      <div class="poll-author">Propuesta por ${esc(poll.author)} · ${dateStr}</div>
+      <div class="poll-votes">
+        ${CFG.crew.map(name => {
+          const v = votes.includes(name);
+          return `<button class="poll-vote-chip ${v ? 'voted' : ''}" data-id="${poll.id}" data-name="${name}">${name}${v ? ' ✓' : ''}</button>`;
+        }).join('')}
+      </div>
+      <div class="poll-meta">
+        <span class="poll-status-badge poll-badge-${status}">${t('poll_' + status)}</span>
+        <span>${votes.length}/7 votos</span>
+        ${status === 'mayoria' && !poll.movedToDecision ? `<button class="btn btn-sm btn-secondary btn-poll-to-dec" data-id="${poll.id}" style="padding:2px 8px;font-size:10px">→ Decisión</button>` : ''}
+        ${poll.movedToDecision ? '<span style="font-size:10px;color:var(--success)">✓ En decisiones</span>' : ''}
+        <button class="btn btn-sm btn-secondary btn-poll-del" data-id="${poll.id}" style="padding:2px 8px;font-size:10px;margin-left:auto">✕</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // Vote toggle — only your own chip
+  list.querySelectorAll('.poll-vote-chip').forEach(chip => {
+    chip.addEventListener('click', async () => {
+      if (chip.dataset.name !== CFG.user) return;
+      const poll = polls.find(p => p.id === chip.dataset.id);
+      if (!poll) return;
+      const votes = poll.votes || [];
+      const newVotes = votes.includes(CFG.user)
+        ? votes.filter(v => v !== CFG.user)
+        : [...votes, CFG.user];
+      await updateDoc(eDoc('polls', poll.id), { votes: newVotes });
+      // Auto → decisión si consenso (7/7) y no migrada aún
+      if (newVotes.length >= 7 && !poll.movedToDecision) {
+        await addDoc(eCol('decisions'), {
+          title: poll.topic,
+          detail: (poll.detail || '') + '\n[Consenso 7/7 en encuesta]',
+          rama: 'otros',
+          status: 'aprobada',
+          createdBy: 'Sistema',
+          ts: Date.now()
+        });
+        await updateDoc(eDoc('polls', poll.id), { movedToDecision: true });
+        toast('Consenso alcanzado — añadido a Decisiones');
+      }
+    });
+  });
+
+  // Manual → decisión (mayoría)
+  list.querySelectorAll('.btn-poll-to-dec').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const poll = polls.find(p => p.id === btn.dataset.id);
+      if (!poll) return;
+      await addDoc(eCol('decisions'), {
+        title: poll.topic,
+        detail: (poll.detail || '') + `\n[Mayoría ${(poll.votes||[]).length}/7 en encuesta]`,
+        rama: 'otros',
+        status: 'aprobada',
+        createdBy: CFG.user,
+        ts: Date.now()
+      });
+      await updateDoc(eDoc('polls', poll.id), { movedToDecision: true });
+      toast('Encuesta pasada a Decisiones');
+    });
+  });
+
+  // Delete
+  list.querySelectorAll('.btn-poll-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteDoc(eDoc('polls', btn.dataset.id));
+      toast(t('toast_poll_deleted'));
+    });
+  });
+}
+
+document.getElementById('btn-add-poll').addEventListener('click', async () => {
+  const topic = document.getElementById('fp-topic').value.trim();
+  if (!topic) { toast(t('toast_fill_poll')); return; }
+  const btn = document.getElementById('btn-add-poll');
+  btn.disabled = true;
+  await addDoc(eCol('polls'), {
+    topic,
+    detail: document.getElementById('fp-detail').value.trim(),
+    author: CFG.user,
+    votes: [],
+    ts: Date.now()
+  });
+  document.getElementById('fp-topic').value = '';
+  document.getElementById('fp-detail').value = '';
+  toast(t('toast_poll_added'));
+  btn.disabled = false;
+});
+
+/* ══════════════════════════════════
+   LINEUP
+══════════════════════════════════ */
+let lineupConfig = null;
+let lineupDJs = [];
+let lineupProposals = [];
+let activeProposalId = null;
+let lineupCompareMode = false;
+
+function initLineup() {
+  const unsub1 = onSnapshot(eDoc('lineup_config', 'current'), snap => {
+    lineupConfig = snap.exists() ? snap.data() : null;
+    renderLineupConfig();
+    renderLineupAll();
+  }, err => console.warn('Lineup config listener:', err));
+
+  const unsub2 = onSnapshot(query(eCol('lineup_djs'), orderBy('ts', 'asc')), snap => {
+    lineupDJs = [];
+    snap.forEach(ds => lineupDJs.push({ id: ds.id, ...ds.data() }));
+    renderLineupAll();
+  }, err => console.warn('Lineup DJs listener:', err));
+
+  const unsub3 = onSnapshot(query(eCol('lineup_proposals'), orderBy('ts', 'asc')), snap => {
+    lineupProposals = [];
+    snap.forEach(ds => lineupProposals.push({ id: ds.id, ...ds.data() }));
+    if (activeProposalId && !lineupProposals.find(p => p.id === activeProposalId)) {
+      activeProposalId = lineupProposals.length ? lineupProposals[0].id : null;
+    }
+    if (!activeProposalId && lineupProposals.length) {
+      activeProposalId = lineupProposals[0].id;
+    }
+    renderLineupAll();
+  }, err => console.warn('Lineup proposals listener:', err));
+
+  unsubscribers.push(unsub1, unsub2, unsub3);
+}
+
+function calcDaySlots(day, slotsArray) {
+  const [sh, sm] = day.start.split(':').map(Number);
+  let currentMin = sh * 60 + sm;
+  const slots = (slotsArray || []).map((dur, i) => {
+    const fromMin = currentMin;
+    const toMin = currentMin + dur;
+    currentMin = toMin;
+    const fh = Math.floor((fromMin % 1440) / 60), fm = (fromMin % 1440) % 60;
+    const th = Math.floor((toMin % 1440) / 60), tm = (toMin % 1440) % 60;
+    return {
+      index: i, duration: dur,
+      from: `${String(fh).padStart(2,'0')}:${String(fm).padStart(2,'0')}`,
+      to: `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`
+    };
+  });
+  const [eh, em] = day.end.split(':').map(Number);
+  let endMin = eh * 60 + em;
+  let startMin = sh * 60 + sm;
+  if (endMin <= startMin) endMin += 1440;
+  const totalMin = endMin - startMin;
+  const usedMin = (slotsArray || []).reduce((s, d) => s + d, 0);
+  return { slots, totalMin, usedMin, remainderMin: totalMin - usedMin };
+}
+
+function formatDur(min) {
+  if (min <= 0) return '0m';
+  if (min % 60 === 0) return (min / 60) + 'h';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h > 0 ? h + 'h' + m + 'm' : m + 'm';
+}
+
+// ─── Config rendering (days + YOUR slots if viewing own proposal) ───
+function renderLineupConfig() {
+  const list = document.getElementById('lineup-days-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!lineupConfig?.days?.length) return;
+
+  const proposal = lineupProposals.find(p => p.id === activeProposalId);
+  const isOwn = proposal && proposal.author === CFG.user;
+  const daySlots = proposal ? (proposal.daySlots || {}) : {};
+
+  lineupConfig.days.forEach((day, dayIdx) => {
+    const dayKey = String(dayIdx);
+    const slotsArr = daySlots[dayKey] || [];
+    const info = calcDaySlots(day, slotsArr);
+    const card = document.createElement('div');
+    card.className = 'lineup-config-day';
+
+    let html = `
+      <div class="lineup-config-day-head">
+        ${esc(day.label)}
+        <span class="lineup-config-day-times">${day.start} → ${day.end} (${formatDur(info.totalMin)})</span>
+        <button class="lineup-config-day-del" data-day="${dayIdx}">✕</button>
+      </div>
+    `;
+
+    // Show slot config if viewing own proposal
+    if (isOwn) {
+      html += '<div class="lineup-config-slots">';
+      slotsArr.forEach((dur, si) => {
+        html += `<span class="lineup-config-slot">
+          <button class="lineup-cfg-slot-move" data-day="${dayIdx}" data-slot="${si}" data-dir="-1" ${si === 0 ? 'style="visibility:hidden"' : ''}>‹</button>
+          ${formatDur(dur)}
+          <button class="lineup-cfg-slot-move" data-day="${dayIdx}" data-slot="${si}" data-dir="1" ${si === slotsArr.length - 1 ? 'style="visibility:hidden"' : ''}>›</button>
+          <button class="lineup-cfg-slot-del" data-day="${dayIdx}" data-slot="${si}">✕</button>
+        </span>`;
+      });
+      if (!slotsArr.length) html += '<span style="font-size:12px;color:var(--text-secondary)">Sin slots — añade abajo</span>';
+      html += '</div>';
+
+      const SLOT_DURS = [30, 60, 90, 120, 150, 180];
+      html += `<div class="lineup-add-slot-row"><span style="font-size:11px;color:var(--text-secondary)">+ Slot:</span>`;
+      SLOT_DURS.forEach(d => { html += `<button class="lineup-cfg-add-slot" data-day="${dayIdx}" data-dur="${d}">${formatDur(d)}</button>`; });
+      html += '</div>';
+
+      const isOver = info.remainderMin < 0;
+      html += `<div class="lineup-day-time-info ${isOver ? 'over' : ''}">${isOver ? `Sobrepasado en ${formatDur(Math.abs(info.remainderMin))}` : `Quedan ${formatDur(info.remainderMin)} libres`}</div>`;
+    } else if (slotsArr.length) {
+      html += `<div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${slotsArr.length} slots · ${formatDur(info.usedMin)}</div>`;
+    }
+
+    card.innerHTML = html;
+    list.appendChild(card);
+  });
+
+  // Delete day (global)
+  list.querySelectorAll('.lineup-config-day-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('¿Borrar este día? Solo se borrará de la configuración global. Las propuestas existentes mantendrán sus datos.')) return;
+      const idx = parseInt(btn.dataset.day);
+      const days = [...lineupConfig.days];
+      days.splice(idx, 1);
+      await setDoc(eDoc('lineup_config', 'current'), { ...lineupConfig, days, ts: Date.now() });
+    });
+  });
+
+  if (!isOwn || !proposal) return;
+
+  // Slot move (in config area, for own proposal)
+  list.querySelectorAll('.lineup-cfg-slot-move').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const dayIdx = parseInt(btn.dataset.day);
+      const slotIdx = parseInt(btn.dataset.slot);
+      const dir = parseInt(btn.dataset.dir);
+      const newIdx = slotIdx + dir;
+      const newDaySlots = JSON.parse(JSON.stringify(daySlots));
+      const dayKey = String(dayIdx);
+      const slots = newDaySlots[dayKey] || [];
+      if (newIdx < 0 || newIdx >= slots.length) return;
+      [slots[slotIdx], slots[newIdx]] = [slots[newIdx], slots[slotIdx]];
+      // Also swap assignments
+      const newAssignments = { ...(proposal.assignments || {}) };
+      const k1 = `${dayIdx}-${slotIdx}`, k2 = `${dayIdx}-${newIdx}`;
+      const tmp = newAssignments[k1]; newAssignments[k1] = newAssignments[k2]; newAssignments[k2] = tmp;
+      if (!newAssignments[k1]) delete newAssignments[k1];
+      if (!newAssignments[k2]) delete newAssignments[k2];
+      await updateDoc(eDoc('lineup_proposals', proposal.id), { daySlots: newDaySlots, assignments: newAssignments });
+    });
+  });
+
+  // Slot delete (in config area)
+  list.querySelectorAll('.lineup-cfg-slot-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const dayIdx = parseInt(btn.dataset.day);
+      const slotIdx = parseInt(btn.dataset.slot);
+      const newDaySlots = JSON.parse(JSON.stringify(daySlots));
+      const dayKey = String(dayIdx);
+      newDaySlots[dayKey].splice(slotIdx, 1);
+      // Re-index assignments
+      const newAssignments = {};
+      Object.entries(proposal.assignments || {}).forEach(([k, v]) => {
+        const [d, s] = k.split('-').map(Number);
+        if (d === dayIdx) {
+          if (s < slotIdx) newAssignments[k] = v;
+          else if (s > slotIdx) newAssignments[`${d}-${s-1}`] = v;
+        } else {
+          newAssignments[k] = v;
+        }
+      });
+      await updateDoc(eDoc('lineup_proposals', proposal.id), { daySlots: newDaySlots, assignments: newAssignments });
+    });
+  });
+
+  // Slot add (in config area)
+  list.querySelectorAll('.lineup-cfg-add-slot').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const dayIdx = parseInt(btn.dataset.day);
+      const dur = parseInt(btn.dataset.dur);
+      const newDaySlots = JSON.parse(JSON.stringify(daySlots));
+      const dayKey = String(dayIdx);
+      if (!newDaySlots[dayKey]) newDaySlots[dayKey] = [];
+      newDaySlots[dayKey].push(dur);
+      await updateDoc(eDoc('lineup_proposals', proposal.id), { daySlots: newDaySlots });
+    });
+  });
+}
+
+// ─── Stats (only hours + DJs) ───
+function updateLineupStats() {
+  const hEl = document.getElementById('stat-lineup-hours');
+  if (!hEl) return;
+  const djEl = document.getElementById('stat-lineup-djs');
+
+  djEl.textContent = lineupDJs.length;
+
+  if (!lineupConfig?.days?.length) {
+    hEl.textContent = '0h';
+    return;
+  }
+  let totalMin = 0;
+  lineupConfig.days.forEach(day => {
+    const info = calcDaySlots(day, []);
+    totalMin += info.totalMin;
+  });
+  hEl.textContent = formatDur(totalMin);
+}
+
+// ─── Render all ───
+function renderLineupAll() {
+  updateLineupStats();
+  renderLineupConfig();
+  renderLineupPool();
+  renderLineupProposalBar();
+  if (lineupCompareMode) renderLineupCompare();
+  else renderLineupProposalBoard();
+}
+
+// ─── Pool ───
+function renderLineupPool() {
+  const pool = document.getElementById('lineup-pool');
+  const empty = document.getElementById('lineup-pool-empty');
+  if (!pool) return;
+  pool.innerHTML = '';
+  document.getElementById('lineup-pool-count').textContent = lineupDJs.length;
+
+  if (!lineupDJs.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  lineupDJs.forEach(dj => {
+    const card = document.createElement('div');
+    card.className = 'lineup-dj';
+    card.innerHTML = `
+      <div class="lineup-dj-name">${esc(dj.name)}</div>
+      ${dj.style ? `<div class="lineup-dj-style">${esc(dj.style)}</div>` : ''}
+      ${dj.comments ? `<div class="lineup-dj-comments">${esc(dj.comments)}</div>` : ''}
+      <button class="lineup-dj-del" data-id="${dj.id}" title="Eliminar">✕</button>
+    `;
+    pool.appendChild(card);
+  });
+
+  pool.querySelectorAll('.lineup-dj-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await deleteDoc(eDoc('lineup_djs', btn.dataset.id));
+      toast(t('toast_dj_deleted'));
+    });
+  });
+}
+
+// ─── Proposal bar ───
+function renderLineupProposalBar() {
+  const bar = document.getElementById('lineup-proposal-bar');
+  if (!bar) return;
+  bar.innerHTML = '';
+
+  lineupProposals.forEach(p => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (!lineupCompareMode && activeProposalId === p.id ? ' on' : '');
+    chip.textContent = p.name;
+    chip.addEventListener('click', () => {
+      activeProposalId = p.id;
+      lineupCompareMode = false;
+      renderLineupAll();
+    });
+    bar.appendChild(chip);
+  });
+
+  // Like info under chips
+  lineupProposals.forEach(p => {
+    const likes = p.likes || [];
+    if (likes.length > 0) {
+      const info = document.createElement('div');
+      info.className = 'lineup-likes';
+      info.style.width = '100%';
+      info.innerHTML = `<span style="font-weight:500">${esc(p.name)}:</span> ` + likes.map(l => `<span class="lineup-like-name">${esc(l)}</span>`).join('');
+      bar.appendChild(info);
+    }
+  });
+
+  // New proposal (max 1 per person)
+  const addBtn = document.createElement('button');
+  addBtn.className = 'chip';
+  addBtn.textContent = '+ Nueva';
+  addBtn.style.borderStyle = 'dashed';
+  addBtn.addEventListener('click', async () => {
+    const name = CFG.user || 'Anónimo';
+    const existing = lineupProposals.find(p => p.author === CFG.user);
+    if (existing) {
+      activeProposalId = existing.id;
+      lineupCompareMode = false;
+      renderLineupAll();
+      toast('Ya tienes una propuesta — edítala');
+      return;
+    }
+    const docRef = await addDoc(eCol('lineup_proposals'), {
+      name, author: CFG.user, daySlots: {}, assignments: {}, likes: [], ts: Date.now()
+    });
+    activeProposalId = docRef.id;
+    lineupCompareMode = false;
+    toast(t('toast_proposal_created'));
+  });
+  bar.appendChild(addBtn);
+
+  // Compare button
+  if (lineupProposals.length >= 2) {
+    const cmpBtn = document.createElement('button');
+    cmpBtn.className = 'chip' + (lineupCompareMode ? ' on' : '');
+    cmpBtn.textContent = 'Comparar';
+    cmpBtn.style.marginLeft = '8px';
+    cmpBtn.addEventListener('click', () => {
+      lineupCompareMode = !lineupCompareMode;
+      renderLineupAll();
+    });
+    bar.appendChild(cmpBtn);
+  }
+}
+
+// ─── Proposal board (single) ───
+function renderLineupProposalBoard() {
+  const board = document.getElementById('lineup-proposal-board');
+  const compare = document.getElementById('lineup-compare-view');
+  if (!board) return;
+  board.style.display = ''; compare.style.display = 'none';
+  board.innerHTML = '';
+
+  const proposal = lineupProposals.find(p => p.id === activeProposalId);
+  if (!proposal) {
+    board.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">${t('lineup_no_proposals')}</div></div>`;
+    return;
+  }
+  if (!lineupConfig?.days?.length) {
+    board.innerHTML = `<div style="font-size:13px;color:var(--text-secondary);padding:12px 0">${t('lineup_config_first')}</div>`;
+    return;
+  }
+
+  const daySlots = proposal.daySlots || {};
+  const assignments = proposal.assignments || {};
+
+  // Header with like + delete
+  const isOwn = proposal.author === CFG.user;
+  const likes = proposal.likes || [];
+  const iLiked = likes.includes(CFG.user);
+
+  const delRow = document.createElement('div');
+  delRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px';
+  delRow.innerHTML = `
+    <span style="font-size:14px;font-weight:600">Propuesta de ${esc(proposal.name)}</span>
+    <div style="display:flex;gap:6px;align-items:center">
+      ${!isOwn ? `<button class="lineup-like-btn ${iLiked ? 'liked' : ''}" id="btn-like-proposal">\u2665 ${iLiked ? 'Te gusta' : 'Me gusta'}${likes.length ? ' (' + likes.length + ')' : ''}</button>` : (likes.length ? `<span style="font-size:12px;color:var(--text-secondary)">\u2665 ${likes.length}</span>` : '')}
+      ${isOwn ? '<button class="btn btn-sm btn-secondary" id="btn-del-proposal" style="font-size:11px">Borrar propuesta</button>' : ''}
+    </div>
+  `;
+  if (likes.length) {
+    const likesDiv = document.createElement('div');
+    likesDiv.className = 'lineup-likes';
+    likesDiv.style.width = '100%';
+    likesDiv.innerHTML = likes.map(l => `<span class="lineup-like-name">${esc(l)}</span>`).join('');
+    delRow.appendChild(likesDiv);
+  }
+  board.appendChild(delRow);
+
+  // Like handler
+  const likeBtn = delRow.querySelector('#btn-like-proposal');
+  if (likeBtn) {
+    likeBtn.addEventListener('click', async () => {
+      if (isOwn) { toast(t('toast_like_own')); return; }
+      // Remove like from all other proposals
+      const removePromises = lineupProposals
+        .filter(p => p.id !== proposal.id && (p.likes || []).includes(CFG.user))
+        .map(p => updateDoc(eDoc('lineup_proposals', p.id), { likes: (p.likes || []).filter(l => l !== CFG.user) }));
+      await Promise.all(removePromises);
+      // Toggle like on this proposal
+      const newLikes = iLiked ? likes.filter(l => l !== CFG.user) : [...likes, CFG.user];
+      await updateDoc(eDoc('lineup_proposals', proposal.id), { likes: newLikes });
+      toast(t('toast_liked'));
+    });
+  }
+  // Delete handler
+  const delBtn = delRow.querySelector('#btn-del-proposal');
+  if (delBtn) {
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('¿Borrar esta propuesta?')) return;
+      await deleteDoc(eDoc('lineup_proposals', proposal.id));
+      toast(t('toast_proposal_deleted'));
+    });
+  }
+
+  // Per-day: slot config + time grid
+  lineupConfig.days.forEach((day, dayIdx) => {
+    const dayKey = String(dayIdx);
+    const slotsArr = daySlots[dayKey] || [];
+    const info = calcDaySlots(day, slotsArr);
+    const section = document.createElement('div');
+    section.style.marginBottom = '20px';
+
+    // Day header (slot config is in renderLineupConfig above)
+    let html = `<div class="lineup-day-header">${esc(day.label)}<span class="lineup-day-hours">${day.start} → ${day.end} · ${info.slots.length} slots</span></div>`;
+
+    // Time slot grid
+    info.slots.forEach((slot, slotIdx) => {
+      const key = `${dayIdx}-${slotIdx}`;
+      const djId = assignments[key];
+      const dj = djId ? lineupDJs.find(d => d.id === djId) : null;
+
+      if (dj) {
+        html += `
+          <div class="lineup-slot">
+            <div class="lineup-slot-time">${slot.from} – ${slot.to} <span class="lineup-slot-dur">(${formatDur(slot.duration)})</span></div>
+            <div class="lineup-slot-content">
+              <div class="lineup-dj" style="border-color:#8b5cf6">
+                <div class="lineup-dj-name">${esc(dj.name)}</div>
+                ${dj.style ? `<div class="lineup-dj-style">${esc(dj.style)}</div>` : ''}
+                ${dj.comments ? `<div class="lineup-dj-comments">${esc(dj.comments)}</div>` : ''}
+              </div>
+            </div>
+            ${isOwn ? `<button class="btn btn-sm btn-secondary lineup-unassign" data-key="${key}">✕</button>` : ''}
+          </div>`;
+      } else {
+        html += `
+          <div class="lineup-slot" style="border-style:dashed">
+            <div class="lineup-slot-time">${slot.from} – ${slot.to} <span class="lineup-slot-dur">(${formatDur(slot.duration)})</span></div>
+            <div class="lineup-slot-content">
+              ${isOwn ? `<button class="lineup-assign-btn" data-key="${key}">${t('lineup_assign')}</button>` : `<span class="lineup-compare-empty">—</span>`}
+            </div>
+          </div>`;
+      }
+    });
+
+    section.innerHTML = html;
+    board.appendChild(section);
+  });
+
+  // Unassign
+  board.querySelectorAll('.lineup-unassign').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const newA = { ...assignments };
+      delete newA[btn.dataset.key];
+      await updateDoc(eDoc('lineup_proposals', proposal.id), { assignments: newA });
+    });
+  });
+
+  // Assign picker — shows DJs not yet used in THIS proposal
+  board.querySelectorAll('.lineup-assign-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.lineup-picker').forEach(p => p.remove());
+      const key = btn.dataset.key;
+      const usedIds = new Set(Object.values(assignments));
+      const available = lineupDJs.filter(dj => !usedIds.has(dj.id));
+      if (!available.length) { toast(t('lineup_no_djs')); return; }
+
+      const picker = document.createElement('div');
+      picker.className = 'lineup-picker';
+      available.forEach(dj => {
+        const item = document.createElement('div');
+        item.className = 'lineup-picker-item';
+        item.innerHTML = `${esc(dj.name)}${dj.style ? `<span class="lineup-picker-style">${esc(dj.style)}</span>` : ''}`;
+        item.addEventListener('click', async () => {
+          picker.remove();
+          await updateDoc(eDoc('lineup_proposals', proposal.id), { assignments: { ...assignments, [key]: dj.id } });
+        });
+        picker.appendChild(item);
+      });
+      btn.parentElement.appendChild(picker);
+      const closeHandler = (ev) => {
+        if (!picker.contains(ev.target)) { picker.remove(); document.removeEventListener('click', closeHandler); }
+      };
+      setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    });
+  });
+}
+
+// ─── Compare view ───
+function renderLineupCompare() {
+  const board = document.getElementById('lineup-proposal-board');
+  const compare = document.getElementById('lineup-compare-view');
+  if (!compare) return;
+  board.style.display = 'none'; compare.style.display = '';
+  compare.innerHTML = '';
+
+  if (!lineupConfig?.days?.length || lineupProposals.length < 2) {
+    compare.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:12px">Necesitas al menos 2 propuestas y días configurados</div>';
+    return;
+  }
+
+  lineupConfig.days.forEach((day, dayIdx) => {
+    const dayKey = String(dayIdx);
+    let html = `<div class="lineup-day-header">${esc(day.label)}<span class="lineup-day-hours">${day.start} → ${day.end}</span></div>`;
+    html += '<div class="table-wrap"><table class="lineup-compare-table"><thead><tr>';
+    lineupProposals.forEach(p => {
+      const pLikes = (p.likes || []).length;
+      html += `<th>${esc(p.name)}${pLikes ? ` <span style="font-weight:normal;font-size:11px">\u2665${pLikes}</span>` : ''}</th>`;
+    });
+    html += '</tr></thead><tbody><tr>';
+
+    // Each column: that proposal's slots stacked vertically
+    lineupProposals.forEach(p => {
+      const pSlots = (p.daySlots || {})[dayKey] || [];
+      const pInfo = calcDaySlots(day, pSlots);
+      const pAssignments = p.assignments || {};
+      html += '<td style="vertical-align:top">';
+      if (!pInfo.slots.length) {
+        html += '<span class="lineup-compare-empty">Sin slots</span>';
+      } else {
+        pInfo.slots.forEach((slot, si) => {
+          const key = `${dayIdx}-${si}`;
+          const djId = pAssignments[key];
+          const dj = djId ? lineupDJs.find(d => d.id === djId) : null;
+          html += `<div style="margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)">`;
+          html += `<div style="font-size:11px;color:var(--text-secondary)">${slot.from}–${slot.to} (${formatDur(slot.duration)})</div>`;
+          if (dj) {
+            html += `<span class="lineup-compare-dj">${esc(dj.name)}</span>`;
+            if (dj.style) html += `<span class="lineup-compare-style">${esc(dj.style)}</span>`;
+          } else {
+            html += '<span class="lineup-compare-empty">—</span>';
+          }
+          html += '</div>';
+        });
+      }
+      html += '</td>';
+    });
+
+    html += '</tr></tbody></table></div>';
+
+    const section = document.createElement('div');
+    section.style.marginBottom = '20px';
+    section.innerHTML = html;
+    compare.appendChild(section);
+  });
+}
+
+// ─── Event listeners ───
+document.getElementById('btn-add-lineup-day').addEventListener('click', async () => {
+  const label = document.getElementById('fl-day-label').value.trim();
+  const start = document.getElementById('fl-day-start').value;
+  const end = document.getElementById('fl-day-end').value;
+  if (!label || !start || !end) { toast(t('lineup_fill_day')); return; }
+
+  const days = lineupConfig?.days ? [...lineupConfig.days] : [];
+  days.push({ label, start, end });
+  await setDoc(eDoc('lineup_config', 'current'), { ...(lineupConfig || {}), days, ts: Date.now() });
+  document.getElementById('fl-day-label').value = '';
+  toast(t('toast_lineup_saved'));
+});
+
+document.getElementById('btn-add-dj').addEventListener('click', async () => {
+  const name = document.getElementById('fl-dj-name').value.trim();
+  if (!name) { toast(t('toast_fill_dj')); return; }
+  const btn = document.getElementById('btn-add-dj');
+  btn.disabled = true;
+  await addDoc(eCol('lineup_djs'), {
+    name,
+    style: document.getElementById('fl-dj-style').value.trim(),
+    comments: document.getElementById('fl-dj-comments').value.trim(),
+    addedBy: CFG.user, ts: Date.now()
+  });
+  document.getElementById('fl-dj-name').value = '';
+  document.getElementById('fl-dj-style').value = '';
+  document.getElementById('fl-dj-comments').value = '';
+  toast(t('toast_dj_added'));
+  btn.disabled = false;
+});
+
+document.getElementById('btn-reset-lineup').addEventListener('click', async () => {
+  if (!confirm(t('lineup_confirm_reset'))) return;
+  const promises = [];
+  const djSnap = await getDocs(eCol('lineup_djs'));
+  djSnap.forEach(ds => promises.push(deleteDoc(eDoc('lineup_djs', ds.id))));
+  const propSnap = await getDocs(eCol('lineup_proposals'));
+  propSnap.forEach(ds => promises.push(deleteDoc(eDoc('lineup_proposals', ds.id))));
+  await Promise.all(promises);
+  await deleteDoc(eDoc('lineup_config', 'current'));
+  activeProposalId = null;
+  lineupCompareMode = false;
+  toast(t('toast_lineup_reset'));
+});
+
+document.getElementById('btn-toggle-lineup-config').addEventListener('click', () => {
+  const body = document.getElementById('lineup-config-body');
+  const btn = document.getElementById('btn-toggle-lineup-config');
+  if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▴'; }
+  else { body.style.display = 'none'; btn.textContent = '▾'; }
 });
 
 /* ══════════════════════════════════
@@ -2133,6 +3644,77 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 document.getElementById('auth-theme').addEventListener('click', toggleTheme);
 document.getElementById('btn-logout').addEventListener('click', logout);
+
+// Edition management
+let editions = [];
+function initEditions() {
+  onSnapshot(query(collection(db, 'sonora_editions'), orderBy('ts', 'asc')), snap => {
+    editions = [];
+    snap.forEach(ds => editions.push({ id: ds.id, ...ds.data() }));
+    if (!editions.length) {
+      addDoc(collection(db, 'sonora_editions'), { name: 'San Sonorín XI', prefix: 'crew', ts: Date.now() });
+    }
+    updateEditionLabel();
+  });
+}
+
+function updateEditionLabel() {
+  const current = editions.find(e => e.prefix === EDITION_PREFIX);
+  document.getElementById('edition-label').textContent = current ? current.name : EDITION_PREFIX;
+}
+
+function switchEdition(prefix, name) {
+  EDITION_PREFIX = prefix;
+  localStorage.setItem('sonora_active_prefix', prefix);
+  localStorage.setItem('sonora_edition', name);
+  clearListeners();
+  payments = []; tasks = []; expenses = []; decisions = []; polls = [];
+  lineupConfig = null; lineupDJs = []; lineupProposals = [];
+  activeProposalId = null; lineupCompareMode = false;
+  initPayments(); initTasks(); initExpenses(); initDecisions(); initPolls(); initLineup();
+  updateEditionLabel();
+  toast('Edición: ' + name);
+}
+
+const edLabel = document.getElementById('edition-label');
+edLabel.addEventListener('click', () => {
+  let html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Ediciones</div>';
+  editions.forEach(e => {
+    const isCurrent = e.prefix === EDITION_PREFIX;
+    html += `<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="${isCurrent ? 'font-weight:700;color:var(--accent)' : ''}">${e.name}${isCurrent ? ' \u2190' : ''}</span>
+      ${!isCurrent ? `<button class="btn btn-sm btn-secondary ed-switch" data-prefix="${e.prefix}" data-name="${e.name}" style="padding:2px 8px;font-size:11px">Cambiar</button>` : ''}
+    </div>`;
+  });
+  html += '<div style="margin-top:10px"><input class="form-input" id="new-edition-name" placeholder="Nueva edición..." style="font-size:13px;padding:6px 8px;margin-bottom:6px"><button class="btn btn-sm" id="btn-create-edition">Crear</button></div>';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
+  const popup = document.createElement('div');
+  popup.style.cssText = 'background:var(--bg-card);border-radius:12px;padding:20px;max-width:360px;width:90%;box-shadow:var(--shadow-lg)';
+  popup.innerHTML = html;
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', (ev) => { if (ev.target === overlay) overlay.remove(); });
+
+  popup.querySelectorAll('.ed-switch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      overlay.remove();
+      switchEdition(btn.dataset.prefix, btn.dataset.name);
+    });
+  });
+
+  popup.querySelector('#btn-create-edition').addEventListener('click', async () => {
+    const name = popup.querySelector('#new-edition-name').value.trim();
+    if (!name) return;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || 'ed' + Date.now();
+    const prefix = 'crew_' + slug;
+    await addDoc(collection(db, 'sonora_editions'), { name, prefix, ts: Date.now() });
+    overlay.remove();
+    switchEdition(prefix, name);
+  });
+});
 
 
 /* ══════════════════════════════════
@@ -2163,10 +3745,13 @@ if (CFG.user && CFG.crew.includes(CFG.user) && getVerified().includes(CFG.user))
 }
 
 // Init data listeners
+initEditions();
 initPayments();
 initTasks();
 initExpenses();
 initDecisions();
+initPolls();
+initLineup();
 
 // Populate selects
 populateRamaSelect('ft-rama');
@@ -2175,6 +3760,7 @@ populateRamaSelect('fd-rama');
 renderCrewChips('ft-assigned');
 populateCrewSelect('fe-paidby');
 renderTaskFilters();
+renderDecisionFilters();
 
 </script>
 </body>
