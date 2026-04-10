@@ -34,7 +34,7 @@ CLAUDE.md               — Contexto del proyecto
 ## Estado actual
 
 ### Funciona
-- **Auth**: Login por username + contraseña en primer acceso (localStorage). 7 usuarios fijos: Panda, Dsastre, Gurke, Droglo, Madalena, Cizette, Francis. Contraseñas = nombre real en minúsculas.
+- **Auth**: Login por username + contraseña en primer acceso (localStorage). 7 usuarios fijos: Panda, Dsastre, Gurke, Droglo, Magdalena, Cizette, Francis. Contraseñas = nombre real en minúsculas.
 - **Pagos**: Registro completo (quién pagó, a quién, cantidad, nº entradas, día, observaciones). Stats en tiempo real. Export CSV. Sorting por columnas.
 - **Tareas**: 8 ramas (sonido, local, logística, decoración, montaje, desmontaje, cartel/artistas, otros). Multi-asignación con crew chips. Sin asignar + "Me la pido" para auto-asignarse. Estados: pendiente → en curso → hecho. Prioridades: normal/alta/urgente. Filtros por rama y estado.
 - **Gastos**: Tracking por rama. Desglose visual con barras. Estados: pagado/pendiente/a reembolsar. Export CSV.

@@ -1560,7 +1560,7 @@ function clearListeners() {
    CONFIG
 ══════════════════════════════════ */
 const STORAGE_KEY = 'sonora_crew';
-const DEFAULT_CREW = ['Panda', 'Dsastre', 'Gurke', 'Droglo', 'Madalena', 'Cizette', 'Francis'];
+const DEFAULT_CREW = ['Panda', 'Dsastre', 'Gurke', 'Droglo', 'Magdalena', 'Cizette', 'Francis'];
 const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwow1eAN2ww4aZF0QtsKPC7JO0KODKFltwhpEJRKCT7NoRJPLpq5PKagggGoQIF1gjy_A/exec';
 
 function loadConfig() {
@@ -1571,6 +1571,24 @@ function loadConfig() {
 }
 function saveConfig(cfg) { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); }
 let CFG = loadConfig();
+
+/* Migración one-shot: Madalena → Magdalena (localStorage residual) */
+(function migrateMadalena() {
+  let dirty = false;
+  if (Array.isArray(CFG.crew)) {
+    const fixed = CFG.crew.map(n => n === 'Madalena' ? 'Magdalena' : n);
+    if (fixed.some((n, i) => n !== CFG.crew[i])) { CFG.crew = fixed; dirty = true; }
+  }
+  if (CFG.user === 'Madalena') { CFG.user = 'Magdalena'; dirty = true; }
+  if (dirty) saveConfig(CFG);
+  try {
+    const v = JSON.parse(localStorage.getItem('sonora_crew_verified') || '[]');
+    if (Array.isArray(v) && v.includes('Madalena')) {
+      const nv = v.map(n => n === 'Madalena' ? 'Magdalena' : n);
+      localStorage.setItem('sonora_crew_verified', JSON.stringify(nv));
+    }
+  } catch {}
+})();
 
 /* ══════════════════════════════════
    i18n
@@ -1829,7 +1847,7 @@ function toast(msg) {
 ══════════════════════════════════ */
 const CREW_PASS = {
   gurke: 'carlos', panda: 'hugo', cizette: 'clara',
-  madalena: 'elena', francis: 'telmo', dsastre: 'victor', droglo: 'pablo'
+  magdalena: 'elena', francis: 'telmo', dsastre: 'victor', droglo: 'pablo'
 };
 const VERIFIED_KEY = 'sonora_crew_verified';
 function getVerified() {
