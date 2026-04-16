@@ -1023,8 +1023,8 @@ tbody tr:hover { background: var(--accent-soft); }
       <div class="card" style="padding:10px 16px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="form-label" style="margin:0">% de cada entrada destinado a bote:</span>
-          <input class="form-input" id="f-bote-pct" type="number" min="0" max="100" step="1" value="0" style="width:70px;padding:6px 8px;text-align:center">
-          <span class="form-label" style="margin:0">%</span>
+          <span id="display-bote-pct" style="font-weight:700;color:#8b5cf6;font-size:15px">0%</span>
+          <span class="form-label" style="margin:0;color:var(--text-secondary);font-size:11px">· editable en Ajustes</span>
         </div>
       </div>
 
@@ -1192,10 +1192,7 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
         <div class="stat-card">
           <div class="stat-label">Presupuesto</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <input class="form-input" id="f-budget" type="number" min="0" step="1" placeholder="0" style="width:90px;padding:6px 8px;font-size:16px;font-weight:700">
-            <span style="font-size:14px;font-weight:600">€</span>
-          </div>
+          <div class="stat-value" id="stat-exp-budget">0 €</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Disponible</div>
@@ -1203,10 +1200,7 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
         <div class="stat-card">
           <div class="stat-label">Bote previo</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <input class="form-input" id="f-bote-prev" type="number" min="0" step="1" placeholder="0" style="width:90px;padding:6px 8px;font-size:16px;font-weight:700;color:#8b5cf6">
-            <span style="font-size:14px;font-weight:600">€</span>
-          </div>
+          <div class="stat-value" id="stat-exp-bote-prev" style="color:#8b5cf6">0 €</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Bote generado</div>
@@ -1480,6 +1474,27 @@ tbody tr:hover { background: var(--accent-soft); }
 
     <!-- ═══ TAB: AJUSTES ═══ -->
     <div class="tab-content" id="tab-settings">
+      <div class="card">
+        <div class="card-title">Parámetros de la edición</div>
+        <div class="settings-label-desc" style="margin-bottom:12px">
+          Estos valores son compartidos con todo el crew y específicos de esta edición. En Pagos y Gastos se muestran como fijos.
+        </div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label class="form-label">% al bote (por entrada)</label>
+            <input class="form-input" id="f-set-bote-pct" type="number" min="0" max="100" step="1" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bote previo (€)</label>
+            <input class="form-input" id="f-set-bote-prev" type="number" min="0" step="1" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Presupuesto disponible (€)</label>
+            <input class="form-input" id="f-set-budget" type="number" min="0" step="1" placeholder="0">
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title" data-i18n="settings_backup">Backup automático</div>
         <div class="settings-row">
@@ -2085,7 +2100,7 @@ function renderPayments() {
 function updateStats() {
   const total = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const entries = payments.reduce((s, p) => s + (p.tickets || 0), 0);
-  const botePct = parseFloat(document.getElementById('f-bote-pct').value) || 0;
+  const botePct = crewSettings.botePct || 0;
   const bote = total * (botePct / 100);
   const presupuesto = total - bote;
   document.getElementById('stat-total').textContent = total.toFixed(2) + ' €';
@@ -2199,13 +2214,6 @@ document.getElementById('btn-backup-drive').addEventListener('click', async () =
   } catch(e) {
     toast('Error al enviar backup');
   }
-});
-
-// Bote % persistence
-document.getElementById('f-bote-pct').value = localStorage.getItem('sonora_bote_pct') || '0';
-document.getElementById('f-bote-pct').addEventListener('input', () => {
-  localStorage.setItem('sonora_bote_pct', document.getElementById('f-bote-pct').value);
-  updateStats();
 });
 
 // Export CSV
@@ -2639,16 +2647,16 @@ function updateExpenseStats() {
 }
 
 function updateBudgetBar(total) {
-  const budget = parseFloat(document.getElementById('f-budget').value) || 0;
+  const budget = crewSettings.presupuesto || 0;
   const remaining = budget - total;
   const remEl = document.getElementById('stat-exp-remaining');
   const barCard = document.getElementById('budget-bar-card');
 
   // Calculate bote
-  const botePct = parseFloat(localStorage.getItem('sonora_bote_pct') || '0');
+  const botePct = crewSettings.botePct || 0;
   const payTotal = payments.reduce((s, p) => s + (p.amount || 0), 0);
   const boteGen = payTotal * (botePct / 100);
-  const botePrev = parseFloat(document.getElementById('f-bote-prev').value) || 0;
+  const botePrev = crewSettings.botePrevio || 0;
   const boteTotal = botePrev + boteGen;
   document.getElementById('stat-exp-bote-gen').textContent = boteGen > 0 ? boteGen.toFixed(2) + ' €' : '—';
   document.getElementById('stat-exp-bote-total').textContent = boteTotal > 0 ? boteTotal.toFixed(2) + ' €' : '—';
@@ -2726,20 +2734,6 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
 });
 
 // Export expenses CSV
-// Budget + bote previo inputs
-document.getElementById('f-budget').value = localStorage.getItem('sonora_budget') || '';
-document.getElementById('f-budget').addEventListener('input', () => {
-  localStorage.setItem('sonora_budget', document.getElementById('f-budget').value);
-  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-  updateBudgetBar(total);
-});
-document.getElementById('f-bote-prev').value = localStorage.getItem('sonora_bote_prev') || '';
-document.getElementById('f-bote-prev').addEventListener('input', () => {
-  localStorage.setItem('sonora_bote_prev', document.getElementById('f-bote-prev').value);
-  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-  updateBudgetBar(total);
-});
-
 document.getElementById('btn-export-expenses').addEventListener('click', () => {
   if (!expenses.length) return;
   const headers = ['Fecha', 'Concepto', 'Rama', 'Cantidad', 'Pagado por', 'Estado', 'Notas', 'Registrado por'];
@@ -3110,6 +3104,61 @@ function initLineup() {
   }, err => console.warn('Lineup proposals listener:', err));
 
   unsubscribers.push(unsub1, unsub2, unsub3);
+}
+
+/* ══════════════════════════════════
+   CREW SETTINGS (por edición)
+══════════════════════════════════ */
+let crewSettings = { botePct: 0, botePrevio: 0, presupuesto: 0 };
+
+function initSettings() {
+  const unsub = onSnapshot(eDoc('settings', 'current'), snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      crewSettings = {
+        botePct:    Number(d.botePct)    || 0,
+        botePrevio: Number(d.botePrevio) || 0,
+        presupuesto:Number(d.presupuesto)|| 0,
+      };
+    } else {
+      crewSettings = { botePct: 0, botePrevio: 0, presupuesto: 0 };
+    }
+    // sync inputs en Ajustes (sin pisar foco)
+    const sp = document.getElementById('f-set-bote-pct');
+    const sv = document.getElementById('f-set-bote-prev');
+    const sb = document.getElementById('f-set-budget');
+    if (sp && document.activeElement !== sp) sp.value = crewSettings.botePct    || '';
+    if (sv && document.activeElement !== sv) sv.value = crewSettings.botePrevio || '';
+    if (sb && document.activeElement !== sb) sb.value = crewSettings.presupuesto|| '';
+    // sync displays en Pagos / Gastos
+    const dp = document.getElementById('display-bote-pct');
+    if (dp) dp.textContent = crewSettings.botePct + '%';
+    const db1 = document.getElementById('stat-exp-budget');
+    if (db1) db1.textContent = (crewSettings.presupuesto || 0).toFixed(0) + ' €';
+    const db2 = document.getElementById('stat-exp-bote-prev');
+    if (db2) db2.textContent = (crewSettings.botePrevio || 0).toFixed(0) + ' €';
+    // recalcular stats dependientes
+    if (typeof updateStats === 'function') updateStats();
+    if (typeof updateBudgetBar === 'function') {
+      const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+      updateBudgetBar(total);
+    }
+  }, err => console.warn('Settings listener:', err));
+  unsubscribers.push(unsub);
+}
+
+async function saveCrewSettings() {
+  const pct    = parseFloat(document.getElementById('f-set-bote-pct').value)  || 0;
+  const prev   = parseFloat(document.getElementById('f-set-bote-prev').value) || 0;
+  const budget = parseFloat(document.getElementById('f-set-budget').value)    || 0;
+  try {
+    await setDoc(eDoc('settings', 'current'), {
+      botePct: pct, botePrevio: prev, presupuesto: budget
+    }, { merge: true });
+  } catch (e) {
+    console.warn('saveCrewSettings:', e);
+    toast('Error al guardar ajustes');
+  }
 }
 
 function calcDaySlots(day, slotsArray) {
@@ -3712,7 +3761,7 @@ function switchEdition(prefix, name) {
   payments = []; tasks = []; expenses = []; decisions = []; polls = [];
   lineupConfig = null; lineupDJs = []; lineupProposals = [];
   activeProposalId = null; lineupCompareMode = false;
-  initPayments(); initTasks(); initExpenses(); initDecisions(); initPolls(); initLineup();
+  initPayments(); initTasks(); initExpenses(); initDecisions(); initPolls(); initLineup(); initSettings();
   updateEditionLabel();
   toast('Edición: ' + name);
 }
@@ -3793,6 +3842,7 @@ initExpenses();
 initDecisions();
 initPolls();
 initLineup();
+initSettings();
 
 // Populate selects
 populateRamaSelect('ft-rama');
@@ -3802,6 +3852,17 @@ renderCrewChips('ft-assigned');
 populateCrewSelect('fe-paidby');
 renderTaskFilters();
 renderDecisionFilters();
+
+// Wire inputs de Ajustes → Firebase (debounced)
+['f-set-bote-pct', 'f-set-bote-prev', 'f-set-budget'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let timer;
+  el.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(saveCrewSettings, 400);
+  });
+});
 
 </script>
 </body>
