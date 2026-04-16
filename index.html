@@ -1273,47 +1273,44 @@ tbody tr:hover { background: var(--accent-soft); }
     <div class="tab-content" id="tab-expenses">
       <!-- STATS -->
       <div class="stats-grid" id="expense-stats">
-        <div class="stat-card">
-          <div class="stat-label" data-i18n="stat_exp_total">Total gastado</div>
+        <div class="stat-card" title="Suma de todos los gastos reales registrados">
+          <div class="stat-label">Gastado</div>
           <div class="stat-value accent" id="stat-exp-total">0 €</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Total previsto</div>
+        <div class="stat-card" title="Suma de las previsiones de gasto (estimaciones futuras)">
+          <div class="stat-label">Previsto</div>
           <div class="stat-value" id="stat-exp-prevision" style="color:var(--warning)">0 €</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label" data-i18n="stat_exp_records">Gastos</div>
-          <div class="stat-value" id="stat-exp-records">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Recaudado (libre de bote)</div>
+        <div class="stat-card" title="Total recaudado en pagos menos el bote. Es el dinero real disponible para gastar">
+          <div class="stat-label">Libre de bote</div>
           <div class="stat-value" id="stat-exp-libre" style="color:var(--success)">0 €</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Presupuesto (Ajustes)</div>
+        <div class="stat-card" title="Presupuesto fijado en Ajustes. Si no hay, se usa el recaudado libre de bote">
+          <div class="stat-label">Presupuesto</div>
           <div class="stat-value" id="stat-exp-budget">0 €</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" title="Presupuesto menos los gastos reales ya realizados">
           <div class="stat-label">Disponible real</div>
           <div class="stat-value" id="stat-exp-remaining">—</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Disp. tras previsiones</div>
+        <div class="stat-card" title="Disponible real menos las previsiones de gasto. Lo que quedaría si se cumplen todas las estimaciones">
+          <div class="stat-label">Disponible prev.</div>
           <div class="stat-value" id="stat-exp-remaining-prev">—</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" title="Bote acumulado de ediciones anteriores, configurado en Ajustes">
           <div class="stat-label">Bote previo</div>
           <div class="stat-value" id="stat-exp-bote-prev" style="color:#8b5cf6">0 €</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" title="Porcentaje de cada entrada que va al bote, calculado sobre el total recaudado">
           <div class="stat-label">Bote generado</div>
           <div class="stat-value" id="stat-exp-bote-gen" style="color:#8b5cf6">—</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" title="Bote previo + bote generado. Dinero reservado que no se gasta en esta edición">
           <div class="stat-label">Bote total</div>
           <div class="stat-value" id="stat-exp-bote-total" style="color:#8b5cf6">—</div>
         </div>
       </div>
+      <div id="stat-exp-records" style="display:none">0</div>
       <div class="card" id="budget-bar-card" style="padding:10px 16px;display:none">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px">
           <span id="budget-bar-label">0 / 0 €</span>
