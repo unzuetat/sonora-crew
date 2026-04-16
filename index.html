@@ -2835,7 +2835,7 @@ function renderExpenses() {
       <td style="font-size:12px;color:var(--text-secondary)">${limiteStr}</td>
       <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
       <td style="white-space:nowrap">
-        <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;margin-right:4px" data-id="${e.id}" data-amount="${e.amount}" data-concept="${esc(e.concept)}" onclick="convertPrevToReal(this)">→ Real</button>
+        <button class="btn btn-sm btn-convert-prev" style="font-size:10px;padding:2px 6px;margin-right:4px" data-id="${e.id}" data-amount="${e.amount}" data-concept="${esc(e.concept)}">→ Real</button>
         <div class="del-row" style="display:inline"><button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button><div class="del-confirm" id="dce-${e.id}"><span>${t('confirm_delete')}</span><button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button><button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button></div></div>
       </td>
     `;
@@ -2864,6 +2864,11 @@ function renderExpenses() {
         dc.previousElementSibling.style.display = '';
       });
     });
+  });
+
+  // Wire convert buttons
+  tbodyPrev.querySelectorAll('.btn-convert-prev').forEach(btn => {
+    btn.addEventListener('click', () => convertPrevToReal(btn));
   });
 }
 
