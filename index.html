@@ -3436,12 +3436,10 @@ function calcDaySlots(day, slotsArray) {
 
 function bpmColor(bpm) {
   if (!bpm || bpm <= 0) return '#999';
-  if (bpm < 100) return '#22c55e';      // green
-  if (bpm < 120) return '#84cc16';      // lime
-  if (bpm < 130) return '#eab308';      // yellow
-  if (bpm < 140) return '#f97316';      // orange
-  if (bpm < 150) return '#ef4444';      // red
-  return '#dc2626';                      // dark red
+  if (bpm <= 130) return '#22c55e';     // green
+  if (bpm <= 144) return '#eab308';     // yellow
+  if (bpm <= 155) return '#f97316';     // orange
+  return '#ef4444';                      // red
 }
 
 function bpmTag(bpmMin, bpmMax) {
