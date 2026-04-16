@@ -1079,6 +1079,7 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="tab-btn" data-tab="decisions" style="color:#b45309">Decisiones</button>
       <button class="tab-btn" data-tab="polls" style="color:#047857">Encuestas</button>
       <button class="tab-btn" data-tab="lineup" style="color:#7c3aed">Lineup</button>
+      <button class="tab-btn" data-tab="settle" style="color:#2563eb">Saldar cuentas</button>
       <button class="tab-btn" data-tab="settings">Ajustes</button>
     </div>
   </div>
@@ -1628,6 +1629,22 @@ tbody tr:hover { background: var(--accent-soft); }
       </div>
     </div>
 
+    <!-- ═══ TAB: SALDAR CUENTAS ═══ -->
+    <div class="tab-content" id="tab-settle">
+      <div class="card">
+        <div class="card-title">Saldar cuentas</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">
+          Cada miembro recauda pagos (dinero que tiene de la org) y adelanta gastos (dinero que la org le debe). El balance muestra quién debe a quién.
+        </div>
+        <div id="settle-list"></div>
+      </div>
+      <div class="card" id="settle-summary-card" style="display:none">
+        <div class="card-title" style="font-size:13px">Resumen de transferencias</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Movimientos mínimos para saldar todas las cuentas</div>
+        <div id="settle-transfers"></div>
+      </div>
+    </div>
+
     <!-- ═══ TAB: AJUSTES ═══ -->
     <div class="tab-content" id="tab-settings">
       <div class="card">
@@ -2172,6 +2189,7 @@ function initPayments() {
     snap.forEach(ds => payments.push({ id: ds.id, ...ds.data() }));
     renderPayments();
     updateStats();
+    if (typeof renderSettle === 'function') renderSettle();
   }, err => {
     console.warn('Payments listener error:', err);
   });
@@ -2759,6 +2777,7 @@ function initExpenses() {
     updateExpenseStats();
     renderExpenseBreakdown();
     renderDeviations();
+    if (typeof renderSettle === 'function') renderSettle();
   }, err => console.warn('Expenses listener:', err));
   unsubscribers.push(unsub);
 }
@@ -2912,6 +2931,101 @@ function renderDeviations() {
     `;
     list.appendChild(row);
   });
+}
+
+/* ══════════════════════════════════
+   SALDAR CUENTAS
+══════════════════════════════════ */
+function renderSettle() {
+  const list = document.getElementById('settle-list');
+  const transfersEl = document.getElementById('settle-transfers');
+  const summaryCard = document.getElementById('settle-summary-card');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const balances = {};
+  CFG.crew.forEach(name => { balances[name] = { collected: 0, spent: 0, payDetails: [], expDetails: [] }; });
+
+  // Pagos: 'to' = crew member who collected cash → they hold money for org
+  payments.forEach(p => {
+    const member = p.to;
+    if (balances[member]) {
+      balances[member].collected += p.amount || 0;
+      balances[member].payDetails.push(p);
+    }
+  });
+
+  // Gastos reales: 'paidBy' = crew member who spent → org owes them
+  expenses.filter(e => e.tipo !== 'prevision').forEach(e => {
+    const member = e.paidBy;
+    if (balances[member]) {
+      balances[member].spent += e.amount || 0;
+      balances[member].expDetails.push(e);
+    }
+  });
+
+  CFG.crew.forEach(name => {
+    const b = balances[name];
+    const net = b.collected - b.spent; // positive = owes org, negative = org owes them
+    const color = net > 0 ? 'var(--accent)' : net < 0 ? 'var(--success)' : 'var(--text-secondary)';
+    const label = net > 0 ? `Debe ${net.toFixed(2)} € a la org` : net < 0 ? `La org le debe ${Math.abs(net).toFixed(2)} €` : 'En paz';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--border)';
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
+        <span style="font-weight:600;font-size:14px">${esc(name)}</span>
+        <span style="font-weight:700;color:${color};font-size:14px">${label}</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:4px;font-size:12px;color:var(--text-secondary)">
+        <span title="Dinero recaudado que tiene de la org">Recaudado: <strong style="color:var(--accent)">${b.collected.toFixed(2)} €</strong> (${b.payDetails.length} pagos)</span>
+        <span title="Dinero adelantado por esta persona para la org">Adelantado: <strong style="color:var(--success)">${b.spent.toFixed(2)} €</strong> (${b.expDetails.length} gastos)</span>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // Calculate minimal transfers to settle
+  const nets = [];
+  CFG.crew.forEach(name => {
+    const net = balances[name].collected - balances[name].spent;
+    if (Math.abs(net) > 0.01) nets.push({ name, net });
+  });
+
+  // Sort: debtors (positive net = owes) and creditors (negative net = owed)
+  const debtors = nets.filter(n => n.net > 0).sort((a, b) => b.net - a.net);
+  const creditors = nets.filter(n => n.net < 0).sort((a, b) => a.net - b.net);
+
+  const transfers = [];
+  let di = 0, ci = 0;
+  const d = debtors.map(x => ({ ...x }));
+  const c = creditors.map(x => ({ ...x, net: Math.abs(x.net) }));
+  while (di < d.length && ci < c.length) {
+    const amount = Math.min(d[di].net, c[ci].net);
+    if (amount > 0.01) transfers.push({ from: d[di].name, to: c[ci].name, amount });
+    d[di].net -= amount;
+    c[ci].net -= amount;
+    if (d[di].net < 0.01) di++;
+    if (c[ci].net < 0.01) ci++;
+  }
+
+  if (transfers.length) {
+    summaryCard.style.display = '';
+    transfersEl.innerHTML = '';
+    transfers.forEach(t => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px';
+      row.innerHTML = `
+        <span style="font-weight:600">${esc(t.from)}</span>
+        <span style="color:var(--text-secondary)">→</span>
+        <span style="font-weight:600">${esc(t.to)}</span>
+        <span style="margin-left:auto;font-weight:700;color:var(--accent)">${t.amount.toFixed(2)} €</span>
+      `;
+      transfersEl.appendChild(row);
+    });
+  } else {
+    summaryCard.style.display = 'none';
+  }
 }
 
 function updateExpenseStats() {
