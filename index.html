@@ -179,6 +179,52 @@ body {
 }
 .icon-btn:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
 
+/* Notification badges */
+.notif-badges { display: flex; gap: 4px; align-items: center; }
+.notif-btn {
+  position: relative; background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 4px 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 4px; transition: .15s; white-space: nowrap;
+}
+.notif-btn:hover { background: var(--bg); border-color: var(--primary); color: var(--primary); }
+.notif-btn .notif-icon { font-size: 14px; }
+.notif-btn .notif-count {
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px; display: flex;
+  align-items: center; justify-content: center; padding: 0 4px;
+}
+.notif-btn .notif-count.zero { background: var(--success); }
+.notif-btn .notif-count.warn { background: var(--warning); }
+.notif-btn .notif-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  position: absolute; top: 2px; right: 2px;
+}
+.notif-panel {
+  position: absolute; top: 100%; right: 0; z-index: 200;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15); padding: 10px; min-width: 280px; max-width: 340px;
+  max-height: 400px; overflow-y: auto; font-size: 12px;
+}
+.notif-panel-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); margin-bottom: 6px; }
+.notif-item {
+  padding: 6px 8px; border-radius: 6px; cursor: pointer; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--bg); }
+.notif-item .notif-item-badge { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+.notif-shared { background: #dbeafe; color: #1d4ed8; }
+.notif-solo { background: #fef3c7; color: #92400e; }
+
+/* Fiesta group */
+.fiesta-group { margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+.fiesta-group-header {
+  font-size: 14px; font-weight: 700; margin-bottom: 8px; padding-bottom: 6px;
+  border-bottom: 2px solid var(--primary); display: flex; align-items: center; gap: 8px;
+}
+.fiesta-group-header .fiesta-label { flex: 1; }
+.fiesta-badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: var(--primary); color: #fff; }
+
 .wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
 
 /* ══════════════════════════════════
@@ -958,6 +1004,7 @@ tbody tr:hover { background: var(--accent-soft); }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .auth-grid { grid-template-columns: 1fr; }
   .topbar-user { display: none; }
+  .notif-badges { flex-wrap: wrap; }
   .wrap { padding: 12px; }
   .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .tab-btn { white-space: nowrap; flex-shrink: 0; }
@@ -997,6 +1044,20 @@ tbody tr:hover { background: var(--accent-soft); }
       <div class="topbar-title"><span class="logo-orgia">Orgía</span><span class="logo-sonora">Sonora</span></div>
       <div id="edition-label" style="font-size:11px;color:var(--text-secondary);font-weight:500;letter-spacing:.5px;cursor:pointer;border-bottom:1px dashed var(--border)" title="Click para editar edición">SAN SONORÍN XI</div>
       <div class="topbar-user">eres: <strong id="topbar-user"></strong></div>
+    </div>
+    <div class="notif-badges" id="notif-badges">
+      <button class="notif-btn" id="notif-tasks-solo" data-tab="tasks" title="Tareas solo tuyas">
+        <span class="notif-icon">📋</span><span class="notif-count zero" id="notif-tasks-solo-count">0</span>
+      </button>
+      <button class="notif-btn" id="notif-tasks-shared" data-tab="tasks" title="Tareas compartidas">
+        <span class="notif-icon">👥</span><span class="notif-count zero" id="notif-tasks-shared-count">0</span>
+      </button>
+      <button class="notif-btn" id="notif-polls" data-tab="polls" title="Encuestas pendientes">
+        <span class="notif-icon">🗳️</span><span class="notif-count zero" id="notif-polls-count">0</span>
+      </button>
+      <button class="notif-btn" id="notif-lineup" data-tab="lineup" title="Lineup sin propuesta">
+        <span class="notif-icon">🎧</span><span class="notif-count zero" id="notif-lineup-count">0</span>
+      </button>
     </div>
     <div class="topbar-actions">
       <div class="backup-status" id="backup-status">
@@ -1435,8 +1496,13 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
         <div id="lineup-config-body" style="margin-top:12px">
           <div id="lineup-days-list"></div>
-          <div class="form-row triple" style="margin-top:8px">
-            <div class="form-group">
+          <div class="form-row" style="margin-top:8px">
+            <div class="form-group" style="flex:1">
+              <label class="form-label">Fiesta / Evento</label>
+              <input class="form-input" id="fl-day-fiesta" type="text" placeholder="Ej: San Sonorín" list="fiesta-suggestions">
+              <datalist id="fiesta-suggestions"></datalist>
+            </div>
+            <div class="form-group" style="flex:1">
               <label class="form-label" data-i18n="lineup_day_label">Nombre del día</label>
               <input class="form-input" id="fl-day-label" type="text" placeholder="Ej: Viernes">
             </div>
@@ -2342,6 +2408,7 @@ function initTasks() {
     tasks = [];
     snap.forEach(ds => tasks.push({ id: ds.id, ...ds.data() }));
     renderTasks();
+    if (typeof updateNotifBadges === 'function') updateNotifBadges();
   }, err => console.warn('Tasks listener:', err));
   unsubscribers.push(unsub);
 }
@@ -3047,6 +3114,7 @@ function initPolls() {
     polls = [];
     snap.forEach(ds => polls.push({ id: ds.id, ...ds.data() }));
     renderPolls();
+    if (typeof updateNotifBadges === 'function') updateNotifBadges();
   }, err => console.warn('Polls listener:', err));
   unsubscribers.push(unsub);
 }
@@ -3200,6 +3268,7 @@ function initLineup() {
       activeProposalId = lineupProposals[0].id;
     }
     renderLineupAll();
+    if (typeof updateNotifBadges === 'function') updateNotifBadges();
   }, err => console.warn('Lineup proposals listener:', err));
 
   unsubscribers.push(unsub1, unsub2, unsub3);
@@ -3305,7 +3374,31 @@ function renderLineupConfig() {
   const isOwn = proposal && proposal.author === CFG.user;
   const daySlots = proposal ? (proposal.daySlots || {}) : {};
 
+  // Update fiesta suggestions datalist
+  const fiestaSet = new Set(lineupConfig.days.map(d => d.fiesta || 'General'));
+  const datalist = document.getElementById('fiesta-suggestions');
+  if (datalist) {
+    datalist.innerHTML = '';
+    fiestaSet.forEach(f => { const o = document.createElement('option'); o.value = f; datalist.appendChild(o); });
+  }
+
+  // Group days by fiesta
+  const fiestaGroups = {};
   lineupConfig.days.forEach((day, dayIdx) => {
+    const fiesta = day.fiesta || 'General';
+    if (!fiestaGroups[fiesta]) fiestaGroups[fiesta] = [];
+    fiestaGroups[fiesta].push({ day, dayIdx });
+  });
+
+  Object.entries(fiestaGroups).forEach(([fiestaName, dayEntries]) => {
+    const group = document.createElement('div');
+    group.className = 'fiesta-group';
+    group.innerHTML = `<div class="fiesta-group-header">
+      <span class="fiesta-label">🎉 ${esc(fiestaName)}</span>
+      <span class="fiesta-badge">${dayEntries.length} día${dayEntries.length > 1 ? 's' : ''}</span>
+    </div>`;
+
+    dayEntries.forEach(({ day, dayIdx }) => {
     const dayKey = String(dayIdx);
     const slotsArr = daySlots[dayKey] || [];
     const info = calcDaySlots(day, slotsArr);
@@ -3346,8 +3439,11 @@ function renderLineupConfig() {
     }
 
     card.innerHTML = html;
-    list.appendChild(card);
-  });
+    group.appendChild(card);
+    }); // end dayEntries.forEach
+
+    list.appendChild(group);
+  }); // end Object.entries(fiestaGroups).forEach
 
   // Delete day (global)
   list.querySelectorAll('.lineup-config-day-del').forEach(btn => {
@@ -3620,15 +3716,30 @@ function renderLineupProposalBoard() {
     });
   }
 
-  // Per-day: slot config + time grid
+  // Per-day: slot config + time grid, grouped by fiesta
+  const boardFiestaGroups = {};
   lineupConfig.days.forEach((day, dayIdx) => {
+    const fiesta = day.fiesta || 'General';
+    if (!boardFiestaGroups[fiesta]) boardFiestaGroups[fiesta] = [];
+    boardFiestaGroups[fiesta].push({ day, dayIdx });
+  });
+
+  Object.entries(boardFiestaGroups).forEach(([fiestaName, dayEntries]) => {
+    if (Object.keys(boardFiestaGroups).length > 1) {
+      const fiestaHeader = document.createElement('div');
+      fiestaHeader.className = 'fiesta-group-header';
+      fiestaHeader.style.marginTop = '12px';
+      fiestaHeader.innerHTML = `<span class="fiesta-label">🎉 ${esc(fiestaName)}</span>`;
+      board.appendChild(fiestaHeader);
+    }
+
+    dayEntries.forEach(({ day, dayIdx }) => {
     const dayKey = String(dayIdx);
     const slotsArr = daySlots[dayKey] || [];
     const info = calcDaySlots(day, slotsArr);
     const section = document.createElement('div');
     section.style.marginBottom = '20px';
 
-    // Day header (slot config is in renderLineupConfig above)
     let html = `<div class="lineup-day-header">${esc(day.label)}<span class="lineup-day-hours">${day.start} → ${day.end} · ${info.slots.length} slots</span></div>`;
 
     // Time slot grid
@@ -3663,7 +3774,8 @@ function renderLineupProposalBoard() {
 
     section.innerHTML = html;
     board.appendChild(section);
-  });
+    }); // end dayEntries.forEach
+  }); // end Object.entries(boardFiestaGroups).forEach
 
   // Unassign
   board.querySelectorAll('.lineup-unassign').forEach(btn => {
@@ -3718,7 +3830,24 @@ function renderLineupCompare() {
     return;
   }
 
+  // Group by fiesta for compare view
+  const compareFiestaGroups = {};
   lineupConfig.days.forEach((day, dayIdx) => {
+    const fiesta = day.fiesta || 'General';
+    if (!compareFiestaGroups[fiesta]) compareFiestaGroups[fiesta] = [];
+    compareFiestaGroups[fiesta].push({ day, dayIdx });
+  });
+
+  Object.entries(compareFiestaGroups).forEach(([fiestaName, dayEntries]) => {
+    if (Object.keys(compareFiestaGroups).length > 1) {
+      const fh = document.createElement('div');
+      fh.className = 'fiesta-group-header';
+      fh.style.marginTop = '12px';
+      fh.innerHTML = `<span class="fiesta-label">🎉 ${esc(fiestaName)}</span>`;
+      compare.appendChild(fh);
+    }
+
+    dayEntries.forEach(({ day, dayIdx }) => {
     const dayKey = String(dayIdx);
     let html = `<div class="lineup-day-header">${esc(day.label)}<span class="lineup-day-hours">${day.start} → ${day.end}</span></div>`;
     html += '<div class="table-wrap"><table class="lineup-compare-table"><thead><tr>';
@@ -3728,7 +3857,6 @@ function renderLineupCompare() {
     });
     html += '</tr></thead><tbody><tr>';
 
-    // Each column: that proposal's slots stacked vertically
     lineupProposals.forEach(p => {
       const pSlots = (p.daySlots || {})[dayKey] || [];
       const pInfo = calcDaySlots(day, pSlots);
@@ -3761,18 +3889,20 @@ function renderLineupCompare() {
     section.style.marginBottom = '20px';
     section.innerHTML = html;
     compare.appendChild(section);
-  });
+    }); // end dayEntries
+  }); // end fiestaGroups
 }
 
 // ─── Event listeners ───
 document.getElementById('btn-add-lineup-day').addEventListener('click', async () => {
+  const fiesta = document.getElementById('fl-day-fiesta').value.trim();
   const label = document.getElementById('fl-day-label').value.trim();
   const start = document.getElementById('fl-day-start').value;
   const end = document.getElementById('fl-day-end').value;
   if (!label || !start || !end) { toast(t('lineup_fill_day')); return; }
 
   const days = lineupConfig?.days ? [...lineupConfig.days] : [];
-  days.push({ label, start, end });
+  days.push({ label, start, end, fiesta: fiesta || 'General' });
   await setDoc(eDoc('lineup_config', 'current'), { ...(lineupConfig || {}), days, ts: Date.now() });
   document.getElementById('fl-day-label').value = '';
   toast(t('toast_lineup_saved'));
@@ -3914,6 +4044,53 @@ edLabel.addEventListener('click', () => {
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+/* ══════════════════════════════════
+   NOTIFICATION BADGES
+══════════════════════════════════ */
+function updateNotifBadges() {
+  if (!CFG.user) return;
+  const me = CFG.user;
+
+  // Tasks assigned to me, not done
+  const myTasks = tasks.filter(t => (t.assigned || []).includes(me) && t.status !== 'hecho');
+  const solo = myTasks.filter(t => (t.assigned || []).length === 1);
+  const shared = myTasks.filter(t => (t.assigned || []).length > 1);
+
+  // Polls where I haven't voted
+  const pendingPolls = polls.filter(p => !(p.votes || []).includes(me));
+
+  // Lineup: do I have a proposal?
+  const myProposal = lineupProposals.find(p => p.owner === me);
+  const lineupDays = lineupConfig?.days?.length || 0;
+  const lineupPending = lineupDays > 0 && !myProposal ? 1 : 0;
+
+  setBadge('notif-tasks-solo-count', solo.length);
+  setBadge('notif-tasks-shared-count', shared.length);
+  setBadge('notif-polls-count', pendingPolls.length);
+  setBadge('notif-lineup-count', lineupPending);
+}
+
+function setBadge(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = count;
+  el.className = 'notif-count' + (count === 0 ? ' zero' : count >= 3 ? '' : ' warn');
+}
+
+// Click handlers: navigate to tab + show panel
+document.querySelectorAll('.notif-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    if (tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
+      const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+      if (tabBtn) tabBtn.classList.add('on');
+      document.getElementById('tab-' + tab)?.classList.add('on');
+    }
+  });
+});
 
 /* ══════════════════════════════════
    INIT
