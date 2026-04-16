@@ -601,6 +601,26 @@ tbody tr:hover { background: var(--accent-soft); }
   min-width: 70px;
   text-align: right;
 }
+.breakdown-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.breakdown-bar-label { font-size: 10px; color: var(--text-secondary); display: flex; justify-content: space-between; }
+.breakdown-amounts { min-width: 130px; text-align: right; font-size: 12px; line-height: 1.6; }
+.breakdown-amounts .amt-real { font-weight: 600; }
+.breakdown-amounts .amt-prev { color: var(--text-secondary); font-style: italic; }
+.breakdown-amounts .amt-limit { color: var(--warning); font-size: 11px; }
+.breakdown-limit-input { width: 65px; padding: 2px 6px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); color: var(--text); text-align: right; }
+.breakdown-limit-input:focus { border-color: var(--primary); outline: none; }
+.breakdown-over { color: var(--accent) !important; font-weight: 600; }
+
+.exp-row-prevision { opacity: 0.7; font-style: italic; }
+.exp-tipo-badge { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; text-transform: uppercase; }
+.exp-tipo-real { background: var(--success); color: #fff; }
+.exp-tipo-prevision { background: var(--warning); color: #fff; }
+
+.tipo-toggle { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.tipo-toggle label { flex: 1; padding: 6px 12px; font-size: 12px; font-weight: 500; text-align: center; cursor: pointer; transition: all .2s; }
+.tipo-toggle input { display: none; }
+.tipo-toggle input:checked + span { background: var(--primary); color: #fff; }
+.tipo-toggle label span { display: block; padding: 6px 12px; border-radius: 0; }
 
 .exp-status {
   display: inline-block;
@@ -1187,6 +1207,10 @@ tbody tr:hover { background: var(--accent-soft); }
           <div class="stat-value accent" id="stat-exp-total">0 €</div>
         </div>
         <div class="stat-card">
+          <div class="stat-label">Total previsto</div>
+          <div class="stat-value" id="stat-exp-prevision" style="color:var(--warning)">0 €</div>
+        </div>
+        <div class="stat-card">
           <div class="stat-label" data-i18n="stat_exp_records">Gastos</div>
           <div class="stat-value" id="stat-exp-records">0</div>
         </div>
@@ -1235,7 +1259,14 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
         <div class="collapsible-body">
         <div class="form-row">
-          <div class="form-group">
+          <div class="form-group" style="flex:0 0 auto">
+            <label class="form-label">Tipo</label>
+            <div class="tipo-toggle">
+              <label><input type="radio" name="fe-tipo" value="real" checked><span>Real</span></label>
+              <label><input type="radio" name="fe-tipo" value="prevision"><span>Previsión</span></label>
+            </div>
+          </div>
+          <div class="form-group" style="flex:1">
             <label class="form-label" data-i18n="lbl_exp_concept">Concepto</label>
             <input class="form-input" id="fe-concept" type="text" placeholder="Qué se ha comprado...">
           </div>
@@ -1262,8 +1293,12 @@ tbody tr:hover { background: var(--accent-soft); }
             </select>
           </div>
         </div>
-        <div class="form-row full">
+        <div class="form-row">
           <div class="form-group">
+            <label class="form-label">Límite máx. (€) <span style="font-weight:400;color:var(--text-secondary)">opcional</span></label>
+            <input class="form-input" id="fe-limit" type="number" step="0.01" min="0" placeholder="Tope para este concepto">
+          </div>
+          <div class="form-group" style="flex:1">
             <label class="form-label" data-i18n="lbl_exp_notes">Notas</label>
             <input class="form-input" id="fe-notes" type="text" placeholder="Opcional...">
           </div>
@@ -1284,10 +1319,12 @@ tbody tr:hover { background: var(--accent-soft); }
           <table>
             <thead>
               <tr>
+                <th>Tipo</th>
                 <th data-i18n="th_date">Fecha</th>
                 <th data-i18n="th_exp_concept">Concepto</th>
                 <th data-i18n="th_exp_rama">Rama</th>
                 <th data-i18n="th_amount">Cantidad</th>
+                <th>Límite</th>
                 <th data-i18n="th_exp_paidby">Pagado por</th>
                 <th data-i18n="th_exp_status">Estado</th>
                 <th data-i18n="th_obs">Notas</th>
@@ -2588,18 +2625,26 @@ function renderExpenses() {
 
   expenses.forEach(e => {
     const tr = document.createElement('tr');
+    const isPrev = e.tipo === 'prevision';
+    if (isPrev) tr.className = 'exp-row-prevision';
     const date = new Date(e.ts);
     const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
       + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     const rama = RAMAS.find(r => r.id === e.rama) || RAMAS[0];
     const statusClass = 'exp-' + e.status;
     const statusLabel = t('exp_' + e.status);
+    const tipoLabel = isPrev ? 'Previsión' : 'Real';
+    const tipoCss = isPrev ? 'exp-tipo-prevision' : 'exp-tipo-real';
+    const limiteStr = e.limite ? e.limite.toFixed(0) + ' €' : '—';
+    const overLimit = e.limite && e.amount > e.limite;
 
     tr.innerHTML = `
+      <td><span class="exp-tipo-badge ${tipoCss}">${tipoLabel}</span></td>
       <td style="white-space:nowrap;font-size:12px;color:var(--text-secondary)">${dateStr}</td>
       <td style="font-weight:500">${esc(e.concept)}</td>
       <td><span class="badge-rama ${rama.css}">${t(rama.key)}</span></td>
-      <td class="amount">${e.amount.toFixed(2)} €</td>
+      <td class="amount${overLimit ? ' breakdown-over' : ''}">${e.amount.toFixed(2)} €</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${limiteStr}</td>
       <td>${esc(e.paidBy)}</td>
       <td><span class="exp-status ${statusClass}">${statusLabel}</span></td>
       <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
@@ -2640,10 +2685,14 @@ function renderExpenses() {
 }
 
 function updateExpenseStats() {
-  const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-  document.getElementById('stat-exp-total').textContent = total.toFixed(2) + ' €';
+  const reales = expenses.filter(e => e.tipo !== 'prevision');
+  const previsiones = expenses.filter(e => e.tipo === 'prevision');
+  const totalReal = reales.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalPrev = previsiones.reduce((s, e) => s + (e.amount || 0), 0);
+  document.getElementById('stat-exp-total').textContent = totalReal.toFixed(2) + ' €';
+  document.getElementById('stat-exp-prevision').textContent = totalPrev.toFixed(2) + ' €';
   document.getElementById('stat-exp-records').textContent = expenses.length;
-  updateBudgetBar(total);
+  updateBudgetBar(totalReal);
 }
 
 function updateBudgetBar(total) {
@@ -2679,24 +2728,67 @@ function updateBudgetBar(total) {
 function renderExpenseBreakdown() {
   const el = document.getElementById('expense-breakdown');
   el.innerHTML = '';
-  const totals = {};
-  RAMAS.forEach(r => totals[r.id] = 0);
-  expenses.forEach(e => { if (totals[e.rama] !== undefined) totals[e.rama] += e.amount || 0; });
-  const max = Math.max(...Object.values(totals), 1);
+  const totalsReal = {}, totalsPrev = {};
+  RAMAS.forEach(r => { totalsReal[r.id] = 0; totalsPrev[r.id] = 0; });
+  expenses.forEach(e => {
+    if (e.tipo === 'prevision') { if (totalsPrev[e.rama] !== undefined) totalsPrev[e.rama] += e.amount || 0; }
+    else { if (totalsReal[e.rama] !== undefined) totalsReal[e.rama] += e.amount || 0; }
+  });
+  const ramaLimits = crewSettings.ramaLimits || {};
+  const max = Math.max(...Object.values(totalsReal), ...Object.values(totalsPrev), ...Object.values(ramaLimits).map(Number), 1);
 
   RAMAS.forEach(r => {
-    const amount = totals[r.id];
-    const pct = (amount / max) * 100;
+    const real = totalsReal[r.id];
+    const prev = totalsPrev[r.id];
+    const limit = ramaLimits[r.id] || 0;
+    const pctReal = (real / max) * 100;
+    const pctPrev = (prev / max) * 100;
+    const pctLimit = limit > 0 ? (limit / max) * 100 : 0;
+    const overLimit = limit > 0 && real > limit;
+    const overPrev = prev > 0 && real > prev;
+
     const row = document.createElement('div');
     row.className = 'breakdown-row';
+    row.style.alignItems = 'flex-start';
     row.innerHTML = `
-      <span class="badge-rama ${r.css}" style="min-width:80px;text-align:center">${t(r.key)}</span>
-      <div class="breakdown-bar-wrap">
-        <div class="breakdown-bar" style="width:${pct}%;background:${RAMA_COLORS[r.id]}"></div>
+      <span class="badge-rama ${r.css}" style="min-width:80px;text-align:center;margin-top:4px">${t(r.key)}</span>
+      <div class="breakdown-bars">
+        <div>
+          <div class="breakdown-bar-wrap">
+            <div class="breakdown-bar" style="width:${pctReal}%;background:${RAMA_COLORS[r.id]}"></div>
+          </div>
+          <div class="breakdown-bar-label"><span>Real</span><span>${real.toFixed(0)} €</span></div>
+        </div>
+        ${prev > 0 ? `<div>
+          <div class="breakdown-bar-wrap" style="opacity:.5">
+            <div class="breakdown-bar" style="width:${pctPrev}%;background:${RAMA_COLORS[r.id]}"></div>
+          </div>
+          <div class="breakdown-bar-label"><span>Previsión</span><span>${prev.toFixed(0)} €</span></div>
+        </div>` : ''}
+        ${pctLimit > 0 ? `<div class="breakdown-bar-label" style="margin-top:1px"><span>Límite</span><span class="${overLimit ? 'breakdown-over' : ''}">${limit.toFixed(0)} €</span></div>` : ''}
       </div>
-      <span class="breakdown-amount">${amount.toFixed(2)} €</span>
+      <div style="min-width:70px;display:flex;align-items:center;gap:4px;margin-top:4px">
+        <input class="breakdown-limit-input" type="number" min="0" step="1" placeholder="—" value="${limit || ''}" data-rama="${r.id}">
+        <span style="font-size:10px;color:var(--text-secondary)">€</span>
+      </div>
     `;
     el.appendChild(row);
+  });
+
+  // Save rama limits on change (debounced)
+  let limitTimer;
+  el.querySelectorAll('.breakdown-limit-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      clearTimeout(limitTimer);
+      limitTimer = setTimeout(() => {
+        const limits = {};
+        el.querySelectorAll('.breakdown-limit-input').forEach(i => {
+          const v = parseFloat(i.value) || 0;
+          if (v > 0) limits[i.dataset.rama] = v;
+        });
+        setDoc(eDoc('settings', 'current'), { ramaLimits: limits }, { merge: true });
+      }, 600);
+    });
   });
 }
 
@@ -2709,10 +2801,15 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
   const btn = document.getElementById('btn-add-expense');
   btn.disabled = true;
 
+  const tipo = document.querySelector('input[name="fe-tipo"]:checked').value;
+  const limite = parseFloat(document.getElementById('fe-limit').value) || 0;
+
   const expense = {
     concept,
     rama: document.getElementById('fe-rama').value,
     amount,
+    tipo,
+    limite: limite > 0 ? limite : null,
     paidBy: document.getElementById('fe-paidby').value,
     status: document.getElementById('fe-status').value,
     notes: document.getElementById('fe-notes').value.trim(),
@@ -2728,7 +2825,9 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
 
   document.getElementById('fe-concept').value = '';
   document.getElementById('fe-amount').value = '';
+  document.getElementById('fe-limit').value = '';
   document.getElementById('fe-notes').value = '';
+  document.querySelector('input[name="fe-tipo"][value="real"]').checked = true;
   toast(t('toast_expense_added'));
   btn.disabled = false;
 });
@@ -2736,11 +2835,11 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
 // Export expenses CSV
 document.getElementById('btn-export-expenses').addEventListener('click', () => {
   if (!expenses.length) return;
-  const headers = ['Fecha', 'Concepto', 'Rama', 'Cantidad', 'Pagado por', 'Estado', 'Notas', 'Registrado por'];
+  const headers = ['Tipo', 'Fecha', 'Concepto', 'Rama', 'Cantidad', 'Límite', 'Pagado por', 'Estado', 'Notas', 'Registrado por'];
   const rows = expenses.map(e => {
     const date = new Date(e.ts).toLocaleString('es-ES');
     const ramaLabel = (RAMAS.find(r => r.id === e.rama) || {}).id || e.rama;
-    return [date, e.concept, ramaLabel, e.amount, e.paidBy, e.status, e.notes || '', e.registeredBy || '']
+    return [e.tipo === 'prevision' ? 'Previsión' : 'Real', date, e.concept, ramaLabel, e.amount, e.limite || '', e.paidBy, e.status, e.notes || '', e.registeredBy || '']
       .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
   });
   const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
@@ -3109,7 +3208,7 @@ function initLineup() {
 /* ══════════════════════════════════
    CREW SETTINGS (por edición)
 ══════════════════════════════════ */
-let crewSettings = { botePct: 0, botePrevio: 0, presupuesto: 0 };
+let crewSettings = { botePct: 0, botePrevio: 0, presupuesto: 0, ramaLimits: {} };
 
 function initSettings() {
   const unsub = onSnapshot(eDoc('settings', 'current'), snap => {
@@ -3119,9 +3218,10 @@ function initSettings() {
         botePct:    Number(d.botePct)    || 0,
         botePrevio: Number(d.botePrevio) || 0,
         presupuesto:Number(d.presupuesto)|| 0,
+        ramaLimits: d.ramaLimits || {},
       };
     } else {
-      crewSettings = { botePct: 0, botePrevio: 0, presupuesto: 0 };
+      crewSettings = { botePct: 0, botePrevio: 0, presupuesto: 0, ramaLimits: {} };
     }
     // sync inputs en Ajustes (sin pisar foco)
     const sp = document.getElementById('f-set-bote-pct');
@@ -3140,9 +3240,10 @@ function initSettings() {
     // recalcular stats dependientes
     if (typeof updateStats === 'function') updateStats();
     if (typeof updateBudgetBar === 'function') {
-      const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+      const total = expenses.filter(e => e.tipo !== 'prevision').reduce((s, e) => s + (e.amount || 0), 0);
       updateBudgetBar(total);
     }
+    if (typeof renderExpenseBreakdown === 'function') renderExpenseBreakdown();
   }, err => console.warn('Settings listener:', err));
   unsubscribers.push(unsub);
 }
