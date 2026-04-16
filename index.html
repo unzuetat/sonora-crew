@@ -1286,12 +1286,20 @@ tbody tr:hover { background: var(--accent-soft); }
           <div class="stat-value" id="stat-exp-records">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Presupuesto</div>
+          <div class="stat-label">Recaudado (libre de bote)</div>
+          <div class="stat-value" id="stat-exp-libre" style="color:var(--success)">0 €</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Presupuesto (Ajustes)</div>
           <div class="stat-value" id="stat-exp-budget">0 €</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Disponible</div>
+          <div class="stat-label">Disponible real</div>
           <div class="stat-value" id="stat-exp-remaining">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Disp. tras previsiones</div>
+          <div class="stat-value" id="stat-exp-remaining-prev">—</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Bote previo</div>
@@ -2803,8 +2811,9 @@ function updateExpenseStats() {
 
 function updateBudgetBar(total) {
   const budget = crewSettings.presupuesto || 0;
-  const remaining = budget - total;
   const remEl = document.getElementById('stat-exp-remaining');
+  const remPrevEl = document.getElementById('stat-exp-remaining-prev');
+  const libreEl = document.getElementById('stat-exp-libre');
   const barCard = document.getElementById('budget-bar-card');
 
   // Calculate bote
@@ -2816,17 +2825,34 @@ function updateBudgetBar(total) {
   document.getElementById('stat-exp-bote-gen').textContent = boteGen > 0 ? boteGen.toFixed(2) + ' €' : '—';
   document.getElementById('stat-exp-bote-total').textContent = boteTotal > 0 ? boteTotal.toFixed(2) + ' €' : '—';
 
-  if (budget > 0) {
+  // Libre de bote = recaudado - bote
+  const libre = payTotal - boteTotal;
+  libreEl.textContent = libre > 0 ? libre.toFixed(2) + ' €' : '—';
+
+  // Previsiones total
+  const totalPrev = expenses.filter(e => e.tipo === 'prevision').reduce((s, e) => s + (e.amount || 0), 0);
+
+  // Disponible real = presupuesto (o libre si no hay presupuesto) - gastos reales
+  const base = budget > 0 ? budget : libre;
+  const remaining = base - total;
+  const remainingAfterPrev = remaining - totalPrev;
+
+  if (base > 0) {
     remEl.textContent = remaining.toFixed(2) + ' €';
     remEl.style.color = remaining < 0 ? 'var(--accent)' : '';
+    remPrevEl.textContent = remainingAfterPrev.toFixed(2) + ' €';
+    remPrevEl.style.color = remainingAfterPrev < 0 ? 'var(--accent)' : remainingAfterPrev < base * 0.1 ? 'var(--warning)' : '';
     barCard.style.display = '';
-    const pct = Math.min(100, (total / budget) * 100);
-    document.getElementById('budget-bar').style.width = pct + '%';
-    document.getElementById('budget-bar').style.background = pct > 90 ? 'var(--accent)' : pct > 70 ? 'var(--warning)' : 'var(--success)';
-    document.getElementById('budget-bar-label').textContent = total.toFixed(0) + ' / ' + budget.toFixed(0) + ' €';
-    document.getElementById('budget-bar-pct').textContent = pct.toFixed(0) + '%';
+    // Bar shows: real (solid) + previsión (striped) against budget
+    const pctReal = Math.min(100, (total / base) * 100);
+    const pctPrev = Math.min(100 - pctReal, (totalPrev / base) * 100);
+    document.getElementById('budget-bar').style.width = pctReal + '%';
+    document.getElementById('budget-bar').style.background = pctReal > 90 ? 'var(--accent)' : pctReal > 70 ? 'var(--warning)' : 'var(--success)';
+    document.getElementById('budget-bar-label').textContent = total.toFixed(0) + (totalPrev > 0 ? ' + ' + totalPrev.toFixed(0) + ' prev.' : '') + ' / ' + base.toFixed(0) + ' €';
+    document.getElementById('budget-bar-pct').textContent = (pctReal + pctPrev).toFixed(0) + '%';
   } else {
     remEl.textContent = '—';
+    remPrevEl.textContent = '—';
     barCard.style.display = 'none';
   }
 }
