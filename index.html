@@ -1275,7 +1275,7 @@ tbody tr:hover { background: var(--accent-soft); }
       <div class="stats-grid" id="expense-stats">
         <div class="stat-card" title="Suma de todos los gastos reales registrados">
           <div class="stat-label">Gastado</div>
-          <div class="stat-value accent" id="stat-exp-total">0 €</div>
+          <div class="stat-value" id="stat-exp-total" style="color:var(--accent)">0 €</div>
         </div>
         <div class="stat-card" title="Suma de las previsiones de gasto (estimaciones futuras)">
           <div class="stat-label">Previsto</div>
@@ -1287,15 +1287,15 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
         <div class="stat-card" title="Presupuesto fijado en Ajustes. Si no hay, se usa el recaudado libre de bote">
           <div class="stat-label">Presupuesto</div>
-          <div class="stat-value" id="stat-exp-budget">0 €</div>
+          <div class="stat-value" id="stat-exp-budget" style="color:var(--success)">0 €</div>
         </div>
         <div class="stat-card" title="Presupuesto menos los gastos reales ya realizados">
           <div class="stat-label">Disponible real</div>
-          <div class="stat-value" id="stat-exp-remaining">—</div>
+          <div class="stat-value" id="stat-exp-remaining" style="color:var(--success)">—</div>
         </div>
         <div class="stat-card" title="Disponible real menos las previsiones de gasto. Lo que quedaría si se cumplen todas las estimaciones">
           <div class="stat-label">Disponible prev.</div>
-          <div class="stat-value" id="stat-exp-remaining-prev">—</div>
+          <div class="stat-value" id="stat-exp-remaining-prev" style="color:var(--warning)">—</div>
         </div>
         <div class="stat-card" title="Bote acumulado de ediciones anteriores, configurado en Ajustes">
           <div class="stat-label">Bote previo</div>
@@ -1316,8 +1316,13 @@ tbody tr:hover { background: var(--accent-soft); }
           <span id="budget-bar-label">0 / 0 €</span>
           <span id="budget-bar-pct">0%</span>
         </div>
-        <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden">
-          <div id="budget-bar" style="height:100%;border-radius:4px;background:var(--accent);transition:width .4s;width:0%"></div>
+        <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:flex">
+          <div id="budget-bar" style="height:100%;background:var(--accent);transition:width .4s;width:0%"></div>
+          <div id="budget-bar-prev" style="height:100%;background:var(--warning);transition:width .4s;width:0%"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--text-secondary)">
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);vertical-align:middle"></span> Real</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--warning);vertical-align:middle"></span> Previsión</span>
         </div>
       </div>
 
@@ -1387,31 +1392,58 @@ tbody tr:hover { background: var(--accent-soft); }
       <!-- EXPENSE TABLE -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <div class="card-title" style="margin-bottom:0" data-i18n="exp_list">Registro de gastos</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="chip on" id="exp-tab-real">💸 Gastos reales</button>
+            <button class="chip" id="exp-tab-prev">📊 Previsiones</button>
+          </div>
           <button class="btn btn-secondary btn-sm" id="btn-export-expenses" data-i18n="btn_export_exp">Exportar CSV</button>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Tipo</th>
-                <th data-i18n="th_date">Fecha</th>
-                <th data-i18n="th_exp_concept">Concepto</th>
-                <th data-i18n="th_exp_rama">Rama</th>
-                <th data-i18n="th_amount">Cantidad</th>
-                <th>Límite</th>
-                <th data-i18n="th_exp_paidby">Pagado por</th>
-                <th data-i18n="th_exp_status">Estado</th>
-                <th data-i18n="th_obs">Notas</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="expenses-body"></tbody>
-          </table>
+        <!-- REAL TABLE -->
+        <div id="exp-table-real">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th>Rama</th>
+                  <th>Cantidad</th>
+                  <th>Pagado por</th>
+                  <th>Estado</th>
+                  <th>Notas</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="expenses-body-real"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="expenses-empty-real" style="display:none">
+            <div class="empty-state-icon">💸</div>
+            <div class="empty-state-text">No hay gastos reales registrados</div>
+          </div>
         </div>
-        <div class="empty-state" id="expenses-empty">
-          <div class="empty-state-icon">💸</div>
-          <div class="empty-state-text" data-i18n="expenses_empty">No hay gastos registrados</div>
+        <!-- PREVISIONES TABLE -->
+        <div id="exp-table-prev" style="display:none">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th>Rama</th>
+                  <th>Coste estimado</th>
+                  <th>Límite</th>
+                  <th>Notas</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="expenses-body-prev"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="expenses-empty-prev" style="display:none">
+            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-text">No hay previsiones registradas</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2725,75 +2757,100 @@ function initExpenses() {
 }
 
 function renderExpenses() {
-  const tbody = document.getElementById('expenses-body');
-  const empty = document.getElementById('expenses-empty');
-  tbody.innerHTML = '';
+  const tbodyReal = document.getElementById('expenses-body-real');
+  const tbodyPrev = document.getElementById('expenses-body-prev');
+  const emptyReal = document.getElementById('expenses-empty-real');
+  const emptyPrev = document.getElementById('expenses-empty-prev');
+  tbodyReal.innerHTML = '';
+  tbodyPrev.innerHTML = '';
 
-  if (!expenses.length) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
+  const reales = expenses.filter(e => e.tipo !== 'prevision');
+  const previsiones = expenses.filter(e => e.tipo === 'prevision');
 
-  expenses.forEach(e => {
+  // Render reales
+  if (!reales.length) { emptyReal.style.display = 'block'; } else { emptyReal.style.display = 'none'; }
+  reales.forEach(e => {
     const tr = document.createElement('tr');
-    const isPrev = e.tipo === 'prevision';
-    if (isPrev) tr.className = 'exp-row-prevision';
     const date = new Date(e.ts);
     const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
       + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     const rama = RAMAS.find(r => r.id === e.rama) || RAMAS[0];
-    const tipoLabel = isPrev ? '📊 Previsión' : '💸 Real';
-    const tipoCss = isPrev ? 'exp-tipo-prevision' : 'exp-tipo-real';
+    const statusMap = { pagado: 'Pagado', pendiente: 'Pendiente de pago', reembolsar: 'Pagado' };
+    const statusDisplay = statusMap[e.status] || e.status;
+    const statusClass = 'exp-' + (e.status === 'reembolsar' ? 'pagado' : e.status);
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-size:12px;color:var(--text-secondary)">${dateStr}</td>
+      <td style="font-weight:500">${esc(e.concept)}</td>
+      <td><span class="badge-rama ${rama.css}">${t(rama.key)}</span></td>
+      <td class="amount">${e.amount.toFixed(2)} €</td>
+      <td>${esc(e.paidBy)}</td>
+      <td><span class="exp-status ${statusClass}">${statusDisplay}</span></td>
+      <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
+      <td><div class="del-row"><button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button><div class="del-confirm" id="dce-${e.id}"><span>${t('confirm_delete')}</span><button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button><button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button></div></div></td>
+    `;
+    tbodyReal.appendChild(tr);
+  });
+
+  // Render previsiones
+  if (!previsiones.length) { emptyPrev.style.display = 'block'; } else { emptyPrev.style.display = 'none'; }
+  previsiones.forEach(e => {
+    const tr = document.createElement('tr');
+    const date = new Date(e.ts);
+    const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+      + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const rama = RAMAS.find(r => r.id === e.rama) || RAMAS[0];
     const limiteStr = e.limite ? e.limite.toFixed(0) + ' €' : '—';
     const overLimit = e.limite && e.amount > e.limite;
-    // Status: for real expenses show pagado/pendiente; for previsión show nothing meaningful
-    const statusMap = { pagado: 'Pagado', pendiente: 'Pendiente de pago', reembolsar: 'Pagado', prevision: '—' };
-    const statusDisplay = isPrev ? '—' : (statusMap[e.status] || e.status);
-    const statusClass = isPrev ? '' : 'exp-' + (e.status === 'reembolsar' ? 'pagado' : e.status);
-
     tr.innerHTML = `
-      <td><span class="exp-tipo-badge ${tipoCss}">${tipoLabel}</span></td>
       <td style="white-space:nowrap;font-size:12px;color:var(--text-secondary)">${dateStr}</td>
       <td style="font-weight:500">${esc(e.concept)}</td>
       <td><span class="badge-rama ${rama.css}">${t(rama.key)}</span></td>
       <td class="amount${overLimit ? ' breakdown-over' : ''}">${e.amount.toFixed(2)} €</td>
       <td style="font-size:12px;color:var(--text-secondary)">${limiteStr}</td>
-      <td>${isPrev ? '<span style="color:var(--text-secondary)">—</span>' : esc(e.paidBy)}</td>
-      <td>${statusClass ? `<span class="exp-status ${statusClass}">${statusDisplay}</span>` : `<span style="color:var(--text-secondary)">${statusDisplay}</span>`}</td>
       <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
-      <td>
-        <div class="del-row">
-          <button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button>
-          <div class="del-confirm" id="dce-${e.id}">
-            <span>${t('confirm_delete')}</span>
-            <button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button>
-            <button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button>
-          </div>
-        </div>
-      </td>
+      <td><div class="del-row"><button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button><div class="del-confirm" id="dce-${e.id}"><span>${t('confirm_delete')}</span><button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button><button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button></div></div></td>
     `;
-    tbody.appendChild(tr);
+    tbodyPrev.appendChild(tr);
   });
 
-  tbody.querySelectorAll('.btn-del-exp').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const dc = document.getElementById('dce-' + btn.dataset.id);
-      btn.style.display = 'none';
-      dc.classList.add('show');
+  // Wire delete buttons for both tables
+  [tbodyReal, tbodyPrev].forEach(tbody => {
+    tbody.querySelectorAll('.btn-del-exp').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dc = document.getElementById('dce-' + btn.dataset.id);
+        btn.style.display = 'none';
+        dc.classList.add('show');
+      });
     });
-  });
-  tbody.querySelectorAll('.btn-del-exp-yes').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      await deleteDoc(eDoc('expenses', btn.dataset.id));
-      toast(t('toast_expense_deleted'));
+    tbody.querySelectorAll('.btn-del-exp-yes').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await deleteDoc(eDoc('expenses', btn.dataset.id));
+        toast(t('toast_expense_deleted'));
+      });
     });
-  });
-  tbody.querySelectorAll('.btn-del-exp-no').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const dc = document.getElementById('dce-' + btn.dataset.id);
-      dc.classList.remove('show');
-      dc.previousElementSibling.style.display = '';
+    tbody.querySelectorAll('.btn-del-exp-no').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dc = document.getElementById('dce-' + btn.dataset.id);
+        dc.classList.remove('show');
+        dc.previousElementSibling.style.display = '';
+      });
     });
   });
 }
+
+// Expense sub-tab switching
+document.getElementById('exp-tab-real').addEventListener('click', () => {
+  document.getElementById('exp-tab-real').classList.add('on');
+  document.getElementById('exp-tab-prev').classList.remove('on');
+  document.getElementById('exp-table-real').style.display = '';
+  document.getElementById('exp-table-prev').style.display = 'none';
+});
+document.getElementById('exp-tab-prev').addEventListener('click', () => {
+  document.getElementById('exp-tab-prev').classList.add('on');
+  document.getElementById('exp-tab-real').classList.remove('on');
+  document.getElementById('exp-table-prev').style.display = '';
+  document.getElementById('exp-table-real').style.display = 'none';
+});
 
 function updateExpenseStats() {
   const reales = expenses.filter(e => e.tipo !== 'prevision');
@@ -2836,15 +2893,14 @@ function updateBudgetBar(total) {
 
   if (base > 0) {
     remEl.textContent = remaining.toFixed(2) + ' €';
-    remEl.style.color = remaining < 0 ? 'var(--accent)' : '';
+    remEl.style.color = remaining < 0 ? 'var(--accent)' : 'var(--success)';
     remPrevEl.textContent = remainingAfterPrev.toFixed(2) + ' €';
-    remPrevEl.style.color = remainingAfterPrev < 0 ? 'var(--accent)' : remainingAfterPrev < base * 0.1 ? 'var(--warning)' : '';
+    remPrevEl.style.color = remainingAfterPrev < 0 ? 'var(--accent)' : 'var(--warning)';
     barCard.style.display = '';
-    // Bar shows: real (solid) + previsión (striped) against budget
     const pctReal = Math.min(100, (total / base) * 100);
     const pctPrev = Math.min(100 - pctReal, (totalPrev / base) * 100);
     document.getElementById('budget-bar').style.width = pctReal + '%';
-    document.getElementById('budget-bar').style.background = pctReal > 90 ? 'var(--accent)' : pctReal > 70 ? 'var(--warning)' : 'var(--success)';
+    document.getElementById('budget-bar-prev').style.width = pctPrev + '%';
     document.getElementById('budget-bar-label').textContent = total.toFixed(0) + (totalPrev > 0 ? ' + ' + totalPrev.toFixed(0) + ' prev.' : '') + ' / ' + base.toFixed(0) + ' €';
     document.getElementById('budget-bar-pct').textContent = (pctReal + pctPrev).toFixed(0) + '%';
   } else {
@@ -2869,12 +2925,8 @@ function renderExpenseBreakdown() {
   RAMAS.forEach(r => {
     const real = totalsReal[r.id];
     const prev = totalsPrev[r.id];
-    const limit = ramaLimits[r.id] || 0;
     const pctReal = (real / max) * 100;
     const pctPrev = (prev / max) * 100;
-    const pctLimit = limit > 0 ? (limit / max) * 100 : 0;
-    const overLimit = limit > 0 && real > limit;
-    const overPrev = prev > 0 && real > prev;
 
     const row = document.createElement('div');
     row.className = 'breakdown-row';
@@ -2884,40 +2936,23 @@ function renderExpenseBreakdown() {
       <div class="breakdown-bars">
         <div>
           <div class="breakdown-bar-wrap">
-            <div class="breakdown-bar" style="width:${pctReal}%;background:${RAMA_COLORS[r.id]}"></div>
+            <div class="breakdown-bar" style="width:${pctReal}%;background:var(--accent)"></div>
           </div>
           <div class="breakdown-bar-label"><span>Real</span><span>${real.toFixed(0)} €</span></div>
         </div>
         ${prev > 0 ? `<div>
-          <div class="breakdown-bar-wrap" style="opacity:.5">
-            <div class="breakdown-bar" style="width:${pctPrev}%;background:${RAMA_COLORS[r.id]}"></div>
+          <div class="breakdown-bar-wrap">
+            <div class="breakdown-bar" style="width:${pctPrev}%;background:var(--warning)"></div>
           </div>
           <div class="breakdown-bar-label"><span>Previsión</span><span>${prev.toFixed(0)} €</span></div>
         </div>` : ''}
-        ${pctLimit > 0 ? `<div class="breakdown-bar-label" style="margin-top:1px"><span>Límite</span><span class="${overLimit ? 'breakdown-over' : ''}">${limit.toFixed(0)} €</span></div>` : ''}
       </div>
-      <div style="min-width:70px;display:flex;align-items:center;gap:4px;margin-top:4px">
-        <input class="breakdown-limit-input" type="number" min="0" step="1" placeholder="—" value="${limit || ''}" data-rama="${r.id}">
-        <span style="font-size:10px;color:var(--text-secondary)">€</span>
+      <div style="min-width:80px;text-align:right;margin-top:4px;font-size:11px;line-height:1.6">
+        <div style="color:var(--accent);font-weight:600">${real.toFixed(0)} €</div>
+        ${prev > 0 ? `<div style="color:var(--warning)">${prev.toFixed(0)} €</div>` : ''}
       </div>
     `;
     el.appendChild(row);
-  });
-
-  // Save rama limits on change (debounced)
-  let limitTimer;
-  el.querySelectorAll('.breakdown-limit-input').forEach(inp => {
-    inp.addEventListener('input', () => {
-      clearTimeout(limitTimer);
-      limitTimer = setTimeout(() => {
-        const limits = {};
-        el.querySelectorAll('.breakdown-limit-input').forEach(i => {
-          const v = parseFloat(i.value) || 0;
-          if (v > 0) limits[i.dataset.rama] = v;
-        });
-        setDoc(eDoc('settings', 'current'), { ramaLimits: limits }, { merge: true });
-      }, 600);
-    });
   });
 }
 
