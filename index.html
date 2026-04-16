@@ -224,6 +224,11 @@ body {
 }
 .fiesta-group-header .fiesta-label { flex: 1; }
 .fiesta-badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: var(--primary); color: #fff; }
+.bpm-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; color: #fff; display: inline-block; }
+.bpm-input { width: 50px; padding: 2px 4px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); color: var(--text); text-align: center; }
+.bpm-input:focus { border-color: var(--primary); outline: none; }
+.fiesta-tab { cursor: pointer; }
+.fiesta-tab.on { background: var(--primary); color: #fff; border-color: var(--primary); }
 
 .wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
 
@@ -1191,6 +1196,11 @@ tbody tr:hover { background: var(--accent-soft); }
 
     <!-- ═══ TAB: TAREAS ═══ -->
     <div class="tab-content" id="tab-tasks">
+      <!-- NOTIF FILTER BANNER -->
+      <div id="task-notif-banner" style="display:none;margin-bottom:10px;padding:8px 12px;background:var(--warning-soft);border:1px solid var(--warning);border-radius:8px;font-size:12px;align-items:center;justify-content:space-between">
+        <span id="task-notif-banner-text"></span>
+        <button class="btn btn-sm btn-secondary" onclick="taskFilterMode='all';renderTasks();this.parentElement.style.display='none'" style="font-size:11px;padding:2px 8px">✕ Quitar filtro</button>
+      </div>
       <!-- FILTERS -->
       <div style="margin-bottom:16px">
         <button class="btn btn-sm btn-secondary" onclick="var b=document.getElementById('task-filters-body');b.style.display=b.style.display==='none'?'':'none';this.textContent=b.style.display==='none'?'Filtrar ▾':'Filtrar ▴'" style="font-size:12px;background:var(--warning-soft);border-color:var(--warning);color:var(--warning)">Filtrar ▾</button>
@@ -1321,14 +1331,14 @@ tbody tr:hover { background: var(--accent-soft); }
         <div class="collapsible-body">
         <div class="form-row">
           <div class="form-group" style="flex:0 0 auto">
-            <label class="form-label">Tipo</label>
-            <div class="tipo-toggle">
-              <label><input type="radio" name="fe-tipo" value="real" checked><span>Real</span></label>
-              <label><input type="radio" name="fe-tipo" value="prevision"><span>Previsión</span></label>
+            <label class="form-label">¿Qué registras?</label>
+            <div class="tipo-toggle" id="fe-tipo-toggle">
+              <label><input type="radio" name="fe-tipo" value="real" checked><span>💸 Gasto real</span></label>
+              <label><input type="radio" name="fe-tipo" value="prevision"><span>📊 Previsión</span></label>
             </div>
           </div>
           <div class="form-group" style="flex:1">
-            <label class="form-label" data-i18n="lbl_exp_concept">Concepto</label>
+            <label class="form-label" id="fe-concept-label">Concepto</label>
             <input class="form-input" id="fe-concept" type="text" placeholder="Qué se ha comprado...">
           </div>
           <div class="form-group">
@@ -1336,21 +1346,20 @@ tbody tr:hover { background: var(--accent-soft); }
             <select class="form-select" id="fe-rama"></select>
           </div>
         </div>
-        <div class="form-row triple">
+        <div class="form-row triple" id="fe-row-details">
           <div class="form-group">
-            <label class="form-label" data-i18n="lbl_exp_amount">Cantidad (€)</label>
+            <label class="form-label" id="fe-amount-label">Cantidad (€)</label>
             <input class="form-input" id="fe-amount" type="number" step="0.01" min="0" placeholder="0.00">
           </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="lbl_exp_paid_by">Pagado por</label>
+          <div class="form-group" id="fe-paidby-group">
+            <label class="form-label">Pagado por</label>
             <select class="form-select" id="fe-paidby"></select>
           </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="lbl_exp_status">Estado</label>
+          <div class="form-group" id="fe-status-group">
+            <label class="form-label">Estado</label>
             <select class="form-select" id="fe-status">
               <option value="pagado">Pagado</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="reembolsar">A reembolsar</option>
+              <option value="pendiente">Pendiente de pago</option>
             </select>
           </div>
         </div>
@@ -1365,7 +1374,7 @@ tbody tr:hover { background: var(--accent-soft); }
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <button class="btn" id="btn-add-expense" data-i18n="btn_add_expense">Registrar gasto</button>
+          <button class="btn" id="btn-add-expense">Registrar gasto</button>
         </div>
         </div><!-- /collapsible-body -->
       </div>
@@ -1569,6 +1578,7 @@ tbody tr:hover { background: var(--accent-soft); }
       <!-- PROPOSALS -->
       <div class="card">
         <div class="card-title" data-i18n="lineup_proposals">Propuestas</div>
+        <div id="lineup-fiesta-tabs" class="chip-row" style="margin-bottom:10px"></div>
         <div class="lineup-proposal-bar" id="lineup-proposal-bar"></div>
         <div id="lineup-proposal-board"></div>
         <div id="lineup-compare-view" style="display:none"></div>
@@ -1772,7 +1782,7 @@ const I18N = {
     exp_list: 'Registro de gastos', exp_breakdown: 'Desglose por rama',
     stat_exp_total: 'Total gastado', stat_exp_records: 'Gastos',
     expenses_empty: 'No hay gastos registrados',
-    exp_pagado: 'Pagado', exp_pendiente: 'Pendiente', exp_reembolsar: 'A reembolsar',
+    exp_pagado: 'Pagado', exp_pendiente: 'Pendiente de pago',
     th_exp_concept: 'Concepto', th_exp_rama: 'Rama',
     th_exp_paidby: 'Pagado por', th_exp_status: 'Estado',
     toast_task_added: 'Tarea añadida', toast_task_deleted: 'Tarea eliminada',
@@ -1881,7 +1891,7 @@ const I18N = {
     exp_list: 'Expense records', exp_breakdown: 'Breakdown by area',
     stat_exp_total: 'Total spent', stat_exp_records: 'Expenses',
     expenses_empty: 'No expenses registered yet',
-    exp_pagado: 'Paid', exp_pendiente: 'Pending', exp_reembolsar: 'To reimburse',
+    exp_pagado: 'Paid', exp_pendiente: 'Pending payment',
     th_exp_concept: 'Concept', th_exp_rama: 'Area',
     th_exp_paidby: 'Paid by', th_exp_status: 'Status',
     toast_task_added: 'Task added', toast_task_deleted: 'Task deleted',
@@ -2402,6 +2412,7 @@ let taskFilterRama = 'all';
 let taskFilterStatus = 'all';
 let taskFilterAssigned = 'all';
 let taskFilterPriority = 'all';
+let taskFilterMode = 'all'; // 'all', 'solo', 'shared' (from notif badges)
 
 function initTasks() {
   const unsub = onSnapshot(query(eCol('tasks'), orderBy('ts', 'desc')), snap => {
@@ -2476,7 +2487,33 @@ function renderTasks() {
   const empty = document.getElementById('tasks-empty');
   list.innerHTML = '';
 
+  // Show notif filter banner
+  const banner = document.getElementById('task-notif-banner');
+  const bannerText = document.getElementById('task-notif-banner-text');
+  if (banner) {
+    if (taskFilterMode !== 'all') {
+      banner.style.display = 'flex';
+      bannerText.textContent = taskFilterMode === 'solo'
+        ? '📋 Mostrando solo tus tareas individuales pendientes'
+        : '👥 Mostrando solo tus tareas compartidas pendientes';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
   let filtered = tasks;
+  // Notif badge mode filter
+  if (taskFilterMode === 'solo') {
+    filtered = filtered.filter(t => {
+      const a = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+      return a.includes(CFG.user) && a.length === 1 && t.status !== 'hecho';
+    });
+  } else if (taskFilterMode === 'shared') {
+    filtered = filtered.filter(t => {
+      const a = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+      return a.includes(CFG.user) && a.length > 1 && t.status !== 'hecho';
+    });
+  }
   if (taskFilterRama !== 'all') filtered = filtered.filter(t => t.rama === taskFilterRama);
   if (taskFilterStatus !== 'all') filtered = filtered.filter(t => t.status === taskFilterStatus);
   if (taskFilterAssigned !== 'all') filtered = filtered.filter(t => {
@@ -2698,12 +2735,14 @@ function renderExpenses() {
     const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
       + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     const rama = RAMAS.find(r => r.id === e.rama) || RAMAS[0];
-    const statusClass = 'exp-' + e.status;
-    const statusLabel = t('exp_' + e.status);
-    const tipoLabel = isPrev ? 'Previsión' : 'Real';
+    const tipoLabel = isPrev ? '📊 Previsión' : '💸 Real';
     const tipoCss = isPrev ? 'exp-tipo-prevision' : 'exp-tipo-real';
     const limiteStr = e.limite ? e.limite.toFixed(0) + ' €' : '—';
     const overLimit = e.limite && e.amount > e.limite;
+    // Status: for real expenses show pagado/pendiente; for previsión show nothing meaningful
+    const statusMap = { pagado: 'Pagado', pendiente: 'Pendiente de pago', reembolsar: 'Pagado', prevision: '—' };
+    const statusDisplay = isPrev ? '—' : (statusMap[e.status] || e.status);
+    const statusClass = isPrev ? '' : 'exp-' + (e.status === 'reembolsar' ? 'pagado' : e.status);
 
     tr.innerHTML = `
       <td><span class="exp-tipo-badge ${tipoCss}">${tipoLabel}</span></td>
@@ -2712,8 +2751,8 @@ function renderExpenses() {
       <td><span class="badge-rama ${rama.css}">${t(rama.key)}</span></td>
       <td class="amount${overLimit ? ' breakdown-over' : ''}">${e.amount.toFixed(2)} €</td>
       <td style="font-size:12px;color:var(--text-secondary)">${limiteStr}</td>
-      <td>${esc(e.paidBy)}</td>
-      <td><span class="exp-status ${statusClass}">${statusLabel}</span></td>
+      <td>${isPrev ? '<span style="color:var(--text-secondary)">—</span>' : esc(e.paidBy)}</td>
+      <td>${statusClass ? `<span class="exp-status ${statusClass}">${statusDisplay}</span>` : `<span style="color:var(--text-secondary)">${statusDisplay}</span>`}</td>
       <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
       <td>
         <div class="del-row">
@@ -2859,6 +2898,18 @@ function renderExpenseBreakdown() {
   });
 }
 
+// Tipo toggle: adapt form fields
+function updateExpenseFormMode() {
+  const isPrev = document.querySelector('input[name="fe-tipo"]:checked')?.value === 'prevision';
+  document.getElementById('fe-concept').placeholder = isPrev ? 'Qué se prevé gastar...' : 'Qué se ha comprado...';
+  document.getElementById('fe-concept-label').textContent = isPrev ? 'Concepto estimado' : 'Concepto';
+  document.getElementById('fe-amount-label').textContent = isPrev ? 'Coste estimado (€)' : 'Cantidad (€)';
+  document.getElementById('fe-paidby-group').style.display = isPrev ? 'none' : '';
+  document.getElementById('fe-status-group').style.display = isPrev ? 'none' : '';
+  document.getElementById('btn-add-expense').textContent = isPrev ? 'Añadir previsión' : 'Registrar gasto';
+}
+document.querySelectorAll('input[name="fe-tipo"]').forEach(r => r.addEventListener('change', updateExpenseFormMode));
+
 // Add expense
 document.getElementById('btn-add-expense').addEventListener('click', async () => {
   const concept = document.getElementById('fe-concept').value.trim();
@@ -2870,6 +2921,7 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
 
   const tipo = document.querySelector('input[name="fe-tipo"]:checked').value;
   const limite = parseFloat(document.getElementById('fe-limit').value) || 0;
+  const isPrev = tipo === 'prevision';
 
   const expense = {
     concept,
@@ -2877,15 +2929,14 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
     amount,
     tipo,
     limite: limite > 0 ? limite : null,
-    paidBy: document.getElementById('fe-paidby').value,
-    status: document.getElementById('fe-status').value,
+    paidBy: isPrev ? CFG.user : document.getElementById('fe-paidby').value,
+    status: isPrev ? 'prevision' : document.getElementById('fe-status').value,
     notes: document.getElementById('fe-notes').value.trim(),
     registeredBy: CFG.user,
     ts: Date.now()
   };
 
   await addDoc(eCol('expenses'), expense);
-  // Backup
   if (CFG.webhook) {
     await sendToWebhook({ action: 'new_expense', ...expense });
   }
@@ -2895,7 +2946,8 @@ document.getElementById('btn-add-expense').addEventListener('click', async () =>
   document.getElementById('fe-limit').value = '';
   document.getElementById('fe-notes').value = '';
   document.querySelector('input[name="fe-tipo"][value="real"]').checked = true;
-  toast(t('toast_expense_added'));
+  updateExpenseFormMode();
+  toast(isPrev ? 'Previsión añadida' : t('toast_expense_added'));
   btn.disabled = false;
 });
 
@@ -3244,6 +3296,7 @@ let lineupDJs = [];
 let lineupProposals = [];
 let activeProposalId = null;
 let lineupCompareMode = false;
+let activeFiesta = null; // selected fiesta for proposals
 
 function initLineup() {
   const unsub1 = onSnapshot(eDoc('lineup_config', 'current'), snap => {
@@ -3353,6 +3406,26 @@ function calcDaySlots(day, slotsArray) {
   const totalMin = endMin - startMin;
   const usedMin = (slotsArray || []).reduce((s, d) => s + d, 0);
   return { slots, totalMin, usedMin, remainderMin: totalMin - usedMin };
+}
+
+function bpmColor(bpm) {
+  if (!bpm || bpm <= 0) return '#999';
+  if (bpm < 100) return '#22c55e';      // green
+  if (bpm < 120) return '#84cc16';      // lime
+  if (bpm < 130) return '#eab308';      // yellow
+  if (bpm < 140) return '#f97316';      // orange
+  if (bpm < 150) return '#ef4444';      // red
+  return '#dc2626';                      // dark red
+}
+
+function bpmTag(bpmMin, bpmMax) {
+  if (!bpmMin && !bpmMax) return '';
+  const min = bpmMin || bpmMax;
+  const max = bpmMax || bpmMin;
+  const avg = (min + max) / 2;
+  const color = bpmColor(avg);
+  const label = min === max ? `${min} bpm` : `${min}–${max} bpm`;
+  return `<span class="bpm-tag" style="background:${color}">${label}</span>`;
 }
 
 function formatDur(min) {
@@ -3578,13 +3651,59 @@ function renderLineupPool() {
   });
 }
 
-// ─── Proposal bar ───
+// ─── Fiesta tabs + Proposal bar ───
+function getFiestas() {
+  if (!lineupConfig?.days?.length) return [];
+  const seen = new Set();
+  return lineupConfig.days
+    .map(d => d.fiesta || 'General')
+    .filter(f => { if (seen.has(f)) return false; seen.add(f); return true; });
+}
+
+function getProposalsForFiesta(fiesta) {
+  return lineupProposals.filter(p => (p.fiesta || 'General') === fiesta);
+}
+
 function renderLineupProposalBar() {
+  const ftabs = document.getElementById('lineup-fiesta-tabs');
   const bar = document.getElementById('lineup-proposal-bar');
-  if (!bar) return;
+  if (!bar || !ftabs) return;
+  ftabs.innerHTML = '';
   bar.innerHTML = '';
 
-  lineupProposals.forEach(p => {
+  const fiestas = getFiestas();
+  if (!fiestas.length) return;
+
+  // Auto-select first fiesta if none selected or invalid
+  if (!activeFiesta || !fiestas.includes(activeFiesta)) activeFiesta = fiestas[0];
+
+  // Fiesta tabs
+  if (fiestas.length > 1) {
+    fiestas.forEach(f => {
+      const chip = document.createElement('button');
+      chip.className = 'chip fiesta-tab' + (activeFiesta === f ? ' on' : '');
+      chip.textContent = '🎉 ' + f;
+      chip.addEventListener('click', () => {
+        activeFiesta = f;
+        activeProposalId = null;
+        lineupCompareMode = false;
+        renderLineupAll();
+      });
+      ftabs.appendChild(chip);
+    });
+  } else {
+    activeFiesta = fiestas[0];
+  }
+
+  // Proposals for this fiesta
+  const fiestaProposals = getProposalsForFiesta(activeFiesta);
+
+  // Auto-select first proposal if none active for this fiesta
+  if (!activeProposalId || !fiestaProposals.find(p => p.id === activeProposalId)) {
+    activeProposalId = fiestaProposals.length ? fiestaProposals[0].id : null;
+  }
+
+  fiestaProposals.forEach(p => {
     const chip = document.createElement('button');
     chip.className = 'chip' + (!lineupCompareMode && activeProposalId === p.id ? ' on' : '');
     chip.textContent = p.name;
@@ -3597,7 +3716,7 @@ function renderLineupProposalBar() {
   });
 
   // Like info under chips
-  lineupProposals.forEach(p => {
+  fiestaProposals.forEach(p => {
     const likes = p.likes || [];
     if (likes.length > 0) {
       const info = document.createElement('div');
@@ -3608,23 +3727,23 @@ function renderLineupProposalBar() {
     }
   });
 
-  // New proposal (max 1 per person)
+  // New proposal (max 1 per person PER FIESTA)
   const addBtn = document.createElement('button');
   addBtn.className = 'chip';
-  addBtn.textContent = '+ Nueva';
+  addBtn.textContent = '+ Nueva propuesta';
   addBtn.style.borderStyle = 'dashed';
   addBtn.addEventListener('click', async () => {
     const name = CFG.user || 'Anónimo';
-    const existing = lineupProposals.find(p => p.author === CFG.user);
+    const existing = fiestaProposals.find(p => p.author === CFG.user);
     if (existing) {
       activeProposalId = existing.id;
       lineupCompareMode = false;
       renderLineupAll();
-      toast('Ya tienes una propuesta — edítala');
+      toast('Ya tienes una propuesta para este evento — edítala');
       return;
     }
     const docRef = await addDoc(eCol('lineup_proposals'), {
-      name, author: CFG.user, daySlots: {}, assignments: {}, likes: [], ts: Date.now()
+      name, author: CFG.user, fiesta: activeFiesta, daySlots: {}, assignments: {}, bpms: {}, likes: [], ts: Date.now()
     });
     activeProposalId = docRef.id;
     lineupCompareMode = false;
@@ -3633,7 +3752,7 @@ function renderLineupProposalBar() {
   bar.appendChild(addBtn);
 
   // Compare button
-  if (lineupProposals.length >= 2) {
+  if (fiestaProposals.length >= 2) {
     const cmpBtn = document.createElement('button');
     cmpBtn.className = 'chip' + (lineupCompareMode ? ' on' : '');
     cmpBtn.textContent = 'Comparar';
@@ -3666,6 +3785,7 @@ function renderLineupProposalBoard() {
 
   const daySlots = proposal.daySlots || {};
   const assignments = proposal.assignments || {};
+  const bpms = proposal.bpms || {};
 
   // Header with like + delete
   const isOwn = proposal.author === CFG.user;
@@ -3695,8 +3815,9 @@ function renderLineupProposalBoard() {
   if (likeBtn) {
     likeBtn.addEventListener('click', async () => {
       if (isOwn) { toast(t('toast_like_own')); return; }
-      // Remove like from all other proposals
-      const removePromises = lineupProposals
+      // Remove like from other proposals in same fiesta
+      const sameFiesta = getProposalsForFiesta(activeFiesta);
+      const removePromises = sameFiesta
         .filter(p => p.id !== proposal.id && (p.likes || []).includes(CFG.user))
         .map(p => updateDoc(eDoc('lineup_proposals', p.id), { likes: (p.likes || []).filter(l => l !== CFG.user) }));
       await Promise.all(removePromises);
@@ -3716,24 +3837,13 @@ function renderLineupProposalBoard() {
     });
   }
 
-  // Per-day: slot config + time grid, grouped by fiesta
-  const boardFiestaGroups = {};
+  // Only show days that belong to the active fiesta
+  const fiestaDays = [];
   lineupConfig.days.forEach((day, dayIdx) => {
-    const fiesta = day.fiesta || 'General';
-    if (!boardFiestaGroups[fiesta]) boardFiestaGroups[fiesta] = [];
-    boardFiestaGroups[fiesta].push({ day, dayIdx });
+    if ((day.fiesta || 'General') === activeFiesta) fiestaDays.push({ day, dayIdx });
   });
 
-  Object.entries(boardFiestaGroups).forEach(([fiestaName, dayEntries]) => {
-    if (Object.keys(boardFiestaGroups).length > 1) {
-      const fiestaHeader = document.createElement('div');
-      fiestaHeader.className = 'fiesta-group-header';
-      fiestaHeader.style.marginTop = '12px';
-      fiestaHeader.innerHTML = `<span class="fiesta-label">🎉 ${esc(fiestaName)}</span>`;
-      board.appendChild(fiestaHeader);
-    }
-
-    dayEntries.forEach(({ day, dayIdx }) => {
+  fiestaDays.forEach(({ day, dayIdx }) => {
     const dayKey = String(dayIdx);
     const slotsArr = daySlots[dayKey] || [];
     const info = calcDaySlots(day, slotsArr);
@@ -3747,17 +3857,25 @@ function renderLineupProposalBoard() {
       const key = `${dayIdx}-${slotIdx}`;
       const djId = assignments[key];
       const dj = djId ? lineupDJs.find(d => d.id === djId) : null;
+      const slotBpm = bpms[key] || {};
+      const bpmDisplay = bpmTag(slotBpm.min, slotBpm.max);
 
       if (dj) {
         html += `
           <div class="lineup-slot">
-            <div class="lineup-slot-time">${slot.from} – ${slot.to} <span class="lineup-slot-dur">(${formatDur(slot.duration)})</span></div>
+            <div class="lineup-slot-time">${slot.from} – ${slot.to} <span class="lineup-slot-dur">(${formatDur(slot.duration)})</span> ${bpmDisplay}</div>
             <div class="lineup-slot-content">
               <div class="lineup-dj" style="border-color:#8b5cf6">
                 <div class="lineup-dj-name">${esc(dj.name)}</div>
                 ${dj.style ? `<div class="lineup-dj-style">${esc(dj.style)}</div>` : ''}
                 ${dj.comments ? `<div class="lineup-dj-comments">${esc(dj.comments)}</div>` : ''}
               </div>
+              ${isOwn ? `<div style="display:flex;gap:4px;align-items:center;margin-top:4px">
+                <span style="font-size:10px;color:var(--text-secondary)">BPM:</span>
+                <input class="bpm-input lineup-bpm" data-key="${key}" data-field="min" type="number" min="60" max="200" placeholder="min" value="${slotBpm.min || ''}">
+                <span style="font-size:10px">–</span>
+                <input class="bpm-input lineup-bpm" data-key="${key}" data-field="max" type="number" min="60" max="200" placeholder="max" value="${slotBpm.max || ''}">
+              </div>` : ''}
             </div>
             ${isOwn ? `<button class="btn btn-sm btn-secondary lineup-unassign" data-key="${key}">✕</button>` : ''}
           </div>`;
@@ -3774,8 +3892,7 @@ function renderLineupProposalBoard() {
 
     section.innerHTML = html;
     board.appendChild(section);
-    }); // end dayEntries.forEach
-  }); // end Object.entries(boardFiestaGroups).forEach
+  });
 
   // Unassign
   board.querySelectorAll('.lineup-unassign').forEach(btn => {
@@ -3815,6 +3932,27 @@ function renderLineupProposalBoard() {
       setTimeout(() => document.addEventListener('click', closeHandler), 0);
     });
   });
+
+  // BPM inputs (debounced)
+  let bpmTimer;
+  board.querySelectorAll('.lineup-bpm').forEach(inp => {
+    inp.addEventListener('input', () => {
+      clearTimeout(bpmTimer);
+      bpmTimer = setTimeout(() => {
+        const newBpms = { ...bpms };
+        board.querySelectorAll('.lineup-bpm').forEach(i => {
+          const k = i.dataset.key;
+          const f = i.dataset.field;
+          if (!newBpms[k]) newBpms[k] = {};
+          const v = parseInt(i.value) || 0;
+          if (v > 0) newBpms[k][f] = v;
+          else delete newBpms[k][f];
+          if (!newBpms[k].min && !newBpms[k].max) delete newBpms[k];
+        });
+        updateDoc(eDoc('lineup_proposals', proposal.id), { bpms: newBpms });
+      }, 600);
+    });
+  });
 }
 
 // ─── Compare view ───
@@ -3825,42 +3963,33 @@ function renderLineupCompare() {
   board.style.display = 'none'; compare.style.display = '';
   compare.innerHTML = '';
 
-  if (!lineupConfig?.days?.length || lineupProposals.length < 2) {
-    compare.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:12px">Necesitas al menos 2 propuestas y días configurados</div>';
+  const fiestaProposals = getProposalsForFiesta(activeFiesta);
+  if (!lineupConfig?.days?.length || fiestaProposals.length < 2) {
+    compare.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:12px">Necesitas al menos 2 propuestas para este evento</div>';
     return;
   }
 
-  // Group by fiesta for compare view
-  const compareFiestaGroups = {};
+  // Only days for active fiesta
+  const compareDays = [];
   lineupConfig.days.forEach((day, dayIdx) => {
-    const fiesta = day.fiesta || 'General';
-    if (!compareFiestaGroups[fiesta]) compareFiestaGroups[fiesta] = [];
-    compareFiestaGroups[fiesta].push({ day, dayIdx });
+    if ((day.fiesta || 'General') === activeFiesta) compareDays.push({ day, dayIdx });
   });
 
-  Object.entries(compareFiestaGroups).forEach(([fiestaName, dayEntries]) => {
-    if (Object.keys(compareFiestaGroups).length > 1) {
-      const fh = document.createElement('div');
-      fh.className = 'fiesta-group-header';
-      fh.style.marginTop = '12px';
-      fh.innerHTML = `<span class="fiesta-label">🎉 ${esc(fiestaName)}</span>`;
-      compare.appendChild(fh);
-    }
-
-    dayEntries.forEach(({ day, dayIdx }) => {
+  compareDays.forEach(({ day, dayIdx }) => {
     const dayKey = String(dayIdx);
     let html = `<div class="lineup-day-header">${esc(day.label)}<span class="lineup-day-hours">${day.start} → ${day.end}</span></div>`;
     html += '<div class="table-wrap"><table class="lineup-compare-table"><thead><tr>';
-    lineupProposals.forEach(p => {
+    fiestaProposals.forEach(p => {
       const pLikes = (p.likes || []).length;
       html += `<th>${esc(p.name)}${pLikes ? ` <span style="font-weight:normal;font-size:11px">\u2665${pLikes}</span>` : ''}</th>`;
     });
     html += '</tr></thead><tbody><tr>';
 
-    lineupProposals.forEach(p => {
+    fiestaProposals.forEach(p => {
       const pSlots = (p.daySlots || {})[dayKey] || [];
       const pInfo = calcDaySlots(day, pSlots);
       const pAssignments = p.assignments || {};
+      const pBpms = p.bpms || {};
       html += '<td style="vertical-align:top">';
       if (!pInfo.slots.length) {
         html += '<span class="lineup-compare-empty">Sin slots</span>';
@@ -3869,8 +3998,9 @@ function renderLineupCompare() {
           const key = `${dayIdx}-${si}`;
           const djId = pAssignments[key];
           const dj = djId ? lineupDJs.find(d => d.id === djId) : null;
+          const slotBpm = pBpms[key] || {};
           html += `<div style="margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)">`;
-          html += `<div style="font-size:11px;color:var(--text-secondary)">${slot.from}–${slot.to} (${formatDur(slot.duration)})</div>`;
+          html += `<div style="font-size:11px;color:var(--text-secondary)">${slot.from}–${slot.to} (${formatDur(slot.duration)}) ${bpmTag(slotBpm.min, slotBpm.max)}</div>`;
           if (dj) {
             html += `<span class="lineup-compare-dj">${esc(dj.name)}</span>`;
             if (dj.style) html += `<span class="lineup-compare-style">${esc(dj.style)}</span>`;
@@ -3889,8 +4019,7 @@ function renderLineupCompare() {
     section.style.marginBottom = '20px';
     section.innerHTML = html;
     compare.appendChild(section);
-    }); // end dayEntries
-  }); // end fiestaGroups
+  });
 }
 
 // ─── Event listeners ───
@@ -3991,7 +4120,7 @@ function switchEdition(prefix, name) {
   clearListeners();
   payments = []; tasks = []; expenses = []; decisions = []; polls = [];
   lineupConfig = null; lineupDJs = []; lineupProposals = [];
-  activeProposalId = null; lineupCompareMode = false;
+  activeProposalId = null; lineupCompareMode = false; activeFiesta = null;
   initPayments(); initTasks(); initExpenses(); initDecisions(); initPolls(); initLineup(); initSettings();
   updateEditionLabel();
   toast('Edición: ' + name);
@@ -4060,10 +4189,9 @@ function updateNotifBadges() {
   // Polls where I haven't voted
   const pendingPolls = polls.filter(p => !(p.votes || []).includes(me));
 
-  // Lineup: do I have a proposal?
-  const myProposal = lineupProposals.find(p => p.owner === me);
-  const lineupDays = lineupConfig?.days?.length || 0;
-  const lineupPending = lineupDays > 0 && !myProposal ? 1 : 0;
+  // Lineup: how many fiestas am I missing a proposal for?
+  const fiestas = lineupConfig?.days?.length ? [...new Set(lineupConfig.days.map(d => d.fiesta || 'General'))] : [];
+  const lineupPending = fiestas.filter(f => !lineupProposals.find(p => p.author === me && (p.fiesta || 'General') === f)).length;
 
   setBadge('notif-tasks-solo-count', solo.length);
   setBadge('notif-tasks-shared-count', shared.length);
@@ -4078,18 +4206,32 @@ function setBadge(id, count) {
   el.className = 'notif-count' + (count === 0 ? ' zero' : count >= 3 ? '' : ' warn');
 }
 
-// Click handlers: navigate to tab + show panel
-document.querySelectorAll('.notif-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    if (tab) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
-      const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-      if (tabBtn) tabBtn.classList.add('on');
-      document.getElementById('tab-' + tab)?.classList.add('on');
-    }
-  });
+// Click handlers: navigate to tab + apply filter
+function switchToTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
+  const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  if (tabBtn) tabBtn.classList.add('on');
+  document.getElementById('tab-' + tab)?.classList.add('on');
+}
+
+document.getElementById('notif-tasks-solo').addEventListener('click', () => {
+  taskFilterMode = taskFilterMode === 'solo' ? 'all' : 'solo';
+  switchToTab('tasks');
+  renderTasks();
+});
+document.getElementById('notif-tasks-shared').addEventListener('click', () => {
+  taskFilterMode = taskFilterMode === 'shared' ? 'all' : 'shared';
+  switchToTab('tasks');
+  renderTasks();
+});
+document.getElementById('notif-polls').addEventListener('click', () => {
+  taskFilterMode = 'all';
+  switchToTab('polls');
+});
+document.getElementById('notif-lineup').addEventListener('click', () => {
+  taskFilterMode = 'all';
+  switchToTab('lineup');
 });
 
 /* ══════════════════════════════════
