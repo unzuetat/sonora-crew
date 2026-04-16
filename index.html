@@ -1446,6 +1446,12 @@ tbody tr:hover { background: var(--accent-soft); }
           </div>
         </div>
       </div>
+
+      <!-- DESVIACIONES -->
+      <div class="card" id="deviations-card" style="display:none">
+        <div class="card-title" style="font-size:13px;color:var(--text-secondary)">Desviaciones (previsto vs real)</div>
+        <div id="deviations-list" style="font-size:12px"></div>
+      </div>
     </div>
 
     <!-- ═══ TAB: DECISIONES ═══ -->
@@ -2752,6 +2758,7 @@ function initExpenses() {
     renderExpenses();
     updateExpenseStats();
     renderExpenseBreakdown();
+    renderDeviations();
   }, err => console.warn('Expenses listener:', err));
   unsubscribers.push(unsub);
 }
@@ -2808,7 +2815,10 @@ function renderExpenses() {
       <td class="amount${overLimit ? ' breakdown-over' : ''}">${e.amount.toFixed(2)} €</td>
       <td style="font-size:12px;color:var(--text-secondary)">${limiteStr}</td>
       <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
-      <td><div class="del-row"><button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button><div class="del-confirm" id="dce-${e.id}"><span>${t('confirm_delete')}</span><button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button><button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button></div></div></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;margin-right:4px" data-id="${e.id}" data-amount="${e.amount}" data-concept="${esc(e.concept)}" onclick="convertPrevToReal(this)">→ Real</button>
+        <div class="del-row" style="display:inline"><button class="btn btn-sm btn-secondary btn-del-exp" data-id="${e.id}">✕</button><div class="del-confirm" id="dce-${e.id}"><span>${t('confirm_delete')}</span><button class="btn btn-sm btn-danger btn-del-exp-yes" data-id="${e.id}">Sí</button><button class="btn btn-sm btn-secondary btn-del-exp-no" data-id="${e.id}">No</button></div></div>
+      </td>
     `;
     tbodyPrev.appendChild(tr);
   });
@@ -2851,6 +2861,58 @@ document.getElementById('exp-tab-prev').addEventListener('click', () => {
   document.getElementById('exp-table-prev').style.display = '';
   document.getElementById('exp-table-real').style.display = 'none';
 });
+
+// Convert previsión → real
+async function convertPrevToReal(btn) {
+  const id = btn.dataset.id;
+  const prevAmount = parseFloat(btn.dataset.amount);
+  const concept = btn.dataset.concept;
+  const realAmount = prompt(`Importe real para "${concept}":\n(Previsto: ${prevAmount.toFixed(2)} €)`, prevAmount.toFixed(2));
+  if (realAmount === null) return;
+  const amount = parseFloat(realAmount);
+  if (!amount || amount <= 0) { toast('Importe no válido'); return; }
+  const paidBy = prompt('¿Quién lo ha pagado?', CFG.user);
+  if (!paidBy) return;
+  await updateDoc(eDoc('expenses', id), {
+    tipo: 'real',
+    amount,
+    prevAmount,
+    convertedFrom: 'prevision',
+    paidBy,
+    status: 'pagado',
+    convertedTs: Date.now()
+  });
+  toast('Previsión convertida a gasto real');
+}
+
+// Render deviations block
+function renderDeviations() {
+  const card = document.getElementById('deviations-card');
+  const list = document.getElementById('deviations-list');
+  if (!card || !list) return;
+  const converted = expenses.filter(e => e.convertedFrom === 'prevision' && e.prevAmount);
+  if (!converted.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  list.innerHTML = '';
+  converted.forEach(e => {
+    const diff = e.amount - e.prevAmount;
+    const pct = e.prevAmount > 0 ? ((diff / e.prevAmount) * 100).toFixed(0) : '—';
+    const color = diff > 0 ? 'var(--accent)' : diff < 0 ? 'var(--success)' : 'var(--text-secondary)';
+    const sign = diff > 0 ? '+' : '';
+    const rama = RAMAS.find(r => r.id === e.rama) || RAMAS[0];
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML = `
+      <span class="badge-rama ${rama.css}" style="font-size:10px;padding:1px 6px">${t(rama.key)}</span>
+      <span style="flex:1;font-weight:500">${esc(e.concept)}</span>
+      <span style="color:var(--text-secondary)">prev. ${e.prevAmount.toFixed(0)} €</span>
+      <span>→</span>
+      <span style="font-weight:600">real ${e.amount.toFixed(0)} €</span>
+      <span style="color:${color};font-weight:600;min-width:70px;text-align:right">${sign}${diff.toFixed(0)} € (${sign}${pct}%)</span>
+    `;
+    list.appendChild(row);
+  });
+}
 
 function updateExpenseStats() {
   const reales = expenses.filter(e => e.tipo !== 'prevision');
