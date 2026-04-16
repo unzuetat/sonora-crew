@@ -186,7 +186,7 @@ body {
   padding: 4px 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary);
   display: flex; align-items: center; gap: 4px; transition: .15s; white-space: nowrap;
 }
-.notif-btn:hover { background: var(--bg); border-color: var(--primary); color: var(--primary); }
+.notif-btn:hover { background: var(--bg); border-color: #8b5cf6; color: #8b5cf6; }
 .notif-btn .notif-icon { font-size: 14px; }
 .notif-btn .notif-count {
   background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
@@ -220,15 +220,15 @@ body {
 .fiesta-group { margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
 .fiesta-group-header {
   font-size: 14px; font-weight: 700; margin-bottom: 8px; padding-bottom: 6px;
-  border-bottom: 2px solid var(--primary); display: flex; align-items: center; gap: 8px;
+  border-bottom: 2px solid #8b5cf6; display: flex; align-items: center; gap: 8px;
 }
 .fiesta-group-header .fiesta-label { flex: 1; }
-.fiesta-badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: var(--primary); color: #fff; }
+.fiesta-badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: #8b5cf6; color: #fff; }
 .bpm-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; color: #fff; display: inline-block; }
 .bpm-input { width: 50px; padding: 2px 4px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); color: var(--text); text-align: center; }
-.bpm-input:focus { border-color: var(--primary); outline: none; }
+.bpm-input:focus { border-color: #8b5cf6; outline: none; }
 .fiesta-tab { cursor: pointer; }
-.fiesta-tab.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.fiesta-tab.on { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
 
 .wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
 
@@ -659,7 +659,7 @@ tbody tr:hover { background: var(--accent-soft); }
 .breakdown-amounts .amt-prev { color: var(--text-secondary); font-style: italic; }
 .breakdown-amounts .amt-limit { color: var(--warning); font-size: 11px; }
 .breakdown-limit-input { width: 65px; padding: 2px 6px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); color: var(--text); text-align: right; }
-.breakdown-limit-input:focus { border-color: var(--primary); outline: none; }
+.breakdown-limit-input:focus { border-color: #8b5cf6; outline: none; }
 .breakdown-over { color: var(--accent) !important; font-weight: 600; }
 
 .exp-row-prevision { opacity: 0.7; font-style: italic; }
@@ -670,7 +670,7 @@ tbody tr:hover { background: var(--accent-soft); }
 .tipo-toggle { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .tipo-toggle label { flex: 1; padding: 6px 12px; font-size: 12px; font-weight: 500; text-align: center; cursor: pointer; transition: all .2s; }
 .tipo-toggle input { display: none; }
-.tipo-toggle input:checked + span { background: var(--primary); color: #fff; }
+.tipo-toggle input:checked + span { background: #8b5cf6; color: #fff; }
 .tipo-toggle label span { display: block; padding: 6px 12px; border-radius: 0; }
 
 .exp-status {
@@ -3443,10 +3443,6 @@ function renderLineupConfig() {
   list.innerHTML = '';
   if (!lineupConfig?.days?.length) return;
 
-  const proposal = lineupProposals.find(p => p.id === activeProposalId);
-  const isOwn = proposal && proposal.author === CFG.user;
-  const daySlots = proposal ? (proposal.daySlots || {}) : {};
-
   // Update fiesta suggestions datalist
   const fiestaSet = new Set(lineupConfig.days.map(d => d.fiesta || 'General'));
   const datalist = document.getElementById('fiesta-suggestions');
@@ -3463,12 +3459,22 @@ function renderLineupConfig() {
     fiestaGroups[fiesta].push({ day, dayIdx });
   });
 
+  // Track all proposals used per fiesta for slot handlers
+  const fiestaProposalMap = {};
+
   Object.entries(fiestaGroups).forEach(([fiestaName, dayEntries]) => {
+    // Find the user's proposal for THIS fiesta
+    const proposal = lineupProposals.find(p => p.author === CFG.user && (p.fiesta || 'General') === fiestaName);
+    const isOwn = !!proposal;
+    const daySlots = proposal ? (proposal.daySlots || {}) : {};
+    if (proposal) fiestaProposalMap[fiestaName] = proposal;
+
     const group = document.createElement('div');
     group.className = 'fiesta-group';
     group.innerHTML = `<div class="fiesta-group-header">
       <span class="fiesta-label">🎉 ${esc(fiestaName)}</span>
       <span class="fiesta-badge">${dayEntries.length} día${dayEntries.length > 1 ? 's' : ''}</span>
+      ${isOwn ? '' : '<span style="font-size:11px;color:var(--text-secondary);font-style:italic">Crea una propuesta para editar slots</span>'}
     </div>`;
 
     dayEntries.forEach(({ day, dayIdx }) => {
@@ -3529,21 +3535,27 @@ function renderLineupConfig() {
     });
   });
 
-  if (!isOwn || !proposal) return;
+  // Helper: find the proposal for a day's fiesta
+  function getProposalForDay(dayIdx) {
+    const day = lineupConfig.days[dayIdx];
+    const fiesta = day?.fiesta || 'General';
+    return fiestaProposalMap[fiesta] || null;
+  }
 
   // Slot move (in config area, for own proposal)
   list.querySelectorAll('.lineup-cfg-slot-move').forEach(btn => {
     btn.addEventListener('click', async () => {
       const dayIdx = parseInt(btn.dataset.day);
+      const proposal = getProposalForDay(dayIdx);
+      if (!proposal) return;
       const slotIdx = parseInt(btn.dataset.slot);
       const dir = parseInt(btn.dataset.dir);
       const newIdx = slotIdx + dir;
-      const newDaySlots = JSON.parse(JSON.stringify(daySlots));
+      const newDaySlots = JSON.parse(JSON.stringify(proposal.daySlots || {}));
       const dayKey = String(dayIdx);
       const slots = newDaySlots[dayKey] || [];
       if (newIdx < 0 || newIdx >= slots.length) return;
       [slots[slotIdx], slots[newIdx]] = [slots[newIdx], slots[slotIdx]];
-      // Also swap assignments
       const newAssignments = { ...(proposal.assignments || {}) };
       const k1 = `${dayIdx}-${slotIdx}`, k2 = `${dayIdx}-${newIdx}`;
       const tmp = newAssignments[k1]; newAssignments[k1] = newAssignments[k2]; newAssignments[k2] = tmp;
@@ -3557,11 +3569,12 @@ function renderLineupConfig() {
   list.querySelectorAll('.lineup-cfg-slot-del').forEach(btn => {
     btn.addEventListener('click', async () => {
       const dayIdx = parseInt(btn.dataset.day);
+      const proposal = getProposalForDay(dayIdx);
+      if (!proposal) return;
       const slotIdx = parseInt(btn.dataset.slot);
-      const newDaySlots = JSON.parse(JSON.stringify(daySlots));
+      const newDaySlots = JSON.parse(JSON.stringify(proposal.daySlots || {}));
       const dayKey = String(dayIdx);
       newDaySlots[dayKey].splice(slotIdx, 1);
-      // Re-index assignments
       const newAssignments = {};
       Object.entries(proposal.assignments || {}).forEach(([k, v]) => {
         const [d, s] = k.split('-').map(Number);
@@ -3580,8 +3593,10 @@ function renderLineupConfig() {
   list.querySelectorAll('.lineup-cfg-add-slot').forEach(btn => {
     btn.addEventListener('click', async () => {
       const dayIdx = parseInt(btn.dataset.day);
+      const proposal = getProposalForDay(dayIdx);
+      if (!proposal) return;
       const dur = parseInt(btn.dataset.dur);
-      const newDaySlots = JSON.parse(JSON.stringify(daySlots));
+      const newDaySlots = JSON.parse(JSON.stringify(proposal.daySlots || {}));
       const dayKey = String(dayIdx);
       if (!newDaySlots[dayKey]) newDaySlots[dayKey] = [];
       newDaySlots[dayKey].push(dur);
