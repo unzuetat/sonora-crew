@@ -1434,6 +1434,7 @@ tbody tr:hover { background: var(--accent-soft); }
                   <th>Rama</th>
                   <th>Coste estimado</th>
                   <th>Límite</th>
+                  <th>Creado por</th>
                   <th>Notas</th>
                   <th></th>
                 </tr>
@@ -1831,7 +1832,7 @@ const I18N = {
     tasks_empty: 'No hay tareas todavía',
     rama_sonido: 'Sonido', rama_local: 'Local', rama_logistica: 'Logística',
     rama_decoracion: 'Decoración', rama_montaje: 'Montaje',
-    rama_desmontaje: 'Desmontaje', rama_cartel: 'Cartel/Artistas', rama_otros: 'Otros',
+    rama_desmontaje: 'Comida y bebida', rama_cartel: 'Cartel/Artistas', rama_otros: 'Otros',
     status_pendiente: 'Pendiente', status_en_curso: 'En curso', status_hecho: 'Hecho',
     priority_normal: 'Normal', priority_alta: 'Alta', priority_urgente: 'Urgente',
     new_expense: 'Nuevo gasto',
@@ -1940,7 +1941,7 @@ const I18N = {
     tasks_empty: 'No tasks yet',
     rama_sonido: 'Sound', rama_local: 'Venue', rama_logistica: 'Logistics',
     rama_decoracion: 'Decoration', rama_montaje: 'Setup',
-    rama_desmontaje: 'Teardown', rama_cartel: 'Poster/Artists',
+    rama_desmontaje: 'Food & drinks', rama_cartel: 'Poster/Artists',
     status_pendiente: 'Pending', status_en_curso: 'In progress', status_hecho: 'Done',
     priority_normal: 'Normal', priority_alta: 'High', priority_urgente: 'Urgent',
     new_expense: 'New expense',
@@ -2833,6 +2834,7 @@ function renderExpenses() {
       <td><span class="badge-rama ${rama.css}">${t(rama.key)}</span></td>
       <td class="amount${overLimit ? ' breakdown-over' : ''}">${e.amount.toFixed(2)} €</td>
       <td style="font-size:12px;color:var(--text-secondary)">${limiteStr}</td>
+      <td>${esc(e.registeredBy || '—')}</td>
       <td class="obs-cell" title="${esc(e.notes || '')}">${esc(e.notes || '—')}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-convert-prev" style="font-size:10px;padding:2px 6px;margin-right:4px" data-id="${e.id}" data-amount="${e.amount}" data-concept="${esc(e.concept)}">→ Real</button>
