@@ -1073,9 +1073,11 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="icon-btn" id="btn-logout" title="Salir">✕</button>
     </div>
     <div class="tabs" style="width:100%;border-top:1px solid var(--border);margin-top:4px;padding-top:0">
-      <button class="tab-btn on" data-tab="payments" style="color:#2563eb">Pagos</button>
-      <button class="tab-btn" data-tab="expenses" style="color:#2563eb">Gastos</button>
+      <button class="tab-btn on" data-tab="hostels" style="color:#0891b2">Albergues</button>
       <button class="tab-btn" data-tab="tasks" style="color:#b45309">Tareas</button>
+      <button class="tab-btn" data-tab="hitos" style="color:#0d9488">Hitos</button>
+      <button class="tab-btn" data-tab="payments" style="color:#2563eb">Pagos</button>
+      <button class="tab-btn" data-tab="expenses" style="color:#2563eb">Gastos</button>
       <button class="tab-btn" data-tab="decisions" style="color:#b45309">Decisiones</button>
       <button class="tab-btn" data-tab="polls" style="color:#047857">Encuestas</button>
       <button class="tab-btn" data-tab="lineup" style="color:#7c3aed">Lineup</button>
@@ -1087,7 +1089,7 @@ tbody tr:hover { background: var(--accent-soft); }
   <div class="wrap">
 
     <!-- ═══ TAB: PAGOS ═══ -->
-    <div class="tab-content on" id="tab-payments">
+    <div class="tab-content" id="tab-payments">
       <!-- STATS -->
       <div class="stats-grid" id="stats-grid">
         <div class="stat-card">
@@ -1219,6 +1221,21 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
       </div>
 
+      <!-- EDICIÓN DE TAREAS -->
+      <div id="tasks-edition-banner" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px">
+        <span>📋 Tareas de: <strong id="tasks-edition-name">…</strong> <span id="tasks-edition-note" style="color:var(--text-secondary);font-style:italic"></span></span>
+        <button class="btn btn-sm btn-secondary" id="btn-tasks-edition" style="font-size:11px;padding:2px 10px;white-space:nowrap">Cambiar edición</button>
+      </div>
+
+      <!-- CARGA DEL EQUIPO -->
+      <div class="card" id="task-load-card" style="display:none">
+        <div class="card-title" style="font-size:14px">⚖️ Carga del equipo</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">Tareas pendientes y en curso, por esfuerzo (talla S=1 · M=2 · L=3) y marrones 🟤.</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;font-style:italic">No es para señalar a quien hace menos, sino para ver quién va más cargado y echarle una mano. 🤝</div>
+        <div id="task-load-bars"></div>
+        <div id="task-load-unassigned" style="margin-top:10px;font-size:12px;color:var(--text-secondary)"></div>
+      </div>
+
       <!-- TASK FORM -->
       <div class="card" id="task-form-card">
         <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
@@ -1247,6 +1264,24 @@ tbody tr:hover { background: var(--accent-soft); }
               <option value="normal">Normal</option>
               <option value="alta">Alta</option>
               <option value="urgente">Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label" title="Cuánto trabajo lleva. La pone quien crea la tarea; cualquiera la ajusta.">Esfuerzo (talla)</label>
+            <select class="form-select" id="ft-effort">
+              <option value="S">S · ligera (1)</option>
+              <option value="M" selected>M · media (2)</option>
+              <option value="L">L · gorda (3)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" title="Cómo de tedioso/desagradable es. Para repartir los marrones de forma justa.">¿Marrón?</label>
+            <select class="form-select" id="ft-marron">
+              <option value="0" selected>No</option>
+              <option value="1">Marrón 🟤</option>
+              <option value="2">Marronazo 🟤🟤</option>
             </select>
           </div>
         </div>
@@ -1453,6 +1488,145 @@ tbody tr:hover { background: var(--accent-soft); }
       <div class="card" id="deviations-card" style="display:none">
         <div class="card-title" style="font-size:13px;color:var(--text-secondary)">Desviaciones (previsto vs real)</div>
         <div id="deviations-list" style="font-size:12px"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: HITOS ═══ -->
+    <div class="tab-content" id="tab-hitos">
+      <div id="hitos-edition-note" style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">📅 Hitos de: <strong id="hitos-edition-name">…</strong></div>
+
+      <!-- HITO FORM -->
+      <div class="card" id="hito-form-card">
+        <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
+          <div class="card-title">Nuevo hito</div>
+          <button class="collapse-toggle" type="button">＋</button>
+        </div>
+        <div class="collapsible-body">
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Hito</label>
+              <input class="form-input" id="fh-title" type="text" placeholder="Qué hay que tener listo (ej. Cartel, Hablar con DJs, Avisos)...">
+            </div>
+          </div>
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label" title="La fecha tope acordada entre todos">Fecha límite (consensuada)</label>
+              <input class="form-input" id="fh-date" type="date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rama (opcional)</label>
+              <select class="form-select" id="fh-rama"></select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Notas</label>
+              <input class="form-input" id="fh-notes" type="text" placeholder="Detalles opcionales...">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn" id="btn-add-hito">Añadir hito</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div class="card" id="hitos-timeline-card" style="display:none">
+        <div class="card-title" style="font-size:14px;margin-bottom:6px">Cuenta atrás</div>
+        <div id="hitos-timeline"></div>
+      </div>
+
+      <!-- LIST -->
+      <div id="hito-list"></div>
+      <div class="empty-state" id="hitos-empty">
+        <div class="empty-state-icon">📅</div>
+        <div class="empty-state-text">No hay hitos todavía. Añade el primero y ponle una fecha acordada.</div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: ALBERGUES ═══ -->
+    <div class="tab-content on" id="tab-hostels">
+      <div id="hostels-summary" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px"></div>
+      <div class="chip-row" id="hostel-filters" style="margin-bottom:14px;flex-wrap:wrap;align-items:center"></div>
+
+      <!-- HOSTEL FORM -->
+      <div class="card" id="hostel-form-card">
+        <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
+          <div class="card-title">Nuevo albergue</div>
+          <button class="collapse-toggle" type="button">＋</button>
+        </div>
+        <div class="collapsible-body">
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Nombre</label>
+              <input class="form-input" id="fa-name" type="text" placeholder="Nombre del albergue...">
+            </div>
+          </div>
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Ubicación / zona</label>
+              <input class="form-input" id="fa-location" type="text" placeholder="Pueblo, comarca...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Distancia de Valencia</label>
+              <input class="form-input" id="fa-distance" type="text" placeholder="ej. 45 min / 60 km">
+            </div>
+          </div>
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Nº de camas</label>
+              <input class="form-input" id="fa-beds" type="number" min="0" placeholder="ej. 40">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Precio</label>
+              <input class="form-input" id="fa-price" type="text" placeholder="ej. 18 €/persona/noche">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estado de contacto</label>
+              <select class="form-select" id="fa-contact">
+                <option value="sin_contactar">Sin contactar</option>
+                <option value="contactado">Contactado</option>
+                <option value="esperando">Esperando respuesta</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="descartado">Descartado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Web / enlace</label>
+              <input class="form-input" id="fa-web" type="text" placeholder="https://...">
+            </div>
+          </div>
+          <label class="form-label">Características</label>
+          <div id="fa-attrs" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px"></div>
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Pros</label>
+              <textarea class="form-input" id="fa-pros" rows="2" style="resize:vertical" placeholder="Lo bueno..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contras</label>
+              <textarea class="form-input" id="fa-cons" rows="2" style="resize:vertical" placeholder="Lo malo..."></textarea>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Notas</label>
+              <input class="form-input" id="fa-notes" type="text" placeholder="Otros detalles...">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn" id="btn-add-hostel">Añadir albergue</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOSTEL LIST -->
+      <div id="hostel-list"></div>
+      <div class="empty-state" id="hostels-empty">
+        <div class="empty-state-icon">🏡</div>
+        <div class="empty-state-text">No hay albergues todavía. Añade el primero que encontréis.</div>
       </div>
     </div>
 
@@ -1738,6 +1912,19 @@ const db = getFirestore(fbApp);
 let EDITION_PREFIX = localStorage.getItem('sonora_active_prefix') || 'crew';
 function eCol(name) { return collection(db, EDITION_PREFIX + '_' + name); }
 function eDoc(colName, docId) { return doc(db, EDITION_PREFIX + '_' + colName, docId); }
+
+/* ── Edición de TAREAS (compartida en Firebase, independiente del resto) ──
+   Doc sonora_config/current = { tasksPrefix, tasksEditionName }.
+   Si no existe, las tareas siguen la edición global (EDITION_PREFIX). */
+let TASKS_CFG = null;
+function tasksPrefix() { return (TASKS_CFG && TASKS_CFG.tasksPrefix) || EDITION_PREFIX; }
+function tasksEditionName() {
+  if (TASKS_CFG && TASKS_CFG.tasksEditionName) return TASKS_CFG.tasksEditionName;
+  const e = (typeof editions !== 'undefined' ? editions : []).find(x => x.prefix === tasksPrefix());
+  return e ? e.name : (localStorage.getItem('sonora_edition') || 'edición actual');
+}
+function tCol(name) { return collection(db, tasksPrefix() + '_' + name); }
+function tDoc(colName, docId) { return doc(db, tasksPrefix() + '_' + colName, docId); }
 
 let unsubscribers = [];
 function clearListeners() {
@@ -2476,14 +2663,161 @@ let taskFilterAssigned = 'all';
 let taskFilterPriority = 'all';
 let taskFilterMode = 'all'; // 'all', 'solo', 'shared' (from notif badges)
 
+/* ── Carga de tareas: esfuerzo (talla) + marrón ── */
+const EFFORT_PTS = { S: 1, M: 2, L: 3 };
+const MARRON_LABEL = { 0: 'No', 1: 'Marrón', 2: 'Marronazo' };
+function effortBadgeHtml(eff) {
+  if (!eff) return '';
+  const c = { S: '#10b981', M: '#f59e0b', L: '#ef4444' }[eff] || '#888';
+  const lbl = { S: 'ligera', M: 'media', L: 'gorda' }[eff] || '';
+  return `<span class="task-meta-item" title="Esfuerzo: ${lbl}" style="font-weight:700;padding:0 6px;border-radius:6px;background:${c}22;color:${c};border:1px solid ${c}55">${eff}</span>`;
+}
+function marronHtml(m) {
+  if (!m) return '';
+  return `<span class="task-meta-item" title="${m === 2 ? 'Marronazo' : 'Marrón'}" style="letter-spacing:1px">${'🟤'.repeat(m)}</span>`;
+}
+function computePendingLoad() {
+  const load = {};
+  CFG.crew.forEach(n => load[n] = { pts: 0, marrones: 0, n: 0 });
+  let unPts = 0, unN = 0;
+  tasks.filter(t => t.status !== 'hecho').forEach(t => {
+    const a = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+    const ep = EFFORT_PTS[t.effort] || 0;
+    const mar = t.marron || 0;
+    if (!a.length) { unPts += ep; unN++; return; }
+    const share = ep / a.length;
+    a.forEach(n => { if (load[n]) { load[n].pts += share; if (mar >= 1) load[n].marrones++; load[n].n++; } });
+  });
+  const totalPts = CFG.crew.reduce((s, n) => s + load[n].pts, 0);
+  const avg = totalPts / CFG.crew.length;
+  return { load, avg, totalPts, unPts, unN };
+}
+function fmtPts(p) { return (Math.round(p * 10) / 10).toString().replace('.', ','); }
+function renderLoadBalance() {
+  const card = document.getElementById('task-load-card');
+  if (!card) return;
+  const barsEl = document.getElementById('task-load-bars');
+  const unEl = document.getElementById('task-load-unassigned');
+  const { load, avg, totalPts, unPts, unN } = computePendingLoad();
+  const max = Math.max(...CFG.crew.map(n => load[n].pts), avg, 1);
+  const arr = CFG.crew.map(n => ({ name: n, ...load[n] })).sort((a, b) => b.pts - a.pts);
+  barsEl.innerHTML = arr.map(p => {
+    const w = p.pts / max * 100;
+    const avgW = avg / max * 100;
+    const heavy = p.pts > avg + 0.01 && p.pts > 0; // por encima de la media → posible candidato a recibir ayuda
+    const col = heavy ? '#f59e0b' : '#8b5cf6';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px">
+      <span style="width:80px;font-weight:600">${esc(p.name)}</span>
+      <div style="flex:1;position:relative;height:16px;background:rgba(127,127,127,.12);border-radius:5px">
+        <div style="height:16px;width:${w.toFixed(1)}%;background:${col};border-radius:5px;transition:width .4s"></div>
+        <div style="position:absolute;left:${avgW.toFixed(1)}%;top:-3px;height:22px;width:2px;background:var(--text-secondary);opacity:.55" title="Media del equipo"></div>
+      </div>
+      <span style="width:130px;text-align:right;font-weight:700">${fmtPts(p.pts)} pts${p.marrones ? ` · ${p.marrones}🟤` : ''}${heavy ? ' <span title="Va más cargada/o que la media — ¿le echamos una mano?">🤝</span>' : ''}</span>
+    </div>`;
+  }).join('');
+  unEl.innerHTML = unN
+    ? `📥 Sin coger: <strong>${unN}</strong> tarea${unN > 1 ? 's' : ''} · <strong>${fmtPts(unPts)}</strong> pts por repartir entre todos`
+    : (totalPts > 0 ? '✓ Todo el trabajo pendiente tiene a alguien detrás' : '');
+  card.style.display = (totalPts > 0 || unN > 0) ? '' : 'none';
+}
+
+let tasksUnsub = null;
 function initTasks() {
-  const unsub = onSnapshot(query(eCol('tasks'), orderBy('ts', 'desc')), snap => {
+  if (tasksUnsub) { try { tasksUnsub(); } catch (e) {} }
+  tasksUnsub = onSnapshot(query(tCol('tasks'), orderBy('ts', 'desc')), snap => {
     tasks = [];
     snap.forEach(ds => tasks.push({ id: ds.id, ...ds.data() }));
     renderTasks();
     if (typeof updateNotifBadges === 'function') updateNotifBadges();
-  }, err => console.warn('Tasks listener:', err));
-  unsubscribers.push(unsub);
+  }, err => { console.warn('Tasks listener:', err); toast('⚠️ Error leyendo tareas (' + tasksPrefix() + '): ' + (err.code || err.message)); });
+  unsubscribers.push(tasksUnsub);
+}
+
+// Puntero de edición de Tareas, compartido por los 7 vía Firebase
+function initTasksEditionConfig() {
+  onSnapshot(doc(db, 'sonora_config', 'current'), snap => {
+    const data = snap.exists() ? snap.data() : null;
+    const prevPrefix = tasksPrefix();
+    TASKS_CFG = data;
+    if (tasksPrefix() !== prevPrefix || !tasksUnsub) {
+      tasks = [];
+      initTasks();
+      if (typeof initMilestones === 'function') { milestones = []; initMilestones(); }
+    }
+    renderTasksEditionBanner();
+    if (typeof renderDecisionFilters === 'function') renderDecisionFilters();
+    if (typeof renderDecisions === 'function') renderDecisions();
+  }, err => { console.warn('Tasks edition config listener:', err); toast('⚠️ Error leyendo config compartida: ' + (err.code || err.message)); });
+}
+
+function renderTasksEditionBanner() {
+  const banner = document.getElementById('tasks-edition-banner');
+  if (!banner) return;
+  const nameEl = document.getElementById('tasks-edition-name');
+  const noteEl = document.getElementById('tasks-edition-note');
+  const differs = tasksPrefix() !== EDITION_PREFIX;
+  nameEl.textContent = tasksEditionName();
+  noteEl.textContent = differs ? '· el resto de la app sigue en otra edición' : '';
+  banner.style.borderColor = differs ? '#f59e0b' : 'var(--border)';
+  banner.style.background = differs ? 'var(--warning-soft)' : 'var(--bg-card)';
+  banner.style.display = 'flex';
+}
+
+function openTasksEditionPicker() {
+  const cur = tasksPrefix();
+  let html = '<div style="font-size:13px;font-weight:600;margin-bottom:4px">Edición de las tareas</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Solo afecta a esta pestaña. El resto de la app (pagos, gastos, saldar) no se toca. El cambio lo verán los 7.</div>';
+  (typeof editions !== 'undefined' ? editions : []).forEach(e => {
+    const isCur = e.prefix === cur;
+    const isGlobal = e.prefix === EDITION_PREFIX;
+    html += `<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <span style="${isCur ? 'font-weight:700;color:var(--accent)' : ''}">${esc(e.name)}${isCur ? ' ← aquí' : ''}${isGlobal ? ' <span style="font-size:10px;color:var(--text-secondary)">(resto de la app)</span>' : ''}</span>
+      ${!isCur ? `<button class="btn btn-sm btn-secondary te-use" data-prefix="${esc(e.prefix)}" data-name="${esc(e.name)}" style="padding:2px 8px;font-size:11px">Usar aquí</button>` : ''}
+    </div>`;
+  });
+  html += '<div style="margin-top:10px"><input class="form-input" id="te-new-name" placeholder="Crear edición nueva..." style="font-size:13px;padding:6px 8px;margin-bottom:6px"><button class="btn btn-sm" id="te-create">Crear y usar aquí</button></div>';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
+  const popup = document.createElement('div');
+  popup.style.cssText = 'background:var(--bg-card);border-radius:12px;padding:20px;max-width:380px;width:90%;box-shadow:var(--shadow-lg)';
+  popup.innerHTML = html;
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', ev => { if (ev.target === overlay) overlay.remove(); });
+
+  async function setTasksEdition(prefix, name) {
+    // Aplica YA en este dispositivo (sin esperar al listener de Firebase)
+    TASKS_CFG = { tasksPrefix: prefix, tasksEditionName: name };
+    tasks = [];
+    initTasks();
+    if (typeof initMilestones === 'function') { milestones = []; initMilestones(); }
+    renderTasks();
+    renderTasksEditionBanner();
+    if (typeof renderDecisionFilters === 'function') { renderDecisionFilters(); renderDecisions(); }
+    // Comparte el cambio con los 7 (si las reglas lo permiten)
+    try {
+      await setDoc(doc(db, 'sonora_config', 'current'), { tasksPrefix: prefix, tasksEditionName: name, ts: Date.now() });
+      toast('Tareas: ' + name);
+    } catch (e) {
+      console.error('setTasksEdition error:', e);
+      toast('⚠️ Cambio aplicado solo aquí. No se pudo compartir: ' + (e.code || e.message));
+    }
+  }
+  popup.querySelectorAll('.te-use').forEach(btn => {
+    btn.addEventListener('click', async () => { overlay.remove(); await setTasksEdition(btn.dataset.prefix, btn.dataset.name); });
+  });
+  popup.querySelector('#te-create').addEventListener('click', async () => {
+    const name = popup.querySelector('#te-new-name').value.trim();
+    if (!name) return;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || 'ed' + Date.now();
+    const prefix = 'crew_' + slug;
+    overlay.remove();
+    if (!(typeof editions !== 'undefined' ? editions : []).some(e => e.prefix === prefix)) {
+      await addDoc(collection(db, 'sonora_editions'), { name, prefix, ts: Date.now() });
+    }
+    await setTasksEdition(prefix, name);
+  });
 }
 
 function renderTaskFilters() {
@@ -2549,6 +2883,9 @@ function renderTasks() {
   const empty = document.getElementById('tasks-empty');
   list.innerHTML = '';
 
+  renderTasksEditionBanner();
+  renderLoadBalance();
+
   // Show notif filter banner
   const banner = document.getElementById('task-notif-banner');
   const bannerText = document.getElementById('task-notif-banner-text');
@@ -2612,6 +2949,7 @@ function renderTasks() {
         <div class="task-title ${isDone ? 'struck' : ''}">${esc(task.title)}</div>
         <div class="task-meta">
           <span class="badge-rama ${rama.css}">${t(rama.key)}</span>
+          ${effortBadgeHtml(task.effort)}${marronHtml(task.marron)}
           <span style="margin-right:2px">→</span> ${assignedHtml} ${claimBtn}
           ${task.priority !== 'normal' ? `<span class="badge ${task.priority === 'urgente' ? 'badge-viernes' : 'badge-sabado'}" style="font-size:10px">${t('priority_' + task.priority)}</span>` : ''}
           ${task.status === 'en_curso' ? `<span class="badge badge-finde" style="font-size:10px">${t('status_en_curso')}</span>` : ''}
@@ -2639,6 +2977,9 @@ function renderTasks() {
       const card = btn.closest('.task-card');
       const ramaOpts = RAMAS.map(r => `<option value="${r.id}" ${task.rama === r.id ? 'selected' : ''}>${t(r.key)}</option>`).join('');
       const prioOpts = ['normal','alta','urgente'].map(p => `<option value="${p}" ${task.priority === p ? 'selected' : ''}>${t('priority_' + p)}</option>`).join('');
+      const EFFLBL = { S: 'S · ligera', M: 'M · media', L: 'L · gorda' };
+      const effortOpts = `<option value="" ${!task.effort ? 'selected' : ''}>— sin talla</option>` + ['S','M','L'].map(e => `<option value="${e}" ${task.effort === e ? 'selected' : ''}>${EFFLBL[e]}</option>`).join('');
+      const marronOpts = [0,1,2].map(m => `<option value="${m}" ${(task.marron || 0) === m ? 'selected' : ''}>${['No es marrón','Marrón 🟤','Marronazo 🟤🟤'][m]}</option>`).join('');
 
       card.innerHTML = `
         <div style="flex:1;display:flex;flex-direction:column;gap:6px;padding:4px 0">
@@ -2646,6 +2987,8 @@ function renderTasks() {
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <select class="form-select edit-task-rama" style="font-size:12px;padding:4px 8px">${ramaOpts}</select>
             <select class="form-select edit-task-priority" style="font-size:12px;padding:4px 8px">${prioOpts}</select>
+            <select class="form-select edit-task-effort" title="Esfuerzo" style="font-size:12px;padding:4px 8px">${effortOpts}</select>
+            <select class="form-select edit-task-marron" title="¿Marrón?" style="font-size:12px;padding:4px 8px">${marronOpts}</select>
           </div>
           <input class="form-input edit-task-notes" value="${esc(task.notes || '')}" placeholder="Notas..." style="font-size:12px">
           <div style="display:flex;gap:6px">
@@ -2660,6 +3003,8 @@ function renderTasks() {
         const newTitle = card.querySelector('.edit-task-title').value.trim();
         const newRama = card.querySelector('.edit-task-rama').value;
         const newPriority = card.querySelector('.edit-task-priority').value;
+        const newEffort = card.querySelector('.edit-task-effort').value;
+        const newMarron = parseInt(card.querySelector('.edit-task-marron').value) || 0;
         const newNotes = card.querySelector('.edit-task-notes').value.trim();
         if (!newTitle) { toast('El título no puede estar vacío'); return; }
 
@@ -2669,6 +3014,8 @@ function renderTasks() {
         if (newTitle !== task.title) { changes.title = newTitle; logEntries.push({ field: 'título', from: task.title, to: newTitle, by: CFG.user, ts: now }); }
         if (newRama !== task.rama) { const oldR = RAMAS.find(r=>r.id===task.rama); const newR = RAMAS.find(r=>r.id===newRama); changes.rama = newRama; logEntries.push({ field: 'rama', from: t(oldR?.key||''), to: t(newR?.key||''), by: CFG.user, ts: now }); }
         if (newPriority !== task.priority) { changes.priority = newPriority; logEntries.push({ field: 'prioridad', from: t('priority_'+task.priority), to: t('priority_'+newPriority), by: CFG.user, ts: now }); }
+        if (newEffort !== (task.effort || '')) { changes.effort = newEffort; logEntries.push({ field: 'esfuerzo', from: task.effort || '—', to: newEffort || '—', by: CFG.user, ts: now }); }
+        if (newMarron !== (task.marron || 0)) { changes.marron = newMarron; logEntries.push({ field: 'marrón', from: MARRON_LABEL[task.marron || 0], to: MARRON_LABEL[newMarron], by: CFG.user, ts: now }); }
         if (newNotes !== (task.notes || '')) { changes.notes = newNotes; logEntries.push({ field: 'notas', from: task.notes || '', to: newNotes, by: CFG.user, ts: now }); }
 
         if (!Object.keys(changes).length) { renderTasks(); return; }
@@ -2681,7 +3028,7 @@ function renderTasks() {
         changes.changelog = [...existingLog, ...logEntries];
 
         try {
-          await updateDoc(eDoc('tasks', id), changes);
+          await updateDoc(tDoc('tasks',id), changes);
           toast('Tarea actualizada');
         } catch (e) {
           console.error('Edit task error:', e);
@@ -2698,7 +3045,7 @@ function renderTasks() {
       const task = tasks.find(t => t.id === id);
       if (!task) return;
       const newStatus = task.status === 'hecho' ? 'pendiente' : 'hecho';
-      await updateDoc(eDoc('tasks', id), { status: newStatus });
+      await updateDoc(tDoc('tasks',id), { status: newStatus });
     });
   });
 
@@ -2708,7 +3055,7 @@ function renderTasks() {
       const id = btn.dataset.id;
       const current = btn.dataset.status;
       const next = current === 'pendiente' ? 'en_curso' : current === 'en_curso' ? 'hecho' : 'pendiente';
-      await updateDoc(eDoc('tasks', id), { status: next });
+      await updateDoc(tDoc('tasks',id), { status: next });
     });
   });
 
@@ -2720,7 +3067,11 @@ function renderTasks() {
       if (!task) return;
       const current = Array.isArray(task.assigned) ? task.assigned : (task.assigned ? [task.assigned] : []);
       if (!current.includes(CFG.user)) {
-        await updateDoc(eDoc('tasks', id), { assigned: [...current, CFG.user] });
+        const { load, avg } = computePendingLoad();
+        await updateDoc(tDoc('tasks',id), { assigned: [...current, CFG.user] });
+        if (avg > 0 && load[CFG.user] && load[CFG.user].pts >= avg) {
+          toast('🤝 Vas de los más cargados — pide ayuda si te hace falta');
+        }
       }
     });
   });
@@ -2728,7 +3079,7 @@ function renderTasks() {
   // Delete
   list.querySelectorAll('.btn-task-del').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await deleteDoc(eDoc('tasks', btn.dataset.id));
+      await deleteDoc(tDoc('tasks',btn.dataset.id));
       toast(t('toast_task_deleted'));
     });
   });
@@ -2744,11 +3095,13 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
 
   const assigned = getSelectedCrew('ft-assigned');
   try {
-    await addDoc(eCol('tasks'), {
+    await addDoc(tCol('tasks'), {
       title,
       rama: document.getElementById('ft-rama').value,
       assigned,
       priority: document.getElementById('ft-priority').value,
+      effort: document.getElementById('ft-effort').value,
+      marron: parseInt(document.getElementById('ft-marron').value) || 0,
       notes: document.getElementById('ft-notes').value.trim(),
       status: 'pendiente',
       createdBy: CFG.user,
@@ -2756,6 +3109,8 @@ document.getElementById('btn-add-task').addEventListener('click', async () => {
     });
     document.getElementById('ft-title').value = '';
     document.getElementById('ft-notes').value = '';
+    document.getElementById('ft-effort').value = 'M';
+    document.getElementById('ft-marron').value = '0';
     document.querySelectorAll('#ft-assigned .crew-chip').forEach(c => c.classList.remove('on'));
     toast(t('toast_task_added'));
   } catch (e) {
@@ -3218,6 +3573,13 @@ document.getElementById('btn-export-expenses').addEventListener('click', () => {
 let decisions = [];
 let decFilterRama = 'all';
 let decFilterStatus = 'all';
+let decShowPrevious = true; // mostrar decisiones de ediciones anteriores (atenuadas)
+// Nombre de la edición base (la que no lleva campo 'edicion' en decisiones antiguas)
+function baseEditionName() {
+  const e = (typeof editions !== 'undefined' ? editions : []).find(x => x.prefix === 'crew');
+  return e ? e.name : 'San Sonorín XI';
+}
+function decEdition(d) { return d.edicion || baseEditionName(); }
 
 function initDecisions() {
   const unsub = onSnapshot(query(eCol('decisions'), orderBy('ts', 'desc')), snap => {
@@ -3250,6 +3612,14 @@ function renderDecisionFilters() {
     chip.addEventListener('click', () => { decFilterStatus = s; renderDecisionFilters(); renderDecisions(); });
     statusEl.appendChild(chip);
   });
+  // Toggle: mostrar/ocultar decisiones de ediciones anteriores
+  const prevChip = document.createElement('button');
+  prevChip.className = 'chip' + (decShowPrevious ? ' on' : '');
+  prevChip.textContent = (decShowPrevious ? '👁 ' : '🙈 ') + 'Anteriores';
+  prevChip.title = 'Mostrar u ocultar decisiones de ediciones anteriores';
+  prevChip.style.marginLeft = '10px';
+  prevChip.addEventListener('click', () => { decShowPrevious = !decShowPrevious; renderDecisionFilters(); renderDecisions(); });
+  statusEl.appendChild(prevChip);
 }
 
 function renderDecisions() {
@@ -3257,9 +3627,11 @@ function renderDecisions() {
   const empty = document.getElementById('decisions-empty');
   list.innerHTML = '';
 
+  const current = tasksEditionName();
   let filtered = decisions;
   if (decFilterRama !== 'all') filtered = filtered.filter(d => d.rama === decFilterRama);
   if (decFilterStatus !== 'all') filtered = filtered.filter(d => d.status === decFilterStatus);
+  if (!decShowPrevious) filtered = filtered.filter(d => decEdition(d) === current);
 
   if (!filtered.length) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
@@ -3270,14 +3642,17 @@ function renderDecisions() {
     const dateStr = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const statusLabel = t('dec_' + d.status);
     const isLong = d.detail && d.detail.length > 120;
+    const isPrev = decEdition(d) !== current;
     const card = document.createElement('div');
-    card.className = 'dec-card dec-' + d.status;
+    card.className = 'dec-card dec-' + d.status + (isPrev ? ' dec-prev' : '');
+    if (isPrev) card.style.opacity = '.62';
 
     card.innerHTML = `
       <div class="dec-title">${esc(d.title)}</div>
       ${d.detail ? `<div class="dec-detail ${isLong ? 'truncated' : ''}">${esc(d.detail)}</div>` : ''}
       <div class="dec-meta">
         <span class="badge-rama ${rama.css}">${t(rama.key)}</span>
+        ${isPrev ? `<span title="Edición anterior" style="font-size:10px;padding:1px 7px;border-radius:10px;background:var(--text-secondary);color:var(--bg-card);font-weight:600">${esc(decEdition(d))}</span>` : ''}
         <span class="dec-status dec-${d.status}">${statusLabel}</span>
         <span>${dateStr} · ${esc(d.createdBy || '')}</span>
         <button class="btn btn-sm btn-secondary btn-dec-edit" data-id="${d.id}" style="padding:2px 8px;font-size:10px">✎</button>
@@ -3384,6 +3759,7 @@ document.getElementById('btn-add-decision').addEventListener('click', async () =
       detail: document.getElementById('fd-detail').value.trim(),
       rama: document.getElementById('fd-rama').value,
       status: document.getElementById('fd-status').value,
+      edicion: tasksEditionName(),
       createdBy: CFG.user,
       ts: Date.now()
     });
@@ -3394,6 +3770,436 @@ document.getElementById('btn-add-decision').addEventListener('click', async () =
     console.error('Add decision error:', e);
     toast('Error: ' + e.message);
   }
+  btn.disabled = false;
+});
+
+/* ══════════════════════════════════
+   HITOS (milestones) — siguen la edición compartida de Tareas
+══════════════════════════════════ */
+let milestones = [];
+let msUnsub = null;
+function initMilestones() {
+  if (msUnsub) { try { msUnsub(); } catch (e) {} }
+  msUnsub = onSnapshot(query(tCol('milestones'), orderBy('date', 'asc')), snap => {
+    milestones = [];
+    snap.forEach(ds => milestones.push({ id: ds.id, ...ds.data() }));
+    renderMilestones();
+  }, err => { console.warn('Milestones listener:', err); });
+  unsubscribers.push(msUnsub);
+}
+
+function hitoDaysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + 'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
+function hitoCountdownLabel(diff, done) {
+  if (done) return '✓ Hecho';
+  if (diff === null) return '';
+  if (diff < 0) return 'hace ' + Math.abs(diff) + ' día' + (Math.abs(diff) > 1 ? 's' : '') + ' · vencido';
+  if (diff === 0) return '¡HOY!';
+  if (diff === 1) return 'mañana';
+  return 'faltan ' + diff + ' días';
+}
+function hitoColor(diff, done) {
+  if (done) return '#10b981';
+  if (diff === null) return '#94a3b8';
+  if (diff < 0) return '#ef4444';
+  if (diff <= 7) return '#f59e0b';
+  if (diff <= 21) return '#8b5cf6';
+  return '#60a5fa';
+}
+
+function renderMilestones() {
+  const list = document.getElementById('hito-list');
+  const empty = document.getElementById('hitos-empty');
+  if (!list) return;
+  const nameEl = document.getElementById('hitos-edition-name');
+  if (nameEl) nameEl.textContent = tasksEditionName();
+  list.innerHTML = '';
+  renderHitosTimeline();
+  if (!milestones.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const sorted = [...milestones].sort((a, b) => {
+    if ((a.done ? 1 : 0) !== (b.done ? 1 : 0)) return (a.done ? 1 : 0) - (b.done ? 1 : 0);
+    return (a.date || '').localeCompare(b.date || '');
+  });
+
+  sorted.forEach(m => {
+    const diff = hitoDaysUntil(m.date);
+    const col = hitoColor(diff, m.done);
+    const cd = hitoCountdownLabel(diff, m.done);
+    const rama = RAMAS.find(r => r.id === m.rama);
+    const dateStr = m.date ? new Date(m.date + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' }) : '';
+    const card = document.createElement('div');
+    card.className = 'task-card' + (m.done ? ' done' : '');
+    card.style.borderLeft = '4px solid ' + col;
+    card.innerHTML = `
+      <div class="task-check ${m.done ? 'checked' : ''}" data-id="${m.id}">✓</div>
+      <div class="task-body">
+        <div class="task-title ${m.done ? 'struck' : ''}">${esc(m.title)}</div>
+        <div class="task-meta">
+          <span style="font-weight:800;color:${col}">${cd}</span>
+          <span style="color:var(--text-secondary)">· 📅 ${dateStr}</span>
+          ${rama ? `<span class="badge-rama ${rama.css}">${t(rama.key)}</span>` : ''}
+        </div>
+        ${m.notes ? `<div class="task-notes">${esc(m.notes)}</div>` : ''}
+        ${renderChangelogHtml(m.changelog)}
+      </div>
+      <div class="task-actions">
+        <button class="btn btn-sm btn-secondary btn-hito-edit" data-id="${m.id}" title="Editar">✎</button>
+        <button class="btn btn-sm btn-secondary btn-hito-del" data-id="${m.id}">✕</button>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.task-check').forEach(el => {
+    el.addEventListener('click', async () => {
+      const m = milestones.find(x => x.id === el.dataset.id);
+      if (!m) return;
+      await updateDoc(tDoc('milestones', el.dataset.id), { done: !m.done });
+    });
+  });
+  list.querySelectorAll('.btn-hito-del').forEach(btn => {
+    btn.addEventListener('click', async () => { await deleteDoc(tDoc('milestones', btn.dataset.id)); toast('Hito eliminado'); });
+  });
+  list.querySelectorAll('.btn-hito-edit').forEach(btn => {
+    btn.addEventListener('click', () => editHitoInline(btn));
+  });
+}
+
+function editHitoInline(btn) {
+  const id = btn.dataset.id;
+  const m = milestones.find(x => x.id === id);
+  if (!m) return;
+  const card = btn.closest('.task-card');
+  const ramaOpts = '<option value="">— sin rama</option>' + RAMAS.map(r => `<option value="${r.id}" ${m.rama === r.id ? 'selected' : ''}>${t(r.key)}</option>`).join('');
+  card.innerHTML = `
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px;padding:4px 0">
+      <input class="form-input edit-hito-title" value="${esc(m.title)}" style="font-size:13px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <input class="form-input edit-hito-date" type="date" value="${esc(m.date || '')}" style="font-size:12px;padding:4px 8px;width:auto">
+        <select class="form-select edit-hito-rama" style="font-size:12px;padding:4px 8px">${ramaOpts}</select>
+      </div>
+      <input class="form-input edit-hito-notes" value="${esc(m.notes || '')}" placeholder="Notas..." style="font-size:12px">
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary btn-hito-save">Guardar</button>
+        <button class="btn btn-sm btn-secondary btn-hito-cancel">Cancelar</button>
+      </div>
+    </div>`;
+  card.querySelector('.btn-hito-cancel').addEventListener('click', renderMilestones);
+  card.querySelector('.btn-hito-save').addEventListener('click', async () => {
+    const nt = card.querySelector('.edit-hito-title').value.trim();
+    const nd = card.querySelector('.edit-hito-date').value;
+    const nr = card.querySelector('.edit-hito-rama').value;
+    const nn = card.querySelector('.edit-hito-notes').value.trim();
+    if (!nt) { toast('El hito necesita un título'); return; }
+    if (!nd) { toast('Ponle una fecha'); return; }
+    const changes = {}, logs = [], now = Date.now();
+    if (nt !== m.title) { changes.title = nt; logs.push({ field: 'título', from: m.title, to: nt, by: CFG.user, ts: now }); }
+    if (nd !== (m.date || '')) { changes.date = nd; logs.push({ field: 'fecha', from: m.date || '—', to: nd, by: CFG.user, ts: now }); }
+    if (nr !== (m.rama || '')) { changes.rama = nr; logs.push({ field: 'rama', from: m.rama || '—', to: nr || '—', by: CFG.user, ts: now }); }
+    if (nn !== (m.notes || '')) { changes.notes = nn; logs.push({ field: 'notas', from: m.notes || '', to: nn, by: CFG.user, ts: now }); }
+    if (!Object.keys(changes).length) { renderMilestones(); return; }
+    changes.changelog = [...(m.changelog || []), ...logs];
+    try { await updateDoc(tDoc('milestones', id), changes); toast('Hito actualizado'); }
+    catch (e) { toast('Error: ' + e.message); }
+  });
+}
+
+function renderHitosTimeline() {
+  const card = document.getElementById('hitos-timeline-card');
+  const el = document.getElementById('hitos-timeline');
+  if (!card || !el) return;
+  const withDate = milestones.filter(m => m.date);
+  if (!withDate.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dates = withDate.map(m => new Date(m.date + 'T00:00:00').getTime());
+  const minT = Math.min(today.getTime(), ...dates);
+  let maxT = Math.max(today.getTime(), ...dates);
+  if (maxT === minT) maxT = minT + 86400000;
+  const span = maxT - minT;
+  const W = 600, H = 96, padL = 12, padR = 12, axisY = 52;
+  const X = tms => padL + ((tms - minT) / span) * (W - padL - padR);
+  let svg = `<line x1="${padL}" y1="${axisY}" x2="${W - padR}" y2="${axisY}" stroke="var(--border)" stroke-width="2"/>`;
+  const hx = X(today.getTime());
+  svg += `<line x1="${hx.toFixed(1)}" y1="22" x2="${hx.toFixed(1)}" y2="${axisY + 16}" stroke="#10b981" stroke-width="2" stroke-dasharray="3 2"/><text x="${hx.toFixed(1)}" y="16" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">HOY</text>`;
+  withDate.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach((m, i) => {
+    const tt = new Date(m.date + 'T00:00:00').getTime();
+    const x = X(tt);
+    const diff = hitoDaysUntil(m.date);
+    const col = hitoColor(diff, m.done);
+    const up = i % 2 === 0;
+    const ly = up ? axisY - 14 : axisY + 14;
+    const lyT = up ? axisY - 20 : axisY + 30;
+    const dlabel = new Date(m.date + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+    const short = m.title.length > 16 ? m.title.slice(0, 15) + '…' : m.title;
+    svg += `<line x1="${x.toFixed(1)}" y1="${axisY}" x2="${x.toFixed(1)}" y2="${ly}" stroke="${col}" stroke-width="1"/>`;
+    svg += `<circle cx="${x.toFixed(1)}" cy="${axisY}" r="6" fill="${col}" stroke="var(--bg-card)" stroke-width="2"><title>${esc(m.title)} — ${m.date}</title></circle>`;
+    svg += `<text x="${x.toFixed(1)}" y="${lyT}" text-anchor="middle" font-size="9" fill="var(--text-secondary)">${esc(short)} · ${dlabel}</text>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;overflow:visible">${svg}</svg>`;
+}
+
+document.getElementById('btn-add-hito').addEventListener('click', async () => {
+  const title = document.getElementById('fh-title').value.trim();
+  const date = document.getElementById('fh-date').value;
+  if (!title) { toast('Ponle un nombre al hito'); return; }
+  if (!date) { toast('Ponle una fecha al hito'); return; }
+  const btn = document.getElementById('btn-add-hito'); btn.disabled = true;
+  try {
+    await addDoc(tCol('milestones'), {
+      title, date,
+      rama: document.getElementById('fh-rama').value || '',
+      notes: document.getElementById('fh-notes').value.trim(),
+      done: false,
+      edicion: tasksEditionName(),
+      createdBy: CFG.user,
+      ts: Date.now()
+    });
+    document.getElementById('fh-title').value = '';
+    document.getElementById('fh-date').value = '';
+    document.getElementById('fh-notes').value = '';
+    toast('Hito añadido');
+  } catch (e) { console.error('Add hito error:', e); toast('Error: ' + e.message); }
+  btn.disabled = false;
+});
+
+/* ══════════════════════════════════
+   ALBERGUES (lista global, no por edición)
+══════════════════════════════════ */
+let hostels = [];
+let hostelsUnsub = null;
+const HOSTEL_ATTRS = [
+  { key: 'pool', label: 'Piscina', icon: '🏊' },
+  { key: 'parties', label: 'Permite fiestas', icon: '🎉' },
+  { key: 'kitchen', label: 'Cocina', icon: '🍳' },
+  { key: 'outdoor', label: 'Exterior/jardín', icon: '🌳' },
+  { key: 'parking', label: 'Aparcamiento', icon: '🅿️' },
+  { key: 'neighbors', label: 'Vecinos cerca', icon: '🏘️' }
+];
+const CONTACT_STATES = [
+  { v: 'sin_contactar', l: 'Sin contactar', c: '#94a3b8' },
+  { v: 'contactado', l: 'Contactado', c: '#3b82f6' },
+  { v: 'esperando', l: 'Esperando respuesta', c: '#f59e0b' },
+  { v: 'confirmado', l: 'Confirmado', c: '#10b981' },
+  { v: 'descartado', l: 'Descartado', c: '#ef4444' }
+];
+let hostelFilter = { fav: false, parties: false, pool: false, contact: 'all' };
+
+function initHostels() {
+  if (hostelsUnsub) return; // global: una sola suscripción, sobrevive a cambios de edición
+  hostelsUnsub = onSnapshot(query(collection(db, 'crew_hostels'), orderBy('ts', 'desc')), snap => {
+    hostels = [];
+    snap.forEach(ds => hostels.push({ id: ds.id, ...ds.data() }));
+    renderHostels();
+  }, err => console.warn('Hostels listener:', err));
+}
+
+function renderHostelAttrInputs(container, vals) {
+  if (!container) return;
+  container.innerHTML = HOSTEL_ATTRS.map(a => `
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <label style="font-size:11px;color:var(--text-secondary)">${a.icon} ${a.label}</label>
+      <select class="form-select fa-attr" data-key="${a.key}" style="font-size:12px;padding:4px 8px">
+        <option value="" ${(!vals || !vals[a.key]) ? 'selected' : ''}>?</option>
+        <option value="si" ${vals && vals[a.key] === 'si' ? 'selected' : ''}>Sí</option>
+        <option value="no" ${vals && vals[a.key] === 'no' ? 'selected' : ''}>No</option>
+      </select>
+    </div>`).join('');
+}
+function readHostelAttrs(container) {
+  const o = {};
+  if (container) container.querySelectorAll('.fa-attr').forEach(s => { o[s.dataset.key] = s.value; });
+  return o;
+}
+function contactState(v) { return CONTACT_STATES.find(s => s.v === v) || CONTACT_STATES[0]; }
+
+function renderHostelFilters() {
+  const el = document.getElementById('hostel-filters');
+  if (!el) return;
+  el.innerHTML = '';
+  [{ id: 'fav', label: '⭐ Preseleccionados' }, { id: 'parties', label: '🎉 Permite fiestas' }, { id: 'pool', label: '🏊 Con piscina' }].forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (hostelFilter[c.id] ? ' on' : '');
+    b.textContent = c.label;
+    b.addEventListener('click', () => { hostelFilter[c.id] = !hostelFilter[c.id]; renderHostelFilters(); renderHostels(); });
+    el.appendChild(b);
+  });
+  const sep = document.createElement('span');
+  sep.style.cssText = 'display:inline-block;width:1px;height:18px;background:var(--border);margin:0 4px';
+  el.appendChild(sep);
+  [{ v: 'all', l: 'Contacto: todos' }, ...CONTACT_STATES.map(s => ({ v: s.v, l: s.l }))].forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (hostelFilter.contact === s.v ? ' on' : '');
+    b.textContent = s.l;
+    b.addEventListener('click', () => { hostelFilter.contact = s.v; renderHostelFilters(); renderHostels(); });
+    el.appendChild(b);
+  });
+}
+
+function renderHostels() {
+  const list = document.getElementById('hostel-list');
+  const empty = document.getElementById('hostels-empty');
+  const summary = document.getElementById('hostels-summary');
+  if (!list) return;
+  renderHostelFilters();
+  if (summary) {
+    const nP = hostels.filter(h => h.parties === 'si').length;
+    const nC = hostels.filter(h => h.contact && h.contact !== 'sin_contactar' && h.contact !== 'descartado').length;
+    const nOk = hostels.filter(h => h.contact === 'confirmado').length;
+    summary.innerHTML = hostels.length
+      ? `<strong>${hostels.length}</strong> albergues · <strong>${nP}</strong> permiten fiestas · <strong>${nC}</strong> contactados · <strong>${nOk}</strong> confirmados`
+      : '';
+  }
+  let filtered = hostels.slice();
+  if (hostelFilter.fav) filtered = filtered.filter(h => h.fav);
+  if (hostelFilter.parties) filtered = filtered.filter(h => h.parties === 'si');
+  if (hostelFilter.pool) filtered = filtered.filter(h => h.pool === 'si');
+  if (hostelFilter.contact !== 'all') filtered = filtered.filter(h => (h.contact || 'sin_contactar') === hostelFilter.contact);
+  filtered.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.name || '').localeCompare(b.name || ''));
+
+  list.innerHTML = '';
+  if (!filtered.length) {
+    empty.style.display = 'block';
+    empty.querySelector('.empty-state-text').textContent = hostels.length ? 'Ningún albergue con esos filtros' : 'No hay albergues todavía. Añade el primero que encontréis.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  filtered.forEach(h => {
+    const cs = contactState(h.contact || 'sin_contactar');
+    const facts = [];
+    if (h.location) facts.push('📍 ' + esc(h.location));
+    if (h.distance) facts.push('🚗 ' + esc(h.distance));
+    if (h.beds) facts.push('🛏️ ' + esc(String(h.beds)) + ' camas');
+    if (h.price) facts.push('💶 ' + esc(h.price));
+    const badges = HOSTEL_ATTRS.filter(a => h[a.key] === 'si' || h[a.key] === 'no').map(a => {
+      const yes = h[a.key] === 'si';
+      const col = yes ? '#10b981' : '#ef4444';
+      return `<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${col}1f;color:${col};border:1px solid ${col}55;white-space:nowrap">${a.icon} ${a.label} ${yes ? '✓' : '✗'}</span>`;
+    }).join(' ');
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'padding:14px 16px;margin-bottom:10px' + (h.fav ? ';border-color:#eab308' : '');
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn-hostel-fav" data-id="${h.id}" title="Preseleccionar" style="background:none;border:none;cursor:pointer;font-size:17px;padding:0;line-height:1">${h.fav ? '⭐' : '☆'}</button>
+        <span style="font-weight:700;font-size:15px">${esc(h.name)}</span>
+        <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${cs.c}1f;color:${cs.c};border:1px solid ${cs.c}55">${cs.l}</span>
+        ${h.web ? `<a href="${esc(h.web)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);margin-left:auto">🔗 web</a>` : '<span style="margin-left:auto"></span>'}
+      </div>
+      ${facts.length ? `<div style="font-size:12.5px;color:var(--text-secondary);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap">${facts.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
+      ${badges ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${badges}</div>` : ''}
+      ${(h.pros || h.cons) ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;font-size:12.5px">
+        <div>${h.pros ? `<div style="color:#10b981;font-weight:600;margin-bottom:2px">✓ Pros</div><div style="color:var(--text-secondary);white-space:pre-wrap">${esc(h.pros)}</div>` : ''}</div>
+        <div>${h.cons ? `<div style="color:#ef4444;font-weight:600;margin-bottom:2px">✗ Contras</div><div style="color:var(--text-secondary);white-space:pre-wrap">${esc(h.cons)}</div>` : ''}</div>
+      </div>` : ''}
+      ${h.notes ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;font-style:italic">${esc(h.notes)}</div>` : ''}
+      <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+        <span style="font-size:11px;color:var(--text-secondary);margin-right:auto">añadido por ${esc(h.createdBy || '?')}</span>
+        <button class="btn btn-sm btn-secondary btn-hostel-edit" data-id="${h.id}" style="padding:2px 8px;font-size:11px">✎ Editar</button>
+        <button class="btn btn-sm btn-secondary btn-hostel-del" data-id="${h.id}" style="padding:2px 8px;font-size:11px">✕</button>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.btn-hostel-fav').forEach(b => b.addEventListener('click', async () => {
+    const h = hostels.find(x => x.id === b.dataset.id); if (!h) return;
+    await updateDoc(doc(db, 'crew_hostels', b.dataset.id), { fav: !h.fav });
+  }));
+  list.querySelectorAll('.btn-hostel-del').forEach(b => b.addEventListener('click', async () => {
+    const h = hostels.find(x => x.id === b.dataset.id);
+    if (h && !confirm('¿Borrar el albergue "' + h.name + '"?')) return;
+    await deleteDoc(doc(db, 'crew_hostels', b.dataset.id)); toast('Albergue eliminado');
+  }));
+  list.querySelectorAll('.btn-hostel-edit').forEach(b => b.addEventListener('click', () => editHostelInline(b)));
+}
+
+function editHostelInline(btn) {
+  const id = btn.dataset.id;
+  const h = hostels.find(x => x.id === id); if (!h) return;
+  const card = btn.closest('.card');
+  const contactOpts = CONTACT_STATES.map(s => `<option value="${s.v}" ${(h.contact || 'sin_contactar') === s.v ? 'selected' : ''}>${s.l}</option>`).join('');
+  card.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input class="form-input eh-name" value="${esc(h.name)}" placeholder="Nombre" style="font-size:14px;font-weight:600">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input class="form-input eh-location" value="${esc(h.location || '')}" placeholder="Ubicación / zona" style="font-size:12px">
+        <input class="form-input eh-distance" value="${esc(h.distance || '')}" placeholder="Distancia de Valencia" style="font-size:12px">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <input class="form-input eh-beds" type="number" min="0" value="${esc(String(h.beds || ''))}" placeholder="Camas" style="font-size:12px">
+        <input class="form-input eh-price" value="${esc(h.price || '')}" placeholder="Precio" style="font-size:12px">
+        <select class="form-select eh-contact" style="font-size:12px">${contactOpts}</select>
+      </div>
+      <input class="form-input eh-web" value="${esc(h.web || '')}" placeholder="Web / enlace" style="font-size:12px">
+      <div class="eh-attrs" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <textarea class="form-input eh-pros" rows="2" placeholder="Pros" style="font-size:12px;resize:vertical">${esc(h.pros || '')}</textarea>
+        <textarea class="form-input eh-cons" rows="2" placeholder="Contras" style="font-size:12px;resize:vertical">${esc(h.cons || '')}</textarea>
+      </div>
+      <input class="form-input eh-notes" value="${esc(h.notes || '')}" placeholder="Notas" style="font-size:12px">
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary eh-save">Guardar</button>
+        <button class="btn btn-sm btn-secondary eh-cancel">Cancelar</button>
+      </div>
+    </div>`;
+  renderHostelAttrInputs(card.querySelector('.eh-attrs'), h);
+  card.querySelector('.eh-cancel').addEventListener('click', renderHostels);
+  card.querySelector('.eh-save').addEventListener('click', async () => {
+    const name = card.querySelector('.eh-name').value.trim();
+    if (!name) { toast('El albergue necesita nombre'); return; }
+    const attrs = readHostelAttrs(card.querySelector('.eh-attrs'));
+    try {
+      await updateDoc(doc(db, 'crew_hostels', id), {
+        name,
+        location: card.querySelector('.eh-location').value.trim(),
+        distance: card.querySelector('.eh-distance').value.trim(),
+        beds: card.querySelector('.eh-beds').value.trim(),
+        price: card.querySelector('.eh-price').value.trim(),
+        contact: card.querySelector('.eh-contact').value,
+        web: card.querySelector('.eh-web').value.trim(),
+        pros: card.querySelector('.eh-pros').value.trim(),
+        cons: card.querySelector('.eh-cons').value.trim(),
+        notes: card.querySelector('.eh-notes').value.trim(),
+        ...attrs
+      });
+      toast('Albergue actualizado');
+    } catch (e) { toast('Error: ' + e.message); }
+  });
+}
+
+document.getElementById('btn-add-hostel').addEventListener('click', async () => {
+  const name = document.getElementById('fa-name').value.trim();
+  if (!name) { toast('Ponle nombre al albergue'); return; }
+  const btn = document.getElementById('btn-add-hostel'); btn.disabled = true;
+  const attrs = readHostelAttrs(document.getElementById('fa-attrs'));
+  try {
+    await addDoc(collection(db, 'crew_hostels'), {
+      name,
+      location: document.getElementById('fa-location').value.trim(),
+      distance: document.getElementById('fa-distance').value.trim(),
+      beds: document.getElementById('fa-beds').value.trim(),
+      price: document.getElementById('fa-price').value.trim(),
+      contact: document.getElementById('fa-contact').value,
+      web: document.getElementById('fa-web').value.trim(),
+      pros: document.getElementById('fa-pros').value.trim(),
+      cons: document.getElementById('fa-cons').value.trim(),
+      notes: document.getElementById('fa-notes').value.trim(),
+      fav: false,
+      ...attrs,
+      createdBy: CFG.user,
+      ts: Date.now()
+    });
+    ['fa-name', 'fa-location', 'fa-distance', 'fa-beds', 'fa-price', 'fa-web', 'fa-pros', 'fa-cons', 'fa-notes'].forEach(idd => { const e = document.getElementById(idd); if (e) e.value = ''; });
+    document.getElementById('fa-contact').value = 'sin_contactar';
+    renderHostelAttrInputs(document.getElementById('fa-attrs'), null);
+    toast('Albergue añadido');
+  } catch (e) { console.error('Add hostel error:', e); toast('Error: ' + e.message); }
   btn.disabled = false;
 });
 
@@ -4375,8 +5181,9 @@ function switchEdition(prefix, name) {
   payments = []; tasks = []; expenses = []; decisions = []; polls = [];
   lineupConfig = null; lineupDJs = []; lineupProposals = [];
   activeProposalId = null; lineupCompareMode = false; activeFiesta = null;
-  initPayments(); initTasks(); initExpenses(); initDecisions(); initPolls(); initLineup(); initSettings();
+  initPayments(); initTasks(); initMilestones(); initExpenses(); initDecisions(); initPolls(); initLineup(); initSettings();
   updateEditionLabel();
+  if (typeof renderTasksEditionBanner === 'function') renderTasksEditionBanner();
   toast('Edición: ' + name);
 }
 
@@ -4512,16 +5319,23 @@ if (CFG.user && CFG.crew.includes(CFG.user) && getVerified().includes(CFG.user))
 initEditions();
 initPayments();
 initTasks();
+initMilestones();
+initTasksEditionConfig();
+initHostels();
 initExpenses();
 initDecisions();
 initPolls();
 initLineup();
 initSettings();
+document.getElementById('btn-tasks-edition')?.addEventListener('click', openTasksEditionPicker);
 
 // Populate selects
 populateRamaSelect('ft-rama');
 populateRamaSelect('fe-rama');
 populateRamaSelect('fd-rama');
+(function () { const el = document.getElementById('fh-rama'); if (el) el.innerHTML = '<option value="">— sin rama</option>' + RAMAS.map(r => `<option value="${r.id}">${t(r.key)}</option>`).join(''); })();
+renderHostelAttrInputs(document.getElementById('fa-attrs'), null);
+renderHostelFilters();
 renderCrewChips('ft-assigned');
 populateCrewSelect('fe-paidby');
 renderTaskFilters();
