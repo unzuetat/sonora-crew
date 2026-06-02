@@ -1,1 +1,7 @@
 .vercel
+.DS_Store
+**/.DS_Store
+firebase-debug.log
+**/firebase-debug.log
+informe/*.html
+sonora-backup*.json
