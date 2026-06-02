@@ -1572,7 +1572,7 @@ tbody tr:hover { background: var(--accent-soft); }
               <input class="form-input" id="fa-distance" type="text" placeholder="ej. 45 min / 60 km">
             </div>
           </div>
-          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div class="form-group">
               <label class="form-label">Nº de camas</label>
               <input class="form-input" id="fa-beds" type="number" min="0" placeholder="ej. 40">
@@ -1581,15 +1581,53 @@ tbody tr:hover { background: var(--accent-soft); }
               <label class="form-label">Precio</label>
               <input class="form-input" id="fa-price" type="text" placeholder="ej. 18 €/persona/noche">
             </div>
+          </div>
+          <div class="form-row full">
             <div class="form-group">
-              <label class="form-label">Estado de contacto</label>
+              <label class="form-label">📞 Comunicación con dueños <span style="font-weight:400;color:var(--text-secondary);font-size:11px">· en qué punto va el contacto con ellos</span></label>
               <select class="form-select" id="fa-contact">
                 <option value="sin_contactar">Sin contactar</option>
                 <option value="contactado">Contactado</option>
                 <option value="esperando">Esperando respuesta</option>
                 <option value="confirmado">Confirmado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">✅ Aptitud <span style="font-weight:400;color:var(--text-secondary);font-size:11px">· ¿el sitio nos sirve? Vale para todas las ediciones (descartado = fuera para siempre)</span></label>
+              <select class="form-select" id="fa-aptitud">
+                <option value="sin_valorar" selected>Sin valorar</option>
+                <option value="apto">Apto</option>
                 <option value="descartado">Descartado</option>
               </select>
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">📅 Disponibilidad <span style="font-weight:400;color:var(--text-secondary);font-size:11px">· ¿libre para las fechas de esta fiesta? (puede cambiar en cada edición)</span></label>
+              <select class="form-select" id="fa-avail">
+                <option value="sin_info" selected>Sin información</option>
+                <option value="disponible">Disponible</option>
+                <option value="sin_propietario">Sin propietario</option>
+                <option value="no_disponible">No disponible</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Quién contacta</label>
+              <select class="form-select" id="fa-owner"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fecha último contacto</label>
+              <input class="form-input" id="fa-lastcontact" type="date">
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Qué se dijo / quedó</label>
+              <input class="form-input" id="fa-contactnote" type="text" placeholder="ej. Quedaron en confirmar precio el lunes">
             </div>
           </div>
           <div class="form-row full">
@@ -3979,16 +4017,31 @@ const HOSTEL_ATTRS = [
   { key: 'kitchen', label: 'Cocina', icon: '🍳' },
   { key: 'outdoor', label: 'Exterior/jardín', icon: '🌳' },
   { key: 'parking', label: 'Aparcamiento', icon: '🅿️' },
-  { key: 'neighbors', label: 'Vecinos cerca', icon: '🏘️' }
+  { key: 'neighbors', label: 'Vecinos cerca', icon: '🏘️', goodWhenNo: true } // 'no' es lo bueno → verde
 ];
+// 1) Comunicación con dueños (flujo de contacto)
 const CONTACT_STATES = [
   { v: 'sin_contactar', l: 'Sin contactar', c: '#94a3b8' },
   { v: 'contactado', l: 'Contactado', c: '#3b82f6' },
   { v: 'esperando', l: 'Esperando respuesta', c: '#f59e0b' },
-  { v: 'confirmado', l: 'Confirmado', c: '#10b981' },
-  { v: 'descartado', l: 'Descartado', c: '#ef4444' }
+  { v: 'confirmado', l: 'Confirmado', c: '#10b981' }
 ];
-let hostelFilter = { fav: false, parties: false, pool: false, contact: 'all' };
+// 2) Aptitud: ¿reúne las condiciones? Vale para TODAS las ediciones. Descartado → rojo.
+const APTITUDE_STATES = [
+  { v: 'apto', l: 'Apto', c: '#10b981', rank: 0 },
+  { v: 'sin_valorar', l: 'Sin valorar', c: '#94a3b8', rank: 1 },
+  { v: 'descartado', l: 'Descartado', c: '#ef4444', rank: 2 }
+];
+// 3) Disponibilidad: varía según las fechas de la fiesta
+const AVAIL_STATES = [
+  { v: 'disponible', l: 'Disponible', c: '#10b981', rank: 0 },
+  { v: 'sin_info', l: 'Sin información', c: '#94a3b8', rank: 1 },
+  { v: 'sin_propietario', l: 'Sin propietario', c: '#a855f7', rank: 2 },
+  { v: 'no_disponible', l: 'No disponible', c: '#f59e0b', rank: 3 }
+];
+function availState(v) { return AVAIL_STATES.find(s => s.v === v) || AVAIL_STATES[1]; }
+function aptitudeState(v) { return APTITUDE_STATES.find(s => s.v === v) || APTITUDE_STATES[1]; }
+let hostelFilter = { fav: false, parties: false, pool: false, contact: 'all', avail: 'all', aptitud: 'all' };
 
 function initHostels() {
   if (hostelsUnsub) return; // global: una sola suscripción, sobrevive a cambios de edición
@@ -4039,6 +4092,26 @@ function renderHostelFilters() {
     b.addEventListener('click', () => { hostelFilter.contact = s.v; renderHostelFilters(); renderHostels(); });
     el.appendChild(b);
   });
+  const sep2 = document.createElement('span');
+  sep2.style.cssText = 'display:inline-block;width:1px;height:18px;background:var(--border);margin:0 4px';
+  el.appendChild(sep2);
+  [{ v: 'all', l: 'Disp.: todas' }, ...AVAIL_STATES.map(s => ({ v: s.v, l: s.l }))].forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (hostelFilter.avail === s.v ? ' on' : '');
+    b.textContent = s.l;
+    b.addEventListener('click', () => { hostelFilter.avail = s.v; renderHostelFilters(); renderHostels(); });
+    el.appendChild(b);
+  });
+  const sep3 = document.createElement('span');
+  sep3.style.cssText = 'display:inline-block;width:1px;height:18px;background:var(--border);margin:0 4px';
+  el.appendChild(sep3);
+  [{ v: 'all', l: 'Aptitud: todas' }, ...APTITUDE_STATES.map(s => ({ v: s.v, l: s.l }))].forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (hostelFilter.aptitud === s.v ? ' on' : '');
+    b.textContent = s.l;
+    b.addEventListener('click', () => { hostelFilter.aptitud = s.v; renderHostelFilters(); renderHostels(); });
+    el.appendChild(b);
+  });
 }
 
 function renderHostels() {
@@ -4049,10 +4122,11 @@ function renderHostels() {
   renderHostelFilters();
   if (summary) {
     const nP = hostels.filter(h => h.parties === 'si').length;
-    const nC = hostels.filter(h => h.contact && h.contact !== 'sin_contactar' && h.contact !== 'descartado').length;
-    const nOk = hostels.filter(h => h.contact === 'confirmado').length;
+    const nApto = hostels.filter(h => h.aptitud === 'apto').length;
+    const nDesc = hostels.filter(h => h.aptitud === 'descartado').length;
+    const nDisp = hostels.filter(h => h.disponibilidad === 'disponible').length;
     summary.innerHTML = hostels.length
-      ? `<strong>${hostels.length}</strong> albergues · <strong>${nP}</strong> permiten fiestas · <strong>${nC}</strong> contactados · <strong>${nOk}</strong> confirmados`
+      ? `<strong>${hostels.length}</strong> albergues · <strong>${nApto}</strong> aptos · <strong>${nDisp}</strong> disponibles · <strong>${nP}</strong> permiten fiestas · <strong>${nDesc}</strong> descartados`
       : '';
   }
   let filtered = hostels.slice();
@@ -4060,7 +4134,13 @@ function renderHostels() {
   if (hostelFilter.parties) filtered = filtered.filter(h => h.parties === 'si');
   if (hostelFilter.pool) filtered = filtered.filter(h => h.pool === 'si');
   if (hostelFilter.contact !== 'all') filtered = filtered.filter(h => (h.contact || 'sin_contactar') === hostelFilter.contact);
-  filtered.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.name || '').localeCompare(b.name || ''));
+  if (hostelFilter.avail !== 'all') filtered = filtered.filter(h => (h.disponibilidad || 'sin_info') === hostelFilter.avail);
+  if (hostelFilter.aptitud !== 'all') filtered = filtered.filter(h => (h.aptitud || 'sin_valorar') === hostelFilter.aptitud);
+  // Orden: preseleccionados primero, luego aptitud (apto→descartado al fondo), luego disponibilidad, luego nombre
+  filtered.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0)
+    || aptitudeState(a.aptitud || 'sin_valorar').rank - aptitudeState(b.aptitud || 'sin_valorar').rank
+    || availState(a.disponibilidad || 'sin_info').rank - availState(b.disponibilidad || 'sin_info').rank
+    || (a.name || '').localeCompare(b.name || ''));
 
   list.innerHTML = '';
   if (!filtered.length) {
@@ -4079,21 +4159,37 @@ function renderHostels() {
     if (h.price) facts.push('💶 ' + esc(h.price));
     const badges = HOSTEL_ATTRS.filter(a => h[a.key] === 'si' || h[a.key] === 'no').map(a => {
       const yes = h[a.key] === 'si';
-      const col = yes ? '#10b981' : '#ef4444';
-      return `<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${col}1f;color:${col};border:1px solid ${col}55;white-space:nowrap">${a.icon} ${a.label} ${yes ? '✓' : '✗'}</span>`;
+      const good = a.goodWhenNo ? !yes : yes; // 'vecinos cerca' = No es lo bueno
+      const col = good ? '#10b981' : '#ef4444';
+      return `<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${col}1f;color:${col};border:1px solid ${col}55;white-space:nowrap">${a.icon} ${a.label}: ${yes ? 'Sí' : 'No'}</span>`;
     }).join(' ');
+    const av = availState(h.disponibilidad || 'sin_info');
+    const ap = aptitudeState(h.aptitud || 'sin_valorar');
+    const discarded = h.aptitud === 'descartado';
+    const segParts = [];
+    if (h.owner) segParts.push('👤 ' + esc(h.owner));
+    if (h.lastContactDate) segParts.push('📅 últ. contacto ' + new Date(h.lastContactDate + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
+    const segLine = segParts.join(' · ');
     const card = document.createElement('div');
     card.className = 'card';
-    card.style.cssText = 'padding:14px 16px;margin-bottom:10px' + (h.fav ? ';border-color:#eab308' : '');
+    card.style.cssText = 'padding:14px 16px;margin-bottom:10px'
+      + (discarded ? ';background:#ef44440f;border-color:#ef444455'
+        : (h.fav ? ';border-color:#eab308' : ''));
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <button class="btn-hostel-fav" data-id="${h.id}" title="Preseleccionar" style="background:none;border:none;cursor:pointer;font-size:17px;padding:0;line-height:1">${h.fav ? '⭐' : '☆'}</button>
         <span style="font-weight:700;font-size:15px">${esc(h.name)}</span>
-        <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${cs.c}1f;color:${cs.c};border:1px solid ${cs.c}55">${cs.l}</span>
+        <span title="Comunicación con los dueños" style="font-size:11px;padding:2px 8px;border-radius:12px;background:${cs.c}1f;color:${cs.c};border:1px solid ${cs.c}55">📞 Dueños: ${cs.l}</span>
+        <span title="Aptitud — ¿el sitio nos sirve? (todas las ediciones)" style="font-size:11px;padding:2px 8px;border-radius:12px;background:${ap.c}1f;color:${ap.c};border:1px solid ${ap.c}55;font-weight:600">🎯 Aptitud: ${ap.l}</span>
+        <span title="Disponibilidad para las fechas de esta fiesta" style="font-size:11px;padding:2px 8px;border-radius:12px;background:${av.c}1f;color:${av.c};border:1px solid ${av.c}55;font-weight:600">📅 Fechas: ${av.l}</span>
         ${h.web ? `<a href="${esc(h.web)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);margin-left:auto">🔗 web</a>` : '<span style="margin-left:auto"></span>'}
       </div>
       ${facts.length ? `<div style="font-size:12.5px;color:var(--text-secondary);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap">${facts.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
       ${badges ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${badges}</div>` : ''}
+      ${(segLine || h.contactNote) ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;padding:6px 10px;background:rgba(127,127,127,.06);border-radius:8px">
+        ${segLine ? `<div>${segLine}</div>` : ''}
+        ${h.contactNote ? `<div style="margin-top:${segLine ? '3px' : '0'}">💬 ${esc(h.contactNote)}</div>` : ''}
+      </div>` : ''}
       ${(h.pros || h.cons) ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;font-size:12.5px">
         <div>${h.pros ? `<div style="color:#10b981;font-weight:600;margin-bottom:2px">✓ Pros</div><div style="color:var(--text-secondary);white-space:pre-wrap">${esc(h.pros)}</div>` : ''}</div>
         <div>${h.cons ? `<div style="color:#ef4444;font-weight:600;margin-bottom:2px">✗ Contras</div><div style="color:var(--text-secondary);white-space:pre-wrap">${esc(h.cons)}</div>` : ''}</div>
@@ -4124,6 +4220,9 @@ function editHostelInline(btn) {
   const h = hostels.find(x => x.id === id); if (!h) return;
   const card = btn.closest('.card');
   const contactOpts = CONTACT_STATES.map(s => `<option value="${s.v}" ${(h.contact || 'sin_contactar') === s.v ? 'selected' : ''}>${s.l}</option>`).join('');
+  const availOpts = AVAIL_STATES.map(s => `<option value="${s.v}" ${(h.disponibilidad || 'sin_info') === s.v ? 'selected' : ''}>${s.l}</option>`).join('');
+  const aptitudeOpts = APTITUDE_STATES.map(s => `<option value="${s.v}" ${(h.aptitud || 'sin_valorar') === s.v ? 'selected' : ''}>${s.l}</option>`).join('');
+  const ownerOpts = '<option value="">— sin asignar</option>' + CFG.crew.map(n => `<option value="${esc(n)}" ${h.owner === n ? 'selected' : ''}>${esc(n)}</option>`).join('');
   card.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px">
       <input class="form-input eh-name" value="${esc(h.name)}" placeholder="Nombre" style="font-size:14px;font-weight:600">
@@ -4131,11 +4230,20 @@ function editHostelInline(btn) {
         <input class="form-input eh-location" value="${esc(h.location || '')}" placeholder="Ubicación / zona" style="font-size:12px">
         <input class="form-input eh-distance" value="${esc(h.distance || '')}" placeholder="Distancia de Valencia" style="font-size:12px">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <input class="form-input eh-beds" type="number" min="0" value="${esc(String(h.beds || ''))}" placeholder="Camas" style="font-size:12px">
         <input class="form-input eh-price" value="${esc(h.price || '')}" placeholder="Precio" style="font-size:12px">
-        <select class="form-select eh-contact" style="font-size:12px">${contactOpts}</select>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="display:flex;flex-direction:column;gap:2px"><label style="font-size:10px;color:var(--text-secondary)">📞 Dueños</label><select class="form-select eh-contact" style="font-size:12px">${contactOpts}</select></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><label style="font-size:10px;color:var(--text-secondary)">🎯 Aptitud</label><select class="form-select eh-aptitud" style="font-size:12px">${aptitudeOpts}</select></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><label style="font-size:10px;color:var(--text-secondary)">📅 Disponib.</label><select class="form-select eh-avail" style="font-size:12px">${availOpts}</select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <select class="form-select eh-owner" style="font-size:12px" title="Quién contacta">${ownerOpts}</select>
+        <input class="form-input eh-lastcontact" type="date" value="${esc(h.lastContactDate || '')}" style="font-size:12px" title="Fecha último contacto">
+      </div>
+      <input class="form-input eh-contactnote" value="${esc(h.contactNote || '')}" placeholder="Qué se dijo / quedó" style="font-size:12px">
       <input class="form-input eh-web" value="${esc(h.web || '')}" placeholder="Web / enlace" style="font-size:12px">
       <div class="eh-attrs" style="display:flex;flex-wrap:wrap;gap:10px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -4162,6 +4270,11 @@ function editHostelInline(btn) {
         beds: card.querySelector('.eh-beds').value.trim(),
         price: card.querySelector('.eh-price').value.trim(),
         contact: card.querySelector('.eh-contact').value,
+        aptitud: card.querySelector('.eh-aptitud').value,
+        disponibilidad: card.querySelector('.eh-avail').value,
+        owner: card.querySelector('.eh-owner').value,
+        lastContactDate: card.querySelector('.eh-lastcontact').value,
+        contactNote: card.querySelector('.eh-contactnote').value.trim(),
         web: card.querySelector('.eh-web').value.trim(),
         pros: card.querySelector('.eh-pros').value.trim(),
         cons: card.querySelector('.eh-cons').value.trim(),
@@ -4186,6 +4299,11 @@ document.getElementById('btn-add-hostel').addEventListener('click', async () => 
       beds: document.getElementById('fa-beds').value.trim(),
       price: document.getElementById('fa-price').value.trim(),
       contact: document.getElementById('fa-contact').value,
+      aptitud: document.getElementById('fa-aptitud').value,
+      disponibilidad: document.getElementById('fa-avail').value,
+      owner: document.getElementById('fa-owner').value,
+      lastContactDate: document.getElementById('fa-lastcontact').value,
+      contactNote: document.getElementById('fa-contactnote').value.trim(),
       web: document.getElementById('fa-web').value.trim(),
       pros: document.getElementById('fa-pros').value.trim(),
       cons: document.getElementById('fa-cons').value.trim(),
@@ -4195,8 +4313,10 @@ document.getElementById('btn-add-hostel').addEventListener('click', async () => 
       createdBy: CFG.user,
       ts: Date.now()
     });
-    ['fa-name', 'fa-location', 'fa-distance', 'fa-beds', 'fa-price', 'fa-web', 'fa-pros', 'fa-cons', 'fa-notes'].forEach(idd => { const e = document.getElementById(idd); if (e) e.value = ''; });
+    ['fa-name', 'fa-location', 'fa-distance', 'fa-beds', 'fa-price', 'fa-web', 'fa-pros', 'fa-cons', 'fa-notes', 'fa-lastcontact', 'fa-contactnote', 'fa-owner'].forEach(idd => { const e = document.getElementById(idd); if (e) e.value = ''; });
     document.getElementById('fa-contact').value = 'sin_contactar';
+    document.getElementById('fa-aptitud').value = 'sin_valorar';
+    document.getElementById('fa-avail').value = 'sin_info';
     renderHostelAttrInputs(document.getElementById('fa-attrs'), null);
     toast('Albergue añadido');
   } catch (e) { console.error('Add hostel error:', e); toast('Error: ' + e.message); }
@@ -5335,6 +5455,7 @@ populateRamaSelect('fe-rama');
 populateRamaSelect('fd-rama');
 (function () { const el = document.getElementById('fh-rama'); if (el) el.innerHTML = '<option value="">— sin rama</option>' + RAMAS.map(r => `<option value="${r.id}">${t(r.key)}</option>`).join(''); })();
 renderHostelAttrInputs(document.getElementById('fa-attrs'), null);
+(function () { const el = document.getElementById('fa-owner'); if (el) el.innerHTML = '<option value="">— sin asignar</option>' + CFG.crew.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join(''); })();
 renderHostelFilters();
 renderCrewChips('ft-assigned');
 populateCrewSelect('fe-paidby');
