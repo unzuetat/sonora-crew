@@ -1,6 +1,6 @@
 # Orgía Sonora (Sonora Crew)
 
-Herramienta de gestión interna para los 7 organizadores de la fiesta San Sonorín XI (29 mayo 2026). Reemplaza un Excel compartido que se quedaba sin actualizar.
+Herramienta de gestión interna para los 7 organizadores de las fiestas "San Sonorín". Reemplaza un Excel compartido que se quedaba sin actualizar. La primera edición gestionada fue **San Sonorín XI** (mayo 2026, ya celebrada); el sistema es **multi-edición** y ahora se trabaja en la siguiente ("Fiesta para SEPTIEMBRE").
 
 ## Tech Stack
 
@@ -13,70 +13,73 @@ Herramienta de gestión interna para los 7 organizadores de la fiesta San Sonor�
 ## Arquitectura
 
 ```
-index.html              — App completa (HTML + CSS + JS inline, ~2000 líneas)
+index.html              — App completa (HTML + CSS + JS inline, ~5.400 líneas)
 appscript/              — Proyecto clasp (Google Apps Script)
-  Code.gs               — Webhook handler + snapshot diario
-  appsscript.json       — Manifest
 backup-appscript.js     — Copia de referencia del código Apps Script
-firebase-rules/         — Reglas Firestore
+firebase-rules/         — Reglas Firestore (firestore.rules) + firebase.json
+informe/                — Generador del informe retrospectivo (generar-informe.js).
+                          El HTML renderizado NO se versiona (lleva datos personales).
 CLAUDE.md               — Contexto del proyecto
 ```
 
-### Colecciones Firebase
-- `crew_payments` — Pagos de entradas
-- `crew_tasks` — Tareas por rama
-- `crew_expenses` — Gastos por rama
-- `crew_decisions` — Decisiones consensuadas
-- `crew_lineup_config` — Config del lineup (días + array de slots por día con duración variable). Single doc ID: "current"
-- `crew_lineup_djs` — Pool compartido de DJs (nombre, estilo, notas). Sin asignación directa.
-- `crew_lineup_proposals` — Propuesta por persona. Cada doc tiene `assignments` map (key: "dayIdx-slotIdx", value: DJ doc ID)
+### Modelo de ediciones (importante)
+- Colección global `sonora_editions`: docs `{ name, prefix, ts }`. La edición base (San Sonorín XI) usa prefijo `crew`; el resto `crew_<slug>`.
+- Cada edición vive en colecciones con su prefijo: `<prefix>_payments`, `_expenses`, `_tasks`, `_decisions`, `_polls`, `_settings`, `_lineup_config`, `_lineup_djs`, `_lineup_proposals`, `_milestones`. Helpers `eCol()`/`eDoc()` usan `EDITION_PREFIX` (por dispositivo, en localStorage).
+- **Edición de trabajo compartida** (`sonora_config/current` → `{ tasksPrefix, tasksEditionName }`): un puntero **compartido por los 7 vía Firebase** que gobierna **Tareas** e **Hitos** (helpers `tCol()`/`tDoc()`), independiente del resto de la app. Permite trabajar las tareas/hitos de la próxima fiesta mientras pagos/gastos siguen en la edición anterior. **Decisiones** no cambian de colección: se etiquetan con la edición (`edicion`) y las de ediciones anteriores se ven atenuadas.
+- **Albergues** (`crew_hostels`): lista **global**, NO por edición (conocimiento de sitios reutilizable entre fiestas).
 
 ## Estado actual
 
 ### Funciona
-- **Auth**: Login por username + contraseña en primer acceso (localStorage). 7 usuarios fijos: Panda, Dsastre, Gurke, Droglo, Magdalena, Cizette, Francis. Contraseñas = nombre real en minúsculas.
-- **Pagos**: Registro completo (quién pagó, a quién, cantidad, nº entradas, día, observaciones). Stats en tiempo real. Export CSV. Sorting por columnas.
-- **Tareas**: 8 ramas (sonido, local, logística, decoración, montaje, desmontaje, cartel/artistas, otros). Multi-asignación con crew chips. Sin asignar + "Me la pido" para auto-asignarse. Estados: pendiente → en curso → hecho. Prioridades: normal/alta/urgente. Filtros por rama y estado.
-- **Gastos**: Tracking por rama. Desglose visual con barras. Estados: pagado/pendiente/a reembolsar. Export CSV.
-- **Decisiones**: Registro con título, detalle/contexto, rama, estado (aprobada/en debate/descartada). Cambio rápido de estado.
-- **Lineup**: Gestión de DJs y slots con propuestas por persona. Config de días con slots de duración variable (30m/1h/1.5h/2h/2.5h/3h mezclables). Pool compartido de DJs (nombre, estilo, notas). Cada organizador crea su propuesta y asigna DJs a slots. Vista "Comparar" muestra todas las propuestas en tabla lado a lado. Stats de horas/slots/disponibilidad. Reset completo para nueva fiesta.
-- **Backup tiempo real**: Webhook a Google Sheets — cada pago y gasto se envía al instante. URL hardcodeada en la app.
-- **Backup diario**: Snapshot cada 24h (4:00 AM) que crea pestaña "Log YYYY-MM-DD" con copia de pagos y gastos. Mantiene últimos 30 días.
-- **UI**: Dark/light theme. Responsive. Logo Orgía (dorado) Sonora (morado). Topbar con "eres: [nombre]".
-- **Firebase rules**: Actualizadas via API REST, permiten lectura/escritura en todas las colecciones crew_*.
-- **Deploy**: Producción en Vercel, auto-deploy desde main.
+- **Multi-edición**: selector en topbar; cada edición con datos independientes. Edición de trabajo compartida para Tareas/Hitos.
+- **Auth**: login username + contraseña la 1ª vez (localStorage). 7 usuarios fijos: Panda, Dsastre, Gurke, Droglo, Magdalena, Cizette, Francis.
+- **Pagos**: registro completo, stats, export CSV, sorting, display % bote.
+- **Gastos**: reales + previsiones; convertir previsión en real guardando desviaciones; stats coloreadas; barra dual real/previsión; desglose por rama; CSV.
+- **Saldar cuentas**: por persona, recaudado (pagos cobrados) vs adelantado (gastos pagados) → balance neto + transferencias mínimas (algoritmo greedy).
+- **Tareas**: 8 ramas, multi-asignación, estados (pendiente→en curso→hecho), prioridades, filtros, edición inline con historial, "Me la pido". **Carga**: talla S/M/L (1/2/3) + marrón; vista **"Carga del equipo"** (puntos por persona repartidos entre responsables, marrones, media), enfocada a ver quién va cargado y echarle una mano (no a señalar a quien hace menos).
+- **Hitos**: hitos a mano con fecha consensuada (con historial de cambios). Lista de cuenta atrás + línea de tiempo SVG. Siguen la edición de trabajo compartida.
+- **Albergues**: directorio global comparativo. 3 ejes diferenciados → **Comunicación con dueños** (flujo de contacto), **Aptitud** (apto/sin valorar/descartado — vale para todas las ediciones, descartado en rojo y al fondo) y **Disponibilidad** (por fechas: disponible/sin info/sin propietario/no disponible). Características sí/no (piscina, permite fiestas, cocina, exterior, aparcamiento, vecinos cerca — esta con polaridad invertida: No = bueno). Datos (camas, precio, distancia de Valencia, web), pros/contras, seguimiento (quién contacta, fecha último contacto, qué se dijo/quedó), preseleccionado ⭐, filtros por los 3 ejes y resumen.
+- **Decisiones**: registro con rama/estado, filtros; etiquetadas por edición; histórico de ediciones anteriores atenuado con toggle.
+- **Encuestas**: votación entre los 7. Mayoría/consenso → Decisión.
+- **Lineup por fiesta**: días agrupados por fiesta/evento; pool compartido de DJs; propuestas por fiesta; BPM por slot con escala de color (verde ≤130, amarillo ≤144, naranja ≤155, rojo >155); likes; vista comparar.
+- **Badges de notificación** en topbar (tareas propias/compartidas, encuestas, lineup sin propuesta).
+- **Ajustes**: % bote, bote previo, presupuesto, límites por rama (doc `settings/current` por edición).
+- **Backup**: webhook tiempo real + snapshot diario + JSON completo + Enviar a Drive.
+- **UI**: dark/light, responsive, tabs sticky. Orden de pestañas: **Albergues · Tareas · Hitos · Pagos · Gastos · Decisiones · Encuestas · Lineup · Saldar cuentas · Ajustes** (abre en Albergues).
+- **Reglas Firestore**: separadas web/crew (ver Decisiones). Deploy: producción en Vercel, auto-deploy desde `main`.
 
 ### Pendiente
-- **Activar trigger diario**: Telmo debe ejecutar `installDailyTrigger` desde el editor de Apps Script (musikixe@gmail.com) para activar el snapshot cada 24h.
-- **Verificar webhook**: Comprobar que los datos de pagos/gastos llegan correctamente al Google Sheet "Sonora Crew Backup".
-- **PWA**: manifest.json pendiente de crear para instalar como app en móvil (icono home screen).
-- **Resumen quién debe a quién**: Telmo mostró interés, no implementado.
-- **Categorías en pagos**: Se preguntó si quería categorías por rama en pagos (ej: pago de sonido vs bebida). Sin implementar.
+- **Cerrar cuentas de San Sonorín XI**: falta registrar el **alquiler del local (~2.392 €, aún como previsión)** y otros gastos sueltos; hasta entonces "Saldar cuentas" no propone transferencias (todos figuran con cash de la org). Magdalena adelantó ~60% del gasto real.
+- **Archivado ligero**: marcar San Sonorín XI como edición archivada (no implementado).
+- **Activar trigger diario**: ejecutar `installDailyTrigger` en Apps Script (musikixe@gmail.com).
+- **Verificar webhook**: comprobar que pagos/gastos llegan al Google Sheet "Sonora Crew Backup".
+- **PWA**: manifest.json para instalar como app en móvil.
 
 ## Decisiones importantes
 
-- **Single HTML file** en vez de React/Vite: el usuario pidió "ligero pero robusto"
-- **Firebase compartido** con Sonora XI: mismo proyecto, colecciones con prefijo `crew_`
-- **Contraseñas en código**: primera vez solo, luego localStorage
-- **Webhook hardcodeado**: todos los usuarios lo tienen sin configurar nada
-- **Sin i18n**: castellano fijo, se quitó el toggle EN
-- **Miembros fijos**: roster no editable desde la UI
-- **Reglas Firestore abiertas** (`allow read, write: if true`): aceptable para este caso de uso
-- **Backup doble**: tiempo real (cada entrada) + snapshot diario (cron 4AM, 30 días de historial)
-- **Apps Script bajo musikixe@gmail.com**: clasp login y deploy manual desde esa cuenta
+- **Single HTML file** en vez de React/Vite: "ligero pero robusto".
+- **Firebase compartido** con Sonora XI: mismo proyecto, colecciones con prefijo `crew_`.
+- **Multi-edición con prefijo dinámico** (`eCol`/`eDoc`) + **edición de trabajo compartida** para Tareas/Hitos vía `sonora_config` (`tCol`/`tDoc`). Decisiones se etiquetan por edición (no cambian de colección).
+- **Albergues = lista global** (`crew_hostels`), no por edición. 3 ejes: **aptitud** (propiedad del sitio, para siempre) ≠ **disponibilidad** (por fechas) ≠ **comunicación** (flujo con dueños). "Vecinos cerca": un No es lo bueno (verde).
+- **Carga de tareas**: talla S/M/L + marrón; el balance resalta a quien va cargado para ayudarle (ámbar + 🤝), no marca en rojo a quien hace menos.
+- **Reglas Firestore separadas web/crew** (en `firebase-rules/firestore.rules`): la web pública mantiene reglas estrictas con Firebase Auth; la crew tiene un bloque independiente `if col.matches('crew_.*') || sonora_editions || sonora_config` (sin auth, a nivel UI) que cubre cualquier colección/edición futura. **Las reglas reales se publican a mano en Firebase Console** (la crew no usa Firebase Auth; auth solo a nivel de UI).
+- **Rename de etiquetas conserva id interno**: ej. la rama "Comida y bebida" sigue siendo `desmontaje` en Firebase para no migrar datos.
+- **Contraseñas en código** (1ª vez, luego localStorage), **webhook hardcodeado**, **sin i18n** (castellano fijo), **miembros fijos** (roster no editable).
+- **var(--primary) no existe**: usar `#8b5cf6` directamente. **script type=module**: nada de `onclick` inline, usar `addEventListener`.
+- **Backup doble**: tiempo real + snapshot diario (cron 4AM, 30 días). **Apps Script bajo musikixe@gmail.com**.
 
 ## Despliegues
 
 | Entorno | URL | Rama |
 |---------|-----|------|
 | Producción | https://sonora-crew.vercel.app | main |
-| Test | (sin URL Vercel) | test/dev |
+| Test | (sin URL Vercel) | ramas `test/*` efímeras, mergeadas a main |
 
 ## URLs y recursos
 
 - **App**: https://sonora-crew.vercel.app
 - **Repo**: github.com/unzuetat/sonora-crew
-- **Firebase Console**: console.firebase.google.com (proyecto sonora-xi, cuenta musikixe@gmail.com)
+- **Firebase Console**: console.firebase.google.com (proyecto sonora-xi, cuenta musikixe@gmail.com) — reglas Firestore se editan aquí
 - **Apps Script editor**: script.google.com (proyecto "Sonora Crew Backup", cuenta musikixe@gmail.com)
 - **Apps Script ID**: 1z_Ines3l1JsHpC7yFD8ygzJPxNDQ60zZxKlCfJxaAauZe_P3T4QLyVOG
 - **Google Sheet backup**: Drive de musikixe@gmail.com, archivo "Sonora Crew Backup"
