@@ -1,0 +1,121 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuth()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function tsRecent(ts) {
+      return ts is int
+        && ts >= request.time.toMillis() - 300000
+        && ts <= request.time.toMillis() + 300000;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // SONORA XI — web pública (sonora.community)
+    // Reglas estrictas con Firebase Auth. Bloque independiente.
+    // No se ve afectado por las reglas de la app de gestión (crew).
+    // ════════════════════════════════════════════════════════════════
+
+    match /admins/{uid} {
+      allow read, write: if isAdmin();
+    }
+
+    match /messages/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly(
+             ['tagId','tag','txt','time','ts','verified','struck','reply','author'])
+        && request.resource.data.keys().hasAll(
+             ['tagId','tag','txt','time','ts','verified','struck','reply','author'])
+        && request.resource.data.txt is string
+        && request.resource.data.txt.size() >= 1
+        && request.resource.data.txt.size() <= 500
+        && request.resource.data.author is string
+        && request.resource.data.author.size() >= 1
+        && request.resource.data.author.size() <= 40
+        && request.resource.data.tagId is string
+        && request.resource.data.tagId.size() <= 40
+        && request.resource.data.tag is string
+        && request.resource.data.tag.size() <= 40
+        && request.resource.data.time is string
+        && request.resource.data.time.size() <= 20
+        && request.resource.data.reply == ''
+        && request.resource.data.verified == false
+        && request.resource.data.struck == false
+        && tsRecent(request.resource.data.ts);
+      allow update, delete: if isAdmin();
+    }
+
+    match /carpool/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly(
+             ['name','from','contact','seats','day','time','direction','type','ts','approved','full'])
+        && request.resource.data.keys().hasAll(
+             ['name','from','contact','seats','day','time','direction','type','ts','approved','full'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.from is string
+        && request.resource.data.from.size() >= 1
+        && request.resource.data.from.size() <= 80
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() >= 1
+        && request.resource.data.contact.size() <= 80
+        && request.resource.data.day is string
+        && request.resource.data.day.size() <= 30
+        && request.resource.data.time is string
+        && request.resource.data.time.size() <= 20
+        && request.resource.data.direction is string
+        && request.resource.data.direction.matches('ida|vuelta')
+        && request.resource.data.type is string
+        && request.resource.data.type.matches('offer|seek')
+        && request.resource.data.seats is int
+        && request.resource.data.seats >= 1
+        && request.resource.data.seats <= 8
+        && request.resource.data.approved == false
+        && request.resource.data.full == false
+        && tsRecent(request.resource.data.ts);
+      allow update, delete: if isAdmin();
+    }
+
+    match /setlist/{doc} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    match /config/{doc} {
+      allow read:  if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // SONORA CREW — app interna de gestión (sin Firebase Auth; auth a
+    // nivel de UI). Bloque INDEPENDIENTE del de la web pública.
+    // Cubre TODAS las colecciones de la crew, de cualquier edición:
+    //   crew_payments, crew_tasks, crew_hostels, crew_milestones,
+    //   crew_<edición>_tasks, crew_<edición>_milestones, etc.
+    // más la config global de la crew (sonora_editions, sonora_config).
+    // A prueba de colecciones nuevas: no hay que tocar esto al añadir features.
+    // ════════════════════════════════════════════════════════════════
+
+    match /{col}/{doc} {
+      allow read, write: if col.matches('crew_.*')
+                         || col == 'sonora_editions'
+                         || col == 'sonora_config';
+    }
+
+    // Todo lo demás: denegado por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
