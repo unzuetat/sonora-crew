@@ -1495,6 +1495,9 @@ tbody tr:hover { background: var(--accent-soft); }
     <div class="tab-content" id="tab-hitos">
       <div id="hitos-edition-note" style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">📅 Hitos de: <strong id="hitos-edition-name">…</strong></div>
 
+      <!-- BANNER HITO MAESTRO -->
+      <div id="hito-master-banner" style="display:none;margin-bottom:12px"></div>
+
       <!-- HITO FORM -->
       <div class="card" id="hito-form-card">
         <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
@@ -1510,7 +1513,7 @@ tbody tr:hover { background: var(--accent-soft); }
           </div>
           <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div class="form-group">
-              <label class="form-label" title="La fecha tope acordada entre todos">Fecha límite (consensuada)</label>
+              <label class="form-label" title="Opcional: puedes dejarla vacía y ponerla luego cuando se consensúe">Fecha límite <span style="font-weight:400;color:var(--text-secondary);font-size:11px">· opcional, se puede poner luego</span></label>
               <input class="form-input" id="fh-date" type="date">
             </div>
             <div class="form-group">
@@ -1523,6 +1526,11 @@ tbody tr:hover { background: var(--accent-soft); }
               <label class="form-label">Notas</label>
               <input class="form-input" id="fh-notes" type="text" placeholder="Detalles opcionales...">
             </div>
+          </div>
+          <div class="form-row full">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="fh-master"> 🏁 Es el inicio del evento (hito maestro)
+            </label>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-top:8px">
             <button class="btn" id="btn-add-hito">Añadir hito</button>
@@ -3818,7 +3826,7 @@ let milestones = [];
 let msUnsub = null;
 function initMilestones() {
   if (msUnsub) { try { msUnsub(); } catch (e) {} }
-  msUnsub = onSnapshot(query(tCol('milestones'), orderBy('date', 'asc')), snap => {
+  msUnsub = onSnapshot(query(tCol('milestones'), orderBy('ts', 'asc')), snap => {
     milestones = [];
     snap.forEach(ds => milestones.push({ id: ds.id, ...ds.data() }));
     renderMilestones();
@@ -3834,7 +3842,7 @@ function hitoDaysUntil(dateStr) {
 }
 function hitoCountdownLabel(diff, done) {
   if (done) return '✓ Hecho';
-  if (diff === null) return '';
+  if (diff === null) return '📌 Sin fecha aún';
   if (diff < 0) return 'hace ' + Math.abs(diff) + ' día' + (Math.abs(diff) > 1 ? 's' : '') + ' · vencido';
   if (diff === 0) return '¡HOY!';
   if (diff === 1) return 'mañana';
@@ -3849,6 +3857,31 @@ function hitoColor(diff, done) {
   return '#60a5fa';
 }
 
+async function clearOtherMasters(exceptId) {
+  const others = milestones.filter(m => m.master && m.id !== exceptId);
+  await Promise.all(others.map(m => updateDoc(tDoc('milestones', m.id), { master: false })));
+}
+
+function renderHitoMasterBanner() {
+  const el = document.getElementById('hito-master-banner');
+  if (!el) return;
+  const master = milestones.find(m => m.master);
+  if (!master) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  const diff = hitoDaysUntil(master.date);
+  let big, sub;
+  if (master.done) { big = '✓ Celebrado'; sub = esc(master.title); }
+  else if (diff === null) { big = '🏁 ' + esc(master.title); sub = 'pendiente de fecha — ponle el día de inicio'; }
+  else if (diff < 0) { big = 'fue hace ' + Math.abs(diff) + ' días'; sub = esc(master.title); }
+  else if (diff === 0) { big = '🎉 ¡ES HOY!'; sub = esc(master.title); }
+  else { big = '🏁 Faltan ' + diff + ' día' + (diff > 1 ? 's' : ''); sub = 'para ' + esc(master.title); }
+  const dateStr = master.date ? new Date(master.date + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }) : '';
+  el.innerHTML = `<div style="background:linear-gradient(135deg,#eab30822,#8b5cf622);border:1px solid #eab30855;border-radius:12px;padding:14px 18px">
+    <div style="font-size:23px;font-weight:800;color:#eab308;line-height:1.1">${big}</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-top:3px">${sub}${dateStr ? ' · ' + dateStr : ''}</div>
+  </div>`;
+}
+
 function renderMilestones() {
   const list = document.getElementById('hito-list');
   const empty = document.getElementById('hitos-empty');
@@ -3856,12 +3889,17 @@ function renderMilestones() {
   const nameEl = document.getElementById('hitos-edition-name');
   if (nameEl) nameEl.textContent = tasksEditionName();
   list.innerHTML = '';
+  renderHitoMasterBanner();
   renderHitosTimeline();
   if (!milestones.length) { empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
   const sorted = [...milestones].sort((a, b) => {
-    if ((a.done ? 1 : 0) !== (b.done ? 1 : 0)) return (a.done ? 1 : 0) - (b.done ? 1 : 0);
+    if (!!a.master !== !!b.master) return a.master ? -1 : 1; // hito maestro arriba del todo
+    const ad = a.done ? 1 : 0, bd = b.done ? 1 : 0;
+    if (ad !== bd) return ad - bd;                 // hechos al final
+    const an = a.date ? 0 : 1, bn = b.date ? 0 : 1;
+    if (an !== bn) return an - bn;                 // sin fecha después de los datados
     return (a.date || '').localeCompare(b.date || '');
   });
 
@@ -3873,14 +3911,16 @@ function renderMilestones() {
     const dateStr = m.date ? new Date(m.date + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' }) : '';
     const card = document.createElement('div');
     card.className = 'task-card' + (m.done ? ' done' : '');
-    card.style.borderLeft = '4px solid ' + col;
+    card.style.borderLeft = '4px solid ' + (m.master ? '#eab308' : col);
+    if (m.master) card.style.background = 'linear-gradient(90deg,#eab30812,transparent)';
     card.innerHTML = `
       <div class="task-check ${m.done ? 'checked' : ''}" data-id="${m.id}">✓</div>
       <div class="task-body">
         <div class="task-title ${m.done ? 'struck' : ''}">${esc(m.title)}</div>
         <div class="task-meta">
+          ${m.master ? '<span style="font-size:10px;font-weight:700;color:#eab308;border:1px solid #eab30866;border-radius:8px;padding:1px 6px">🏁 Inicio del evento</span>' : ''}
           <span style="font-weight:800;color:${col}">${cd}</span>
-          <span style="color:var(--text-secondary)">· 📅 ${dateStr}</span>
+          ${m.date ? `<span style="color:var(--text-secondary)">· 📅 ${dateStr}</span>` : ''}
           ${rama ? `<span class="badge-rama ${rama.css}">${t(rama.key)}</span>` : ''}
         </div>
         ${m.notes ? `<div class="task-notes">${esc(m.notes)}</div>` : ''}
@@ -3922,6 +3962,9 @@ function editHitoInline(btn) {
         <select class="form-select edit-hito-rama" style="font-size:12px;padding:4px 8px">${ramaOpts}</select>
       </div>
       <input class="form-input edit-hito-notes" value="${esc(m.notes || '')}" placeholder="Notas..." style="font-size:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+        <input type="checkbox" class="edit-hito-master" ${m.master ? 'checked' : ''}> 🏁 Inicio del evento (hito maestro)
+      </label>
       <div style="display:flex;gap:6px">
         <button class="btn btn-sm btn-primary btn-hito-save">Guardar</button>
         <button class="btn btn-sm btn-secondary btn-hito-cancel">Cancelar</button>
@@ -3933,17 +3976,21 @@ function editHitoInline(btn) {
     const nd = card.querySelector('.edit-hito-date').value;
     const nr = card.querySelector('.edit-hito-rama').value;
     const nn = card.querySelector('.edit-hito-notes').value.trim();
+    const nmaster = card.querySelector('.edit-hito-master').checked;
     if (!nt) { toast('El hito necesita un título'); return; }
-    if (!nd) { toast('Ponle una fecha'); return; }
     const changes = {}, logs = [], now = Date.now();
     if (nt !== m.title) { changes.title = nt; logs.push({ field: 'título', from: m.title, to: nt, by: CFG.user, ts: now }); }
     if (nd !== (m.date || '')) { changes.date = nd; logs.push({ field: 'fecha', from: m.date || '—', to: nd, by: CFG.user, ts: now }); }
     if (nr !== (m.rama || '')) { changes.rama = nr; logs.push({ field: 'rama', from: m.rama || '—', to: nr || '—', by: CFG.user, ts: now }); }
     if (nn !== (m.notes || '')) { changes.notes = nn; logs.push({ field: 'notas', from: m.notes || '', to: nn, by: CFG.user, ts: now }); }
+    if (nmaster !== !!m.master) { changes.master = nmaster; logs.push({ field: 'hito maestro', from: m.master ? 'sí' : 'no', to: nmaster ? 'sí' : 'no', by: CFG.user, ts: now }); }
     if (!Object.keys(changes).length) { renderMilestones(); return; }
     changes.changelog = [...(m.changelog || []), ...logs];
-    try { await updateDoc(tDoc('milestones', id), changes); toast('Hito actualizado'); }
-    catch (e) { toast('Error: ' + e.message); }
+    try {
+      await updateDoc(tDoc('milestones', id), changes);
+      if (nmaster) await clearOtherMasters(id);
+      toast('Hito actualizado');
+    } catch (e) { toast('Error: ' + e.message); }
   });
 }
 
@@ -3968,40 +4015,53 @@ function renderHitosTimeline() {
   withDate.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach((m, i) => {
     const tt = new Date(m.date + 'T00:00:00').getTime();
     const x = X(tt);
-    const diff = hitoDaysUntil(m.date);
-    const col = hitoColor(diff, m.done);
+    const ramaCol = RAMA_COLORS[m.rama] || '#94a3b8';
+    const dotCol = m.done ? '#10b981' : ramaCol;   // hecho = verde; si no, color de su rama
     const up = i % 2 === 0;
     const ly = up ? axisY - 14 : axisY + 14;
     const lyT = up ? axisY - 20 : axisY + 30;
     const dlabel = new Date(m.date + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
     const short = m.title.length > 16 ? m.title.slice(0, 15) + '…' : m.title;
-    svg += `<line x1="${x.toFixed(1)}" y1="${axisY}" x2="${x.toFixed(1)}" y2="${ly}" stroke="${col}" stroke-width="1"/>`;
-    svg += `<circle cx="${x.toFixed(1)}" cy="${axisY}" r="6" fill="${col}" stroke="var(--bg-card)" stroke-width="2"><title>${esc(m.title)} — ${m.date}</title></circle>`;
+    const rObj = m.rama ? RAMAS.find(r => r.id === m.rama) : null;
+    const tip = esc(m.title) + (rObj ? ' · ' + t(rObj.key) : '') + ' — ' + m.date + (m.done ? ' (hecho)' : '');
+    svg += `<line x1="${x.toFixed(1)}" y1="${axisY}" x2="${x.toFixed(1)}" y2="${ly}" stroke="${dotCol}" stroke-width="1"/>`;
+    if (m.master) svg += `<circle cx="${x.toFixed(1)}" cy="${axisY}" r="9" fill="none" stroke="#eab308" stroke-width="2.5"/>`;
+    svg += `<circle cx="${x.toFixed(1)}" cy="${axisY}" r="6" fill="${dotCol}" stroke="var(--bg-card)" stroke-width="2"><title>${tip}</title></circle>`;
+    if (m.done) svg += `<text x="${x.toFixed(1)}" y="${axisY}" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="900" fill="#fff">✓</text>`;
     svg += `<text x="${x.toFixed(1)}" y="${lyT}" text-anchor="middle" font-size="9" fill="var(--text-secondary)">${esc(short)} · ${dlabel}</text>`;
   });
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;overflow:visible">${svg}</svg>`;
+  const ramasPresent = [...new Set(withDate.map(m => m.rama).filter(Boolean))];
+  const legend = (ramasPresent.length || withDate.some(m => m.done))
+    ? `<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:10.5px;color:var(--text-secondary)">`
+      + ramasPresent.map(rid => { const r = RAMAS.find(x => x.id === rid); return `<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${RAMA_COLORS[rid] || '#94a3b8'};margin-right:5px;vertical-align:middle"></span>${r ? t(r.key) : esc(rid)}</span>`; }).join('')
+      + `<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#10b981;margin-right:5px;vertical-align:middle"></span>✓ hecho</span></div>`
+    : '';
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;overflow:visible">${svg}</svg>${legend}`;
 }
 
 document.getElementById('btn-add-hito').addEventListener('click', async () => {
   const title = document.getElementById('fh-title').value.trim();
   const date = document.getElementById('fh-date').value;
   if (!title) { toast('Ponle un nombre al hito'); return; }
-  if (!date) { toast('Ponle una fecha al hito'); return; }
   const btn = document.getElementById('btn-add-hito'); btn.disabled = true;
+  const isMaster = document.getElementById('fh-master').checked;
   try {
-    await addDoc(tCol('milestones'), {
+    const ref = await addDoc(tCol('milestones'), {
       title, date,
       rama: document.getElementById('fh-rama').value || '',
       notes: document.getElementById('fh-notes').value.trim(),
       done: false,
+      master: isMaster,
       edicion: tasksEditionName(),
       createdBy: CFG.user,
       ts: Date.now()
     });
+    if (isMaster) await clearOtherMasters(ref.id);
     document.getElementById('fh-title').value = '';
     document.getElementById('fh-date').value = '';
     document.getElementById('fh-notes').value = '';
-    toast('Hito añadido');
+    document.getElementById('fh-master').checked = false;
+    toast(isMaster ? '🏁 Hito maestro añadido' : 'Hito añadido');
   } catch (e) { console.error('Add hito error:', e); toast('Error: ' + e.message); }
   btn.disabled = false;
 });
@@ -4136,8 +4196,11 @@ function renderHostels() {
   if (hostelFilter.contact !== 'all') filtered = filtered.filter(h => (h.contact || 'sin_contactar') === hostelFilter.contact);
   if (hostelFilter.avail !== 'all') filtered = filtered.filter(h => (h.disponibilidad || 'sin_info') === hostelFilter.avail);
   if (hostelFilter.aptitud !== 'all') filtered = filtered.filter(h => (h.aptitud || 'sin_valorar') === hostelFilter.aptitud);
-  // Orden: preseleccionados primero, luego aptitud (apto→descartado al fondo), luego disponibilidad, luego nombre
+  // Hundimiento: descartado (rojo) al fondo · no disponible (gris) justo encima · resto arriba
+  const sinkRank = h => h.aptitud === 'descartado' ? 2 : (h.disponibilidad === 'no_disponible' ? 1 : 0);
+  // Orden: preseleccionados primero, luego hundimiento, luego aptitud, disponibilidad y nombre
   filtered.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0)
+    || sinkRank(a) - sinkRank(b)
     || aptitudeState(a.aptitud || 'sin_valorar').rank - aptitudeState(b.aptitud || 'sin_valorar').rank
     || availState(a.disponibilidad || 'sin_info').rank - availState(b.disponibilidad || 'sin_info').rank
     || (a.name || '').localeCompare(b.name || ''));
@@ -4166,6 +4229,7 @@ function renderHostels() {
     const av = availState(h.disponibilidad || 'sin_info');
     const ap = aptitudeState(h.aptitud || 'sin_valorar');
     const discarded = h.aptitud === 'descartado';
+    const unavailable = !discarded && h.disponibilidad === 'no_disponible';
     const segParts = [];
     if (h.owner) segParts.push('👤 ' + esc(h.owner));
     if (h.lastContactDate) segParts.push('📅 últ. contacto ' + new Date(h.lastContactDate + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }));
@@ -4174,7 +4238,8 @@ function renderHostels() {
     card.className = 'card';
     card.style.cssText = 'padding:14px 16px;margin-bottom:10px'
       + (discarded ? ';background:#ef44440f;border-color:#ef444455'
-        : (h.fav ? ';border-color:#eab308' : ''));
+        : unavailable ? ';background:rgba(127,127,127,.10);border-color:var(--border);opacity:.8'
+          : (h.fav ? ';border-color:#eab308' : ''));
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <button class="btn-hostel-fav" data-id="${h.id}" title="Preseleccionar" style="background:none;border:none;cursor:pointer;font-size:17px;padding:0;line-height:1">${h.fav ? '⭐' : '☆'}</button>
