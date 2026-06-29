@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#1a1a2e">
 <title>Orgía Sonora</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 /* ══════════════════════════════════
    TOKENS
@@ -1016,6 +1017,63 @@ tbody tr:hover { background: var(--accent-soft); }
   .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .tab-btn { white-space: nowrap; flex-shrink: 0; }
 }
+
+/* ══════════════════════════════════
+   INFORME (REPORT)
+══════════════════════════════════ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.kpi-card .kpi-value { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.kpi-card .kpi-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: .4px; }
+.kpi-card.accent .kpi-value { color: var(--accent); }
+.kpi-card.success .kpi-value { color: var(--success); }
+.kpi-card.warn .kpi-value { color: var(--warning); }
+.kpi-card.purple .kpi-value { color: #8b5cf6; }
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+.chart-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.chart-box .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.chart-canvas-wrap { position: relative; height: 240px; }
+.report-header { display: none; }
+.archived-badge {
+  display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .5px;
+  color: var(--warning); border: 1px solid var(--warning); border-radius: 4px;
+  padding: 1px 5px; margin-left: 6px; vertical-align: middle; text-transform: uppercase;
+}
+
+/* ══════════════════════════════════
+   IMPRESIÓN DEL INFORME
+══════════════════════════════════ */
+@media print {
+  body { background: #fff !important; }
+  .topbar, .tabs, .notif-badges, #toast, .no-print { display: none !important; }
+  .wrap { padding: 0 !important; max-width: 100% !important; }
+  .tab-content { display: none !important; }
+  body.printing-report #tab-informe { display: block !important; }
+  .report-header { display: block !important; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+  .kpi-card, .chart-box, .card { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
+  .chart-canvas-wrap { height: 220px; }
+  .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+  .chart-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
@@ -1084,6 +1142,7 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="tab-btn" data-tab="polls" style="color:#047857">Encuestas</button>
       <button class="tab-btn" data-tab="lineup" style="color:#7c3aed">Lineup</button>
       <button class="tab-btn" data-tab="settle" style="color:#2563eb">Saldar cuentas</button>
+      <button class="tab-btn" data-tab="informe" style="color:#0891b2">Informe</button>
       <button class="tab-btn" data-tab="settings">Ajustes</button>
     </div>
   </div>
@@ -1309,43 +1368,60 @@ tbody tr:hover { background: var(--accent-soft); }
 
     <!-- ═══ TAB: GASTOS ═══ -->
     <div class="tab-content" id="tab-expenses">
-      <!-- STATS -->
+      <!-- STATS PRINCIPALES -->
       <div class="stats-grid" id="expense-stats">
+        <div class="stat-card" title="Dinero real en caja = entradas + ingresos a la org − gastos reales. Es lo que de verdad hay.">
+          <div class="stat-label">💰 Caja real</div>
+          <div class="stat-value" id="stat-exp-caja" style="color:var(--success)">0 €</div>
+        </div>
+        <div class="stat-card" title="Total recaudado por venta de entradas">
+          <div class="stat-label">Entradas</div>
+          <div class="stat-value" id="stat-exp-recaudado" style="color:#2563eb">0 €</div>
+        </div>
+        <div class="stat-card" title="Ingresos a la org que NO son venta de entradas (aportaciones, barra, donaciones...). No generan bote.">
+          <div class="stat-label">Ingresos org</div>
+          <div class="stat-value" id="stat-exp-income" style="color:#0891b2">0 €</div>
+        </div>
         <div class="stat-card" title="Suma de todos los gastos reales registrados">
           <div class="stat-label">Gastado</div>
           <div class="stat-value" id="stat-exp-total" style="color:var(--accent)">0 €</div>
         </div>
-        <div class="stat-card" title="Suma de las previsiones de gasto (estimaciones futuras)">
-          <div class="stat-label">Previsto</div>
-          <div class="stat-value" id="stat-exp-prevision" style="color:var(--warning)">0 €</div>
-        </div>
-        <div class="stat-card" title="Total recaudado en pagos menos el bote. Es el dinero real disponible para gastar">
-          <div class="stat-label">Libre de bote</div>
-          <div class="stat-value" id="stat-exp-libre" style="color:var(--success)">0 €</div>
-        </div>
-        <div class="stat-card" title="Presupuesto fijado en Ajustes. Si no hay, se usa el recaudado libre de bote">
-          <div class="stat-label">Presupuesto</div>
-          <div class="stat-value" id="stat-exp-budget" style="color:var(--success)">0 €</div>
-        </div>
-        <div class="stat-card" title="Presupuesto menos los gastos reales ya realizados">
-          <div class="stat-label">Disponible real</div>
-          <div class="stat-value" id="stat-exp-remaining" style="color:var(--success)">—</div>
-        </div>
-        <div class="stat-card" title="Disponible real menos las previsiones de gasto. Lo que quedaría si se cumplen todas las estimaciones">
-          <div class="stat-label">Disponible prev.</div>
-          <div class="stat-value" id="stat-exp-remaining-prev" style="color:var(--warning)">—</div>
-        </div>
-        <div class="stat-card" title="Bote acumulado de ediciones anteriores, configurado en Ajustes">
-          <div class="stat-label">Bote previo</div>
-          <div class="stat-value" id="stat-exp-bote-prev" style="color:#8b5cf6">0 €</div>
-        </div>
-        <div class="stat-card" title="Porcentaje de cada entrada que va al bote, calculado sobre el total recaudado">
-          <div class="stat-label">Bote generado</div>
-          <div class="stat-value" id="stat-exp-bote-gen" style="color:#8b5cf6">—</div>
-        </div>
-        <div class="stat-card" title="Bote previo + bote generado. Dinero reservado que no se gasta en esta edición">
-          <div class="stat-label">Bote total</div>
-          <div class="stat-value" id="stat-exp-bote-total" style="color:#8b5cf6">—</div>
+      </div>
+      <button class="btn btn-sm btn-secondary" id="btn-toggle-fin-detail" style="margin:8px 0 12px;font-size:12px">Ver detalle financiero ▾</button>
+      <div id="fin-detail" style="display:none">
+        <div class="stats-grid">
+          <div class="stat-card" title="Suma de las previsiones de gasto (estimaciones futuras, no dinero movido)">
+            <div class="stat-label">Previsto</div>
+            <div class="stat-value" id="stat-exp-prevision" style="color:var(--warning)">0 €</div>
+          </div>
+          <div class="stat-card" title="Entradas + ingresos org − bote total. Dinero disponible una vez apartado el bote.">
+            <div class="stat-label">Libre de bote</div>
+            <div class="stat-value" id="stat-exp-libre" style="color:var(--success)">0 €</div>
+          </div>
+          <div class="stat-card" title="Presupuesto fijado en Ajustes. Si no hay, se usa el libre de bote">
+            <div class="stat-label">Presupuesto</div>
+            <div class="stat-value" id="stat-exp-budget" style="color:var(--success)">0 €</div>
+          </div>
+          <div class="stat-card" title="Presupuesto (o libre de bote) menos los gastos reales ya realizados">
+            <div class="stat-label">Disponible vs presup.</div>
+            <div class="stat-value" id="stat-exp-remaining" style="color:var(--success)">—</div>
+          </div>
+          <div class="stat-card" title="Disponible menos las previsiones de gasto. Lo que quedaría si se cumplen todas las estimaciones">
+            <div class="stat-label">Disponible prev.</div>
+            <div class="stat-value" id="stat-exp-remaining-prev" style="color:var(--warning)">—</div>
+          </div>
+          <div class="stat-card" title="Bote acumulado de ediciones anteriores, configurado en Ajustes">
+            <div class="stat-label">Bote previo</div>
+            <div class="stat-value" id="stat-exp-bote-prev" style="color:#8b5cf6">0 €</div>
+          </div>
+          <div class="stat-card" title="Porcentaje de cada entrada que va al bote, calculado sobre el total de entradas">
+            <div class="stat-label">Bote generado</div>
+            <div class="stat-value" id="stat-exp-bote-gen" style="color:#8b5cf6">—</div>
+          </div>
+          <div class="stat-card" title="Bote previo + bote generado. Dinero reservado que no se gasta en esta edición">
+            <div class="stat-label">Bote total</div>
+            <div class="stat-value" id="stat-exp-bote-total" style="color:#8b5cf6">—</div>
+          </div>
         </div>
       </div>
       <div id="stat-exp-records" style="display:none">0</div>
@@ -1362,6 +1438,49 @@ tbody tr:hover { background: var(--accent-soft); }
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);vertical-align:middle"></span> Real</span>
           <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--warning);vertical-align:middle"></span> Previsión</span>
         </div>
+      </div>
+
+      <!-- INGRESOS A LA ORG (no entradas) -->
+      <div class="card" id="income-card" style="border-color:#0891b2">
+        <div class="collapsible-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.collapse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▴':'＋'">
+          <div>
+            <div class="card-title" style="color:#0891b2;margin-bottom:2px">Ingresos a la org <span id="income-total-badge" style="font-weight:600;font-size:13px"></span></div>
+            <div style="font-size:11px;color:var(--text-secondary)">Dinero que entra a la org y NO es venta de entradas (aportaciones, barra, donaciones, reembolsos...). No cuenta como entrada ni genera bote. Si lo <strong>recauda un miembro</strong>, se suma a su balance en Saldar cuentas (lo tiene en mano y se lo debe a la org). Si es <strong>externo</strong>, va directo a la caja común.</div>
+          </div>
+          <button class="collapse-toggle" type="button">＋</button>
+        </div>
+        <div class="collapsible-body">
+          <div class="form-row triple">
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">Concepto</label>
+              <input class="form-input" id="fi-concept" type="text" placeholder="ej. Aportación camisetas, Barra, Donación...">
+            </div>
+          </div>
+          <div class="form-row triple">
+            <div class="form-group">
+              <label class="form-label">Cantidad (€)</label>
+              <input class="form-input" id="fi-amount" type="number" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Origen</label>
+              <select class="form-select" id="fi-holder"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fecha</label>
+              <input class="form-input" id="fi-date" type="date">
+            </div>
+          </div>
+          <div class="form-row full">
+            <div class="form-group">
+              <label class="form-label">Nota (opcional)</label>
+              <input class="form-input" id="fi-note" type="text" placeholder="Detalles...">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn" id="btn-add-income">Registrar ingreso</button>
+          </div>
+        </div>
+        <div id="income-list" style="margin-top:12px"></div>
       </div>
 
       <!-- PER-RAMA BREAKDOWN -->
@@ -1857,14 +1976,69 @@ tbody tr:hover { background: var(--accent-soft); }
       <div class="card">
         <div class="card-title">Saldar cuentas</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">
-          Cada miembro recauda pagos (dinero que tiene de la org) y adelanta gastos (dinero que la org le debe). El balance muestra quién debe a quién.
+          Cada miembro recauda pagos (dinero que tiene de la org) y adelanta gastos (dinero que la org le debe). El balance muestra quién debe a quién. Registra cada pago entre personas para ir saldando.
         </div>
         <div id="settle-list"></div>
       </div>
       <div class="card" id="settle-summary-card" style="display:none">
-        <div class="card-title" style="font-size:13px">Resumen de transferencias</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Movimientos mínimos para saldar todas las cuentas</div>
+        <div class="card-title" style="font-size:13px">Resumen de transferencias pendientes</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Movimientos mínimos para saldar todo. Pulsa ✓ cuando alguien haya pagado.</div>
         <div id="settle-transfers"></div>
+      </div>
+      <div class="card" id="settle-done-card" style="display:none;border-color:var(--success)">
+        <div class="card-title" style="font-size:14px;color:var(--success)">✓ Todo saldado</div>
+        <div style="font-size:12px;color:var(--text-secondary)">No quedan cuentas pendientes entre el equipo.</div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="font-size:13px">Registrar pago manual</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Para un pago que no esté en la lista de arriba (ej. un importe parcial concreto).</div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label class="form-label">Paga</label>
+            <select class="form-input" id="settle-from"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Recibe</label>
+            <select class="form-input" id="settle-to"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cantidad (€)</label>
+            <input class="form-input" id="settle-amount" type="number" step="0.01" min="0" placeholder="0.00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nota (opcional)</label>
+          <input class="form-input" id="settle-note" placeholder="ej. Bizum, efectivo...">
+        </div>
+        <button class="btn btn-sm" id="btn-settle-record">Registrar pago</button>
+      </div>
+      <div class="card" id="settle-history-card" style="display:none">
+        <div class="card-title" style="font-size:13px">Pagos registrados</div>
+        <div id="settle-history"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: INFORME ═══ -->
+    <div class="tab-content" id="tab-informe">
+      <div class="report-header">
+        <div style="font-size:22px;font-weight:700" id="report-title">Informe — San Sonorín XI</div>
+        <div style="font-size:12px;color:#555" id="report-date"></div>
+      </div>
+      <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="card-title" style="margin-bottom:2px">Informe de la edición</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Snapshot monetario y de actividad. Imprime o guarda como PDF para archivar.</div>
+        </div>
+        <button class="btn btn-sm" id="btn-print-report">🖨️ Imprimir / PDF</button>
+      </div>
+      <div class="kpi-grid" id="report-kpis"></div>
+      <div class="chart-grid">
+        <div class="chart-box"><div class="chart-title">Panorama monetario (€)</div><div class="chart-canvas-wrap"><canvas id="chart-money"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">Gastos por rama (real vs previsión)</div><div class="chart-canvas-wrap"><canvas id="chart-ramas"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">Recaudado vs adelantado por persona</div><div class="chart-canvas-wrap"><canvas id="chart-collected"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">Balance por persona (− le deben / + debe)</div><div class="chart-canvas-wrap"><canvas id="chart-balance"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">Estado de tareas</div><div class="chart-canvas-wrap"><canvas id="chart-tasks"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">Estado de decisiones</div><div class="chart-canvas-wrap"><canvas id="chart-decisions"></canvas></div></div>
       </div>
     </div>
 
@@ -2578,7 +2752,7 @@ document.getElementById('btn-add').addEventListener('click', async () => {
 // Export CSV
 // Full backup — shared helper
 async function buildFullBackup() {
-  const colNames = ['payments', 'expenses', 'tasks', 'decisions', 'polls', 'lineup_djs', 'lineup_proposals'];
+  const colNames = ['payments', 'expenses', 'income', 'settlements', 'tasks', 'decisions', 'polls', 'lineup_djs', 'lineup_proposals'];
   const backup = { exportedAt: new Date().toISOString(), edition: localStorage.getItem('sonora_edition') || 'SAN SONORÍN XI', prefix: EDITION_PREFIX };
   for (const name of colNames) {
     const snap = await getDocs(eCol(name));
@@ -3345,98 +3519,399 @@ function renderDeviations() {
 }
 
 /* ══════════════════════════════════
+   INGRESOS A LA ORG (no entradas)
+══════════════════════════════════ */
+let income = [];
+function initIncome() {
+  const unsub = onSnapshot(query(eCol('income'), orderBy('ts', 'desc')), snap => {
+    income = [];
+    snap.forEach(ds => income.push({ id: ds.id, ...ds.data() }));
+    renderIncome();
+    updateExpenseStats();
+    if (typeof renderSettle === 'function') renderSettle();
+  }, err => { console.warn('Income listener error:', err); });
+  unsubscribers.push(unsub);
+}
+
+function renderIncome() {
+  // Select de "quién tiene el dinero"
+  const holderSel = document.getElementById('fi-holder');
+  if (holderSel) {
+    const cur = holderSel.value;
+    holderSel.innerHTML = '<option value="">Externo (donación / de fuera) → caja común</option>' + CFG.crew.map(n => `<option value="${esc(n)}">Recaudado por ${esc(n)} (a su balance)</option>`).join('');
+    if (cur) holderSel.value = cur;
+  }
+
+  const total = income.reduce((s, i) => s + (i.amount || 0), 0);
+  const badge = document.getElementById('income-total-badge');
+  if (badge) badge.textContent = total > 0 ? `· ${total.toFixed(2)} €` : '';
+
+  const list = document.getElementById('income-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!income.length) return;
+  income.forEach(i => {
+    const d = i.date ? i.date : (i.ts ? new Date(i.ts).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap';
+    row.innerHTML = `
+      <span style="font-weight:600;flex:1;min-width:120px">${esc(i.concept || 'Ingreso')}</span>
+      ${i.holder ? `<span style="font-size:11px;color:#0891b2">recaudado por ${esc(i.holder)}</span>` : '<span style="font-size:11px;color:var(--text-secondary)">externo · caja común</span>'}
+      ${i.note ? `<span style="font-size:11px;color:var(--text-secondary)">· ${esc(i.note)}</span>` : ''}
+      <span style="font-size:11px;color:var(--text-secondary)">${esc(d)}</span>
+      <span style="font-weight:700;color:#0891b2;min-width:80px;text-align:right">+${(i.amount || 0).toFixed(2)} €</span>
+    `;
+    const del = document.createElement('button');
+    del.className = 'btn btn-sm btn-secondary';
+    del.style.cssText = 'padding:2px 8px;font-size:11px';
+    del.textContent = '✕';
+    del.addEventListener('click', async () => {
+      if (!confirm('¿Borrar este ingreso?')) return;
+      await deleteDoc(eDoc('income', i.id));
+      toast('Ingreso borrado');
+    });
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+async function addIncome() {
+  const concept = document.getElementById('fi-concept').value.trim();
+  const amount = parseFloat(String(document.getElementById('fi-amount').value).replace(',', '.'));
+  const holder = document.getElementById('fi-holder').value;
+  const date = document.getElementById('fi-date').value;
+  const note = document.getElementById('fi-note').value.trim();
+  if (!concept) { toast('Pon un concepto'); return; }
+  if (!(amount > 0)) { toast('Introduce una cantidad válida'); return; }
+  await addDoc(eCol('income'), { concept, amount: Math.round(amount * 100) / 100, holder: holder || '', date: date || '', note: note || '', registeredBy: CFG.user, ts: Date.now() });
+  document.getElementById('fi-concept').value = '';
+  document.getElementById('fi-amount').value = '';
+  document.getElementById('fi-note').value = '';
+  toast('Ingreso registrado');
+}
+
+/* ══════════════════════════════════
    SALDAR CUENTAS
 ══════════════════════════════════ */
+let settlements = [];
+function initSettlements() {
+  const unsub = onSnapshot(query(eCol('settlements'), orderBy('ts', 'desc')), snap => {
+    settlements = [];
+    snap.forEach(ds => settlements.push({ id: ds.id, ...ds.data() }));
+    renderSettle();
+  }, err => { console.warn('Settlements listener error:', err); });
+  unsubscribers.push(unsub);
+}
+
+// Núcleo de cálculo: balances por persona aplicando pagos, gastos reales y settlements.
+// Reutilizado por renderSettle, el informe y el aviso de archivado.
+function computeSettle() {
+  const balances = {};
+  CFG.crew.forEach(name => { balances[name] = { collected: 0, spent: 0, paidOut: 0, received: 0, payDetails: [], expDetails: [] }; });
+
+  // Pagos: 'to' = quien cobró efectivo → tiene dinero de la org
+  payments.forEach(p => {
+    if (balances[p.to]) { balances[p.to].collected += p.amount || 0; balances[p.to].payDetails.push(p); }
+  });
+  // Gastos reales: 'paidBy' = quien adelantó → la org le debe
+  expenses.filter(e => e.tipo !== 'prevision').forEach(e => {
+    if (balances[e.paidBy]) { balances[e.paidBy].spent += e.amount || 0; balances[e.paidBy].expDetails.push(e); }
+  });
+  // Ingresos a la org que tiene físicamente una persona → dinero de la org en su poder
+  income.forEach(i => {
+    if (i.holder && balances[i.holder]) { balances[i.holder].collected += i.amount || 0; balances[i.holder].payDetails.push({ concept: i.concept, amount: i.amount, _income: true }); }
+  });
+  // Pagos registrados entre personas (X pagó a Y) → ajustan el saldo
+  settlements.forEach(s => {
+    if (balances[s.from]) balances[s.from].paidOut += s.amount || 0;
+    if (balances[s.to]) balances[s.to].received += s.amount || 0;
+  });
+
+  const rows = CFG.crew.map(name => {
+    const b = balances[name];
+    const baseNet = b.collected - b.spent;          // + = debe a la org, − = la org le debe
+    const adjNet = baseNet - b.paidOut + b.received; // ajustado por pagos ya hechos
+    return { name, ...b, baseNet, adjNet };
+  });
+
+  // Transferencias mínimas sobre el neto ajustado (greedy)
+  const nets = rows.filter(r => Math.abs(r.adjNet) > 0.01).map(r => ({ name: r.name, net: r.adjNet }));
+  const debtors = nets.filter(n => n.net > 0).sort((a, b) => b.net - a.net).map(x => ({ ...x }));
+  const creditors = nets.filter(n => n.net < 0).sort((a, b) => a.net - b.net).map(x => ({ ...x, net: Math.abs(x.net) }));
+  const transfers = [];
+  let di = 0, ci = 0;
+  while (di < debtors.length && ci < creditors.length) {
+    const amount = Math.min(debtors[di].net, creditors[ci].net);
+    if (amount > 0.01) transfers.push({ from: debtors[di].name, to: creditors[ci].name, amount });
+    debtors[di].net -= amount; creditors[ci].net -= amount;
+    if (debtors[di].net < 0.01) di++;
+    if (creditors[ci].net < 0.01) ci++;
+  }
+  const outstanding = rows.reduce((s, r) => s + Math.max(0, r.adjNet), 0);
+  return { rows, transfers, outstanding };
+}
+
+const POT = 'Bote común'; // contraparte virtual cuando alguien salda con el fondo común
+async function recordSettlement(from, to, amount, note = '') {
+  amount = Math.round((amount || 0) * 100) / 100;
+  if (!from || !to || from === to || !(amount > 0)) { toast('Datos de pago no válidos'); return; }
+  await addDoc(eCol('settlements'), { from, to, amount, note: note || '', registeredBy: CFG.user, ts: Date.now() });
+  toast(`Pago registrado: ${from} → ${to}`);
+}
+async function deleteSettlement(id) {
+  if (!confirm('¿Borrar este pago registrado? Volverá a contar como pendiente.')) return;
+  await deleteDoc(eDoc('settlements', id));
+  toast('Pago borrado');
+}
+
 function renderSettle() {
   const list = document.getElementById('settle-list');
   const transfersEl = document.getElementById('settle-transfers');
   const summaryCard = document.getElementById('settle-summary-card');
+  const doneCard = document.getElementById('settle-done-card');
   if (!list) return;
   list.innerHTML = '';
 
-  const balances = {};
-  CFG.crew.forEach(name => { balances[name] = { collected: 0, spent: 0, payDetails: [], expDetails: [] }; });
+  const { rows, transfers } = computeSettle();
 
-  // Pagos: 'to' = crew member who collected cash → they hold money for org
-  payments.forEach(p => {
-    const member = p.to;
-    if (balances[member]) {
-      balances[member].collected += p.amount || 0;
-      balances[member].payDetails.push(p);
-    }
-  });
-
-  // Gastos reales: 'paidBy' = crew member who spent → org owes them
-  expenses.filter(e => e.tipo !== 'prevision').forEach(e => {
-    const member = e.paidBy;
-    if (balances[member]) {
-      balances[member].spent += e.amount || 0;
-      balances[member].expDetails.push(e);
-    }
-  });
-
-  CFG.crew.forEach(name => {
-    const b = balances[name];
-    const net = b.collected - b.spent; // positive = owes org, negative = org owes them
-    const color = net > 0 ? 'var(--accent)' : net < 0 ? 'var(--success)' : 'var(--text-secondary)';
-    const label = net > 0 ? `Debe ${net.toFixed(2)} € a la org` : net < 0 ? `La org le debe ${Math.abs(net).toFixed(2)} €` : 'En paz';
+  rows.forEach(r => {
+    const net = r.adjNet;
+    const settled = r.paidOut + r.received;
+    const color = net > 0.01 ? 'var(--accent)' : net < -0.01 ? 'var(--success)' : 'var(--success)';
+    const label = net > 0.01 ? `Debe ${net.toFixed(2)} €` : net < -0.01 ? `Le deben ${Math.abs(net).toFixed(2)} €` : '✓ En paz';
 
     const card = document.createElement('div');
     card.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--border)';
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
-        <span style="font-weight:600;font-size:14px">${esc(name)}</span>
+        <span style="font-weight:600;font-size:14px">${esc(r.name)}</span>
         <span style="font-weight:700;color:${color};font-size:14px">${label}</span>
       </div>
-      <div style="display:flex;gap:16px;margin-top:4px;font-size:12px;color:var(--text-secondary)">
-        <span title="Dinero recaudado que tiene de la org">Recaudado: <strong style="color:var(--accent)">${b.collected.toFixed(2)} €</strong> (${b.payDetails.length} pagos)</span>
-        <span title="Dinero adelantado por esta persona para la org">Adelantado: <strong style="color:var(--success)">${b.spent.toFixed(2)} €</strong> (${b.expDetails.length} gastos)</span>
+      <div style="display:flex;gap:16px;margin-top:4px;font-size:12px;color:var(--text-secondary);flex-wrap:wrap">
+        <span title="Dinero recaudado que tiene de la org">Recaudado: <strong style="color:var(--accent)">${r.collected.toFixed(2)} €</strong> (${r.payDetails.length})</span>
+        <span title="Dinero adelantado por esta persona para la org">Adelantado: <strong style="color:var(--success)">${r.spent.toFixed(2)} €</strong> (${r.expDetails.length})</span>
+        ${settled > 0.01 ? `<span title="Pagos ya registrados">Saldado: <strong>${(r.paidOut).toFixed(2)} € pagados · ${(r.received).toFixed(2)} € recibidos</strong></span>` : ''}
       </div>
     `;
     list.appendChild(card);
   });
 
-  // Calculate minimal transfers to settle
-  const nets = [];
-  CFG.crew.forEach(name => {
-    const net = balances[name].collected - balances[name].spent;
-    if (Math.abs(net) > 0.01) nets.push({ name, net });
-  });
-
-  // Sort: debtors (positive net = owes) and creditors (negative net = owed)
-  const debtors = nets.filter(n => n.net > 0).sort((a, b) => b.net - a.net);
-  const creditors = nets.filter(n => n.net < 0).sort((a, b) => a.net - b.net);
-
-  const transfers = [];
-  let di = 0, ci = 0;
-  const d = debtors.map(x => ({ ...x }));
-  const c = creditors.map(x => ({ ...x, net: Math.abs(x.net) }));
-  while (di < d.length && ci < c.length) {
-    const amount = Math.min(d[di].net, c[ci].net);
-    if (amount > 0.01) transfers.push({ from: d[di].name, to: c[ci].name, amount });
-    d[di].net -= amount;
-    c[ci].net -= amount;
-    if (d[di].net < 0.01) di++;
-    if (c[ci].net < 0.01) ci++;
-  }
-
+  // Transferencias pendientes (con botón de marcar pagado)
   if (transfers.length) {
     summaryCard.style.display = '';
+    doneCard.style.display = 'none';
     transfersEl.innerHTML = '';
     transfers.forEach(t => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px';
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap';
       row.innerHTML = `
         <span style="font-weight:600">${esc(t.from)}</span>
         <span style="color:var(--text-secondary)">→</span>
         <span style="font-weight:600">${esc(t.to)}</span>
         <span style="margin-left:auto;font-weight:700;color:var(--accent)">${t.amount.toFixed(2)} €</span>
       `;
+      const btnFull = document.createElement('button');
+      btnFull.className = 'btn btn-sm';
+      btnFull.style.cssText = 'padding:3px 10px;font-size:11px';
+      btnFull.textContent = '✓ Pagado';
+      btnFull.title = 'Registrar este pago completo';
+      btnFull.addEventListener('click', () => recordSettlement(t.from, t.to, t.amount));
+      const btnPart = document.createElement('button');
+      btnPart.className = 'btn btn-sm btn-secondary';
+      btnPart.style.cssText = 'padding:3px 10px;font-size:11px';
+      btnPart.textContent = 'Parcial';
+      btnPart.title = 'Registrar un importe parcial';
+      btnPart.addEventListener('click', () => {
+        const v = prompt(`¿Cuánto ha pagado ${t.from} a ${t.to}? (máx ${t.amount.toFixed(2)} €)`, t.amount.toFixed(2));
+        if (v == null) return;
+        const amt = parseFloat(String(v).replace(',', '.'));
+        if (amt > 0) recordSettlement(t.from, t.to, amt);
+      });
+      row.appendChild(btnFull);
+      row.appendChild(btnPart);
       transfersEl.appendChild(row);
     });
   } else {
     summaryCard.style.display = 'none';
+    const totalAbs = rows.reduce((s, r) => s + Math.abs(r.adjNet), 0);
+    const anyMoney = payments.length || income.length || expenses.some(e => e.tipo !== 'prevision');
+    if (!anyMoney) {
+      doneCard.style.display = 'none';
+    } else if (totalAbs < 0.01) {
+      doneCard.style.display = '';
+      doneCard.style.borderColor = 'var(--success)';
+      doneCard.innerHTML = `<div class="card-title" style="font-size:14px;color:var(--success)">✓ Todo saldado</div>
+        <div style="font-size:12px;color:var(--text-secondary)">Nadie debe nada a nadie. Cuentas a cero.</div>`;
+    } else {
+      // Hay saldos no nulos pero todos del mismo lado (sobrante o déficit colectivo): no hay transferencia persona-a-persona, se ajusta contra la caja/bote común.
+      const surplus = rows.reduce((s, r) => s + r.adjNet, 0); // + = el equipo tiene dinero de la org en mano
+      doneCard.style.display = '';
+      doneCard.style.borderColor = 'var(--warning)';
+      doneCard.innerHTML = `<div class="card-title" style="font-size:14px;color:var(--warning)">Sin transferencias entre personas</div>
+        <div style="font-size:12px;color:var(--text-secondary)">${surplus > 0
+          ? `El equipo tiene en mano <strong>${surplus.toFixed(2)} €</strong> de la org (más recaudado que adelantado). Ese dinero es de la caja/bote común, no se transfiere entre personas. Cada uno lo entrega a la caja cuando toque.`
+          : `La org debe al equipo <strong>${Math.abs(surplus).toFixed(2)} €</strong> en total (más adelantado que recaudado). Se cubre con la caja/bote común.`}</div>`;
+    }
   }
+
+  // Selects del formulario manual
+  ['settle-from', 'settle-to'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = CFG.crew.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    if (cur && CFG.crew.includes(cur)) sel.value = cur;
+  });
+
+  // Histórico de pagos registrados
+  const histCard = document.getElementById('settle-history-card');
+  const histEl = document.getElementById('settle-history');
+  if (settlements.length) {
+    histCard.style.display = '';
+    histEl.innerHTML = '';
+    settlements.forEach(s => {
+      const d = new Date(s.ts);
+      const dateStr = isNaN(d) ? '' : d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap';
+      row.innerHTML = `
+        <span style="font-weight:600">${esc(s.from)}</span>
+        <span style="color:var(--text-secondary)">→</span>
+        <span style="font-weight:600">${esc(s.to)}</span>
+        <span style="font-weight:700;color:var(--success)">${(s.amount || 0).toFixed(2)} €</span>
+        ${s.note ? `<span style="color:var(--text-secondary);font-size:11px">· ${esc(s.note)}</span>` : ''}
+        <span style="margin-left:auto;color:var(--text-secondary);font-size:11px">${dateStr}${s.registeredBy ? ' · ' + esc(s.registeredBy) : ''}</span>
+      `;
+      const del = document.createElement('button');
+      del.className = 'btn btn-sm btn-secondary';
+      del.style.cssText = 'padding:2px 8px;font-size:11px';
+      del.textContent = '✕';
+      del.addEventListener('click', () => deleteSettlement(s.id));
+      row.appendChild(del);
+      histEl.appendChild(row);
+    });
+  } else {
+    histCard.style.display = 'none';
+  }
+}
+
+/* ══════════════════════════════════
+   INFORME (REPORT)
+══════════════════════════════════ */
+let informeCharts = [];
+function destroyInformeCharts() {
+  informeCharts.forEach(c => { try { c.destroy(); } catch (e) {} });
+  informeCharts = [];
+}
+
+function renderInforme() {
+  // Cabecera (visible solo al imprimir)
+  const edName = (editions.find(e => e.prefix === EDITION_PREFIX) || {}).name || localStorage.getItem('sonora_edition') || 'Edición';
+  const titleEl = document.getElementById('report-title');
+  const dateEl = document.getElementById('report-date');
+  if (titleEl) titleEl.textContent = 'Informe — ' + edName;
+  if (dateEl) dateEl.textContent = 'Generado el ' + new Date().toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' });
+
+  // Métricas monetarias
+  const payTotal = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  const incomeTotal = income.reduce((s, i) => s + (i.amount || 0), 0);
+  const tickets = payments.reduce((s, p) => s + (Number(p.tickets) || 0), 0);
+  const realTotal = expenses.filter(e => e.tipo !== 'prevision').reduce((s, e) => s + (e.amount || 0), 0);
+  const prevTotal = expenses.filter(e => e.tipo === 'prevision').reduce((s, e) => s + (e.amount || 0), 0);
+  const botePct = crewSettings.botePct || 0;
+  const botePrev = crewSettings.botePrevio || 0;
+  const boteGen = payTotal * (botePct / 100);
+  const boteTotal = botePrev + boteGen;
+  const caja = payTotal + incomeTotal - realTotal; // dinero real en caja
+  const { rows, outstanding } = computeSettle();
+
+  const fmt = v => (Math.round(v * 100) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const kpis = [
+    { label: '💰 Caja real', value: fmt(caja), cls: caja >= 0 ? 'success' : 'accent' },
+    { label: 'Entradas (€)', value: fmt(payTotal), cls: '' },
+    { label: 'Ingresos org', value: fmt(incomeTotal), cls: '' },
+    { label: 'Gastado (real)', value: fmt(realTotal), cls: 'accent' },
+    { label: 'Entradas vendidas', value: String(tickets), cls: '' },
+    { label: 'Previsto', value: fmt(prevTotal), cls: 'warn' },
+    { label: 'Bote total', value: fmt(boteTotal), cls: 'purple' },
+    { label: 'Pendiente de saldar', value: fmt(outstanding), cls: outstanding > 0.01 ? 'accent' : 'success' },
+  ];
+  const kpiEl = document.getElementById('report-kpis');
+  if (kpiEl) kpiEl.innerHTML = kpis.map(k =>
+    `<div class="kpi-card ${k.cls}"><div class="kpi-value">${k.value}</div><div class="kpi-label">${esc(k.label)}</div></div>`
+  ).join('');
+
+  if (typeof Chart === 'undefined') return; // CDN no disponible (sin conexión)
+  destroyInformeCharts();
+
+  const dark = document.body.classList.contains('dark');
+  const txt = dark ? '#e5e7eb' : '#374151';
+  const grid = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+  Chart.defaults.color = txt;
+  Chart.defaults.font.family = 'Inter, sans-serif';
+  const baseOpts = (extra = {}) => ({ responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: txt } } }, ...extra });
+  const scales = { x: { ticks: { color: txt }, grid: { color: grid } }, y: { ticks: { color: txt }, grid: { color: grid }, beginAtZero: true } };
+  const mk = (id, cfg) => { const el = document.getElementById(id); if (el) informeCharts.push(new Chart(el, cfg)); };
+
+  // 1. Panorama monetario
+  mk('chart-money', {
+    type: 'bar',
+    data: { labels: ['Entradas', 'Ingresos org', 'Gastado', 'Previsto', 'Bote', 'Caja real'],
+      datasets: [{ data: [payTotal, incomeTotal, realTotal, prevTotal, boteTotal, caja],
+        backgroundColor: ['#2563eb', '#0891b2', '#ef4444', '#f59e0b', '#8b5cf6', caja >= 0 ? '#10b981' : '#ef4444'] }] },
+    options: baseOpts({ plugins: { legend: { display: false } }, scales })
+  });
+
+  // 2. Gastos por rama (real vs previsión)
+  const ramaReal = RAMAS.map(r => expenses.filter(e => e.rama === r.id && e.tipo !== 'prevision').reduce((s, e) => s + (e.amount || 0), 0));
+  const ramaPrev = RAMAS.map(r => expenses.filter(e => e.rama === r.id && e.tipo === 'prevision').reduce((s, e) => s + (e.amount || 0), 0));
+  mk('chart-ramas', {
+    type: 'bar',
+    data: { labels: RAMAS.map(r => t(r.key)),
+      datasets: [
+        { label: 'Real', data: ramaReal, backgroundColor: '#ef4444' },
+        { label: 'Previsión', data: ramaPrev, backgroundColor: '#f59e0b' }] },
+    options: baseOpts({ scales })
+  });
+
+  // 3. Recaudado vs adelantado por persona
+  mk('chart-collected', {
+    type: 'bar',
+    data: { labels: rows.map(r => r.name),
+      datasets: [
+        { label: 'Recaudado', data: rows.map(r => r.collected), backgroundColor: '#e8001a' },
+        { label: 'Adelantado', data: rows.map(r => r.spent), backgroundColor: '#10b981' }] },
+    options: baseOpts({ scales })
+  });
+
+  // 4. Balance por persona (neto ajustado)
+  mk('chart-balance', {
+    type: 'bar',
+    data: { labels: rows.map(r => r.name),
+      datasets: [{ data: rows.map(r => Math.round(r.adjNet * 100) / 100),
+        backgroundColor: rows.map(r => r.adjNet > 0.01 ? '#ef4444' : r.adjNet < -0.01 ? '#10b981' : '#9ca3af') }] },
+    options: baseOpts({ plugins: { legend: { display: false } }, scales })
+  });
+
+  // 5. Estado de tareas
+  const tc = { pendiente: 0, en_curso: 0, hecho: 0 };
+  tasks.forEach(x => { if (tc[x.status] != null) tc[x.status]++; });
+  mk('chart-tasks', {
+    type: 'doughnut',
+    data: { labels: ['Pendiente', 'En curso', 'Hecho'],
+      datasets: [{ data: [tc.pendiente, tc.en_curso, tc.hecho], backgroundColor: ['#9ca3af', '#f59e0b', '#10b981'] }] },
+    options: baseOpts()
+  });
+
+  // 6. Estado de decisiones
+  const dc = { aprobada: 0, en_debate: 0, descartada: 0 };
+  decisions.forEach(d => { if (dc[d.status] != null) dc[d.status]++; });
+  mk('chart-decisions', {
+    type: 'doughnut',
+    data: { labels: ['Aprobada', 'En debate', 'Descartada'],
+      datasets: [{ data: [dc.aprobada, dc.en_debate, dc.descartada], backgroundColor: ['#10b981', '#f59e0b', '#9ca3af'] }] },
+    options: baseOpts()
+  });
 }
 
 function updateExpenseStats() {
@@ -3457,24 +3932,38 @@ function updateBudgetBar(total) {
   const libreEl = document.getElementById('stat-exp-libre');
   const barCard = document.getElementById('budget-bar-card');
 
-  // Calculate bote
+  // Calculate bote (solo sobre entradas; los ingresos a la org no generan bote)
   const botePct = crewSettings.botePct || 0;
   const payTotal = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  const incomeTotal = income.reduce((s, i) => s + (i.amount || 0), 0);
   const boteGen = payTotal * (botePct / 100);
   const botePrev = crewSettings.botePrevio || 0;
   const boteTotal = botePrev + boteGen;
   document.getElementById('stat-exp-bote-gen').textContent = boteGen > 0 ? boteGen.toFixed(2) + ' €' : '—';
   document.getElementById('stat-exp-bote-total').textContent = boteTotal > 0 ? boteTotal.toFixed(2) + ' €' : '—';
+  const botePrevEl = document.getElementById('stat-exp-bote-prev');
+  if (botePrevEl) botePrevEl.textContent = botePrev.toFixed(2) + ' €';
 
-  // Libre de bote = recaudado - bote
-  const libre = payTotal - boteTotal;
-  libreEl.textContent = libre > 0 ? libre.toFixed(2) + ' €' : '—';
+  // Caja real = entradas + ingresos org − gastos reales (el dinero que de verdad hay)
+  const caja = payTotal + incomeTotal - total;
+  const cajaEl = document.getElementById('stat-exp-caja');
+  if (cajaEl) { cajaEl.textContent = caja.toFixed(2) + ' €'; cajaEl.style.color = caja < 0 ? 'var(--accent)' : 'var(--success)'; }
+  const recEl = document.getElementById('stat-exp-recaudado');
+  if (recEl) recEl.textContent = payTotal.toFixed(2) + ' €';
+  const incEl = document.getElementById('stat-exp-income');
+  if (incEl) incEl.textContent = incomeTotal.toFixed(2) + ' €';
+
+  // Libre de bote = entradas + ingresos org − bote
+  const libre = payTotal + incomeTotal - boteTotal;
+  libreEl.textContent = libre.toFixed(2) + ' €';
 
   // Previsiones total
   const totalPrev = expenses.filter(e => e.tipo === 'prevision').reduce((s, e) => s + (e.amount || 0), 0);
 
   // Disponible real = presupuesto (o libre si no hay presupuesto) - gastos reales
   const base = budget > 0 ? budget : libre;
+  const budgetEl = document.getElementById('stat-exp-budget');
+  if (budgetEl) budgetEl.textContent = budget > 0 ? budget.toFixed(2) + ' €' : 'libre (' + libre.toFixed(2) + ' €)';
   const remaining = base - total;
   const remainingAfterPrev = remaining - totalPrev;
 
@@ -5377,6 +5866,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
     btn.classList.add('on');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('on');
+    if (btn.dataset.tab === 'informe') renderInforme();
   });
 });
 
@@ -5386,6 +5876,37 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 document.getElementById('auth-theme').addEventListener('click', toggleTheme);
 document.getElementById('btn-logout').addEventListener('click', logout);
+
+// Saldar cuentas — registro manual de pago
+document.getElementById('btn-settle-record').addEventListener('click', async () => {
+  const from = document.getElementById('settle-from').value;
+  const to = document.getElementById('settle-to').value;
+  const amount = parseFloat(String(document.getElementById('settle-amount').value).replace(',', '.'));
+  const note = document.getElementById('settle-note').value.trim();
+  if (from === to) { toast('Quien paga y quien recibe no pueden ser la misma persona'); return; }
+  if (!(amount > 0)) { toast('Introduce una cantidad válida'); return; }
+  await recordSettlement(from, to, amount, note);
+  document.getElementById('settle-amount').value = '';
+  document.getElementById('settle-note').value = '';
+});
+
+// Ingresos a la org
+document.getElementById('btn-add-income').addEventListener('click', addIncome);
+document.getElementById('btn-toggle-fin-detail').addEventListener('click', (ev) => {
+  const d = document.getElementById('fin-detail');
+  const open = d.style.display === 'none';
+  d.style.display = open ? '' : 'none';
+  ev.currentTarget.textContent = open ? 'Ocultar detalle financiero ▴' : 'Ver detalle financiero ▾';
+});
+
+// Informe — imprimir / PDF
+document.getElementById('btn-print-report').addEventListener('click', () => {
+  switchToTab('informe');
+  renderInforme();
+  document.body.classList.add('printing-report');
+  setTimeout(() => window.print(), 350);
+});
+window.addEventListener('afterprint', () => document.body.classList.remove('printing-report'));
 
 // Edition management
 let editions = [];
@@ -5402,7 +5923,15 @@ function initEditions() {
 
 function updateEditionLabel() {
   const current = editions.find(e => e.prefix === EDITION_PREFIX);
-  document.getElementById('edition-label').textContent = current ? current.name : EDITION_PREFIX;
+  const el = document.getElementById('edition-label');
+  if (!current) { el.textContent = EDITION_PREFIX; return; }
+  el.innerHTML = esc(current.name) + (current.archived ? '<span class="archived-badge">archivada</span>' : '');
+}
+
+async function setEditionArchived(id, archived) {
+  await updateDoc(doc(db, 'sonora_editions', id), { archived, closedAt: archived ? Date.now() : null });
+  toast(archived ? 'Edición archivada' : 'Edición reactivada');
+  updateEditionLabel();
 }
 
 function switchEdition(prefix, name) {
@@ -5410,10 +5939,10 @@ function switchEdition(prefix, name) {
   localStorage.setItem('sonora_active_prefix', prefix);
   localStorage.setItem('sonora_edition', name);
   clearListeners();
-  payments = []; tasks = []; expenses = []; decisions = []; polls = [];
+  payments = []; tasks = []; expenses = []; decisions = []; polls = []; settlements = []; income = [];
   lineupConfig = null; lineupDJs = []; lineupProposals = [];
   activeProposalId = null; lineupCompareMode = false; activeFiesta = null;
-  initPayments(); initTasks(); initMilestones(); initExpenses(); initDecisions(); initPolls(); initLineup(); initSettings();
+  initPayments(); initTasks(); initMilestones(); initExpenses(); initDecisions(); initPolls(); initLineup(); initSettings(); initSettlements(); initIncome();
   updateEditionLabel();
   if (typeof renderTasksEditionBanner === 'function') renderTasksEditionBanner();
   toast('Edición: ' + name);
@@ -5421,15 +5950,30 @@ function switchEdition(prefix, name) {
 
 const edLabel = document.getElementById('edition-label');
 edLabel.addEventListener('click', () => {
+  const current = editions.find(e => e.prefix === EDITION_PREFIX);
+  const outstanding = computeSettle().outstanding;
+
   let html = '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Ediciones</div>';
   editions.forEach(e => {
     const isCurrent = e.prefix === EDITION_PREFIX;
-    html += `<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <span style="${isCurrent ? 'font-weight:700;color:var(--accent)' : ''}">${e.name}${isCurrent ? ' \u2190' : ''}</span>
+    const dim = e.archived ? 'opacity:.55;' : '';
+    const badge = e.archived ? '<span class="archived-badge">archivada</span>' : '';
+    html += `<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;${dim}">
+      <span style="${isCurrent ? 'font-weight:700;color:var(--accent)' : ''}">${e.name}${isCurrent ? ' \u2190' : ''}${badge}</span>
       ${!isCurrent ? `<button class="btn btn-sm btn-secondary ed-switch" data-prefix="${e.prefix}" data-name="${e.name}" style="padding:2px 8px;font-size:11px">Cambiar</button>` : ''}
     </div>`;
   });
-  html += '<div style="margin-top:10px"><input class="form-input" id="new-edition-name" placeholder="Nueva edición..." style="font-size:13px;padding:6px 8px;margin-bottom:6px"><button class="btn btn-sm" id="btn-create-edition">Crear</button></div>';
+  if (current) {
+    const warn = (!current.archived && outstanding > 0.01)
+      ? `<div style="font-size:11px;color:var(--warning);margin-bottom:6px">⚠️ Aún quedan <strong>${outstanding.toFixed(2)} €</strong> por saldar. Puedes archivar igualmente: Pagos, Gastos y Saldar cuentas seguirán accesibles al reabrir esta edición.</div>`
+      : '';
+    html += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px">Edición actual: ${esc(current.name)}</div>
+      ${warn}
+      <button class="btn btn-sm ${current.archived ? '' : 'btn-secondary'}" id="btn-archive-edition" data-id="${esc(current.id)}" data-archived="${current.archived ? '1' : '0'}" style="font-size:11px;padding:4px 10px">${current.archived ? '↩ Reactivar edición' : '📦 Archivar edición'}</button>
+    </div>`;
+  }
+  html += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:12px;font-weight:600;margin-bottom:6px">Nueva edición</div><input class="form-input" id="new-edition-name" placeholder="Nombre..." style="font-size:13px;padding:6px 8px;margin-bottom:6px"><button class="btn btn-sm" id="btn-create-edition">Crear y cambiar</button></div>';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
@@ -5447,6 +5991,15 @@ edLabel.addEventListener('click', () => {
       switchEdition(btn.dataset.prefix, btn.dataset.name);
     });
   });
+
+  const archiveBtn = popup.querySelector('#btn-archive-edition');
+  if (archiveBtn) {
+    archiveBtn.addEventListener('click', async () => {
+      const archived = archiveBtn.dataset.archived !== '1'; // toggle
+      overlay.remove();
+      await setEditionArchived(archiveBtn.dataset.id, archived);
+    });
+  }
 
   popup.querySelector('#btn-create-edition').addEventListener('click', async () => {
     const name = popup.querySelector('#new-edition-name').value.trim();
@@ -5559,6 +6112,8 @@ initDecisions();
 initPolls();
 initLineup();
 initSettings();
+initSettlements();
+initIncome();
 document.getElementById('btn-tasks-edition')?.addEventListener('click', openTasksEditionPicker);
 
 // Populate selects

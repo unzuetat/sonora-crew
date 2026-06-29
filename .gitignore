@@ -5,3 +5,4 @@ firebase-debug.log
 **/firebase-debug.log
 informe/*.html
 sonora-backup*.json
+.gstack/
