@@ -1425,20 +1425,6 @@ tbody tr:hover { background: var(--accent-soft); }
         </div>
       </div>
       <div id="stat-exp-records" style="display:none">0</div>
-      <div class="card" id="budget-bar-card" style="padding:10px 16px;display:none">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px">
-          <span id="budget-bar-label">0 / 0 €</span>
-          <span id="budget-bar-pct">0%</span>
-        </div>
-        <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:flex">
-          <div id="budget-bar" style="height:100%;background:var(--accent);transition:width .4s;width:0%"></div>
-          <div id="budget-bar-prev" style="height:100%;background:var(--warning);transition:width .4s;width:0%"></div>
-        </div>
-        <div style="display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--text-secondary)">
-          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);vertical-align:middle"></span> Real</span>
-          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--warning);vertical-align:middle"></span> Previsión</span>
-        </div>
-      </div>
 
       <!-- INGRESOS A LA ORG (no entradas) -->
       <div class="card" id="income-card" style="border-color:#0891b2">
@@ -3930,7 +3916,6 @@ function updateBudgetBar(total) {
   const remEl = document.getElementById('stat-exp-remaining');
   const remPrevEl = document.getElementById('stat-exp-remaining-prev');
   const libreEl = document.getElementById('stat-exp-libre');
-  const barCard = document.getElementById('budget-bar-card');
 
   // Calculate bote (solo sobre entradas; los ingresos a la org no generan bote)
   const botePct = crewSettings.botePct || 0;
@@ -3972,17 +3957,9 @@ function updateBudgetBar(total) {
     remEl.style.color = remaining < 0 ? 'var(--accent)' : 'var(--success)';
     remPrevEl.textContent = remainingAfterPrev.toFixed(2) + ' €';
     remPrevEl.style.color = remainingAfterPrev < 0 ? 'var(--accent)' : 'var(--warning)';
-    barCard.style.display = '';
-    const pctReal = Math.min(100, (total / base) * 100);
-    const pctPrev = Math.min(100 - pctReal, (totalPrev / base) * 100);
-    document.getElementById('budget-bar').style.width = pctReal + '%';
-    document.getElementById('budget-bar-prev').style.width = pctPrev + '%';
-    document.getElementById('budget-bar-label').textContent = total.toFixed(0) + (totalPrev > 0 ? ' + ' + totalPrev.toFixed(0) + ' prev.' : '') + ' / ' + base.toFixed(0) + ' €';
-    document.getElementById('budget-bar-pct').textContent = (pctReal + pctPrev).toFixed(0) + '%';
   } else {
     remEl.textContent = '—';
     remPrevEl.textContent = '—';
-    barCard.style.display = 'none';
   }
 }
 
