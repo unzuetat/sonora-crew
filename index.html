@@ -1133,10 +1133,10 @@ tbody tr:hover { background: var(--accent-soft); }
       <button class="icon-btn" id="btn-logout" title="Salir">✕</button>
     </div>
     <div class="tabs" style="width:100%;border-top:1px solid var(--border);margin-top:4px;padding-top:0">
-      <button class="tab-btn on" data-tab="hostels" style="color:#0891b2">Albergues</button>
+      <button class="tab-btn" id="tab-btn-hostels" data-tab="hostels" style="color:#0891b2;display:none">Albergues</button>
       <button class="tab-btn" data-tab="tasks" style="color:#b45309">Tareas</button>
       <button class="tab-btn" data-tab="hitos" style="color:#0d9488">Hitos</button>
-      <button class="tab-btn" data-tab="payments" style="color:#2563eb">Pagos</button>
+      <button class="tab-btn on" data-tab="payments" style="color:#2563eb">Pagos</button>
       <button class="tab-btn" data-tab="expenses" style="color:#2563eb">Gastos</button>
       <button class="tab-btn" data-tab="decisions" style="color:#b45309">Decisiones</button>
       <button class="tab-btn" data-tab="polls" style="color:#047857">Encuestas</button>
@@ -1150,7 +1150,7 @@ tbody tr:hover { background: var(--accent-soft); }
   <div class="wrap">
 
     <!-- ═══ TAB: PAGOS ═══ -->
-    <div class="tab-content" id="tab-payments">
+    <div class="tab-content on" id="tab-payments">
       <!-- STATS -->
       <div class="stats-grid" id="stats-grid">
         <div class="stat-card">
@@ -1660,7 +1660,7 @@ tbody tr:hover { background: var(--accent-soft); }
     </div>
 
     <!-- ═══ TAB: ALBERGUES ═══ -->
-    <div class="tab-content on" id="tab-hostels">
+    <div class="tab-content" id="tab-hostels">
       <div id="hostels-summary" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px"></div>
       <div class="chip-row" id="hostel-filters" style="margin-bottom:14px;flex-wrap:wrap;align-items:center"></div>
 
@@ -2052,6 +2052,17 @@ tbody tr:hover { background: var(--accent-soft); }
       </div>
 
       <div class="card">
+        <div class="card-title">Pestañas visibles</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Pestaña Albergues</div>
+            <div class="settings-label-desc">Directorio de albergues para buscar sitio. Mantenla oculta cuando no estéis buscando local. Ajuste de este dispositivo.</div>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="btn-toggle-hostels">Mostrar</button>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="card-title" data-i18n="settings_backup">Backup automático</div>
         <div class="settings-row">
           <div class="settings-label">
@@ -2149,7 +2160,7 @@ const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwow1eAN2ww4aZF
 
 function loadConfig() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  const defaults = { user: null, webhook: DEFAULT_WEBHOOK, crew: DEFAULT_CREW, lang: 'es', dark: false };
+  const defaults = { user: null, webhook: DEFAULT_WEBHOOK, crew: DEFAULT_CREW, lang: 'es', dark: false, showHostels: false };
   if (!raw) return defaults;
   try { return { ...defaults, ...JSON.parse(raw) }; } catch { return defaults; }
 }
@@ -2413,6 +2424,19 @@ function applyTheme() {
   document.querySelector('meta[name="theme-color"]').content = CFG.dark ? '#0f0f1a' : '#f5f5f7';
 }
 function toggleTheme() { CFG.dark = !CFG.dark; saveConfig(CFG); applyTheme(); }
+
+/* Pestaña Albergues: oculta por defecto, se muestra desde Ajustes (por dispositivo) */
+function applyHostelsVisibility() {
+  const show = !!CFG.showHostels;
+  const btn = document.getElementById('tab-btn-hostels');
+  if (btn) btn.style.display = show ? '' : 'none';
+  const toggle = document.getElementById('btn-toggle-hostels');
+  if (toggle) toggle.textContent = show ? 'Ocultar' : 'Mostrar';
+  // Si se oculta estando dentro de Albergues, volver a Pagos
+  if (!show && document.getElementById('tab-hostels')?.classList.contains('on')) {
+    switchToTab('payments');
+  }
+}
 
 /* ══════════════════════════════════
    TOAST
@@ -5852,6 +5876,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 ══════════════════════════════════ */
 document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 document.getElementById('auth-theme').addEventListener('click', toggleTheme);
+document.getElementById('btn-toggle-hostels').addEventListener('click', () => {
+  CFG.showHostels = !CFG.showHostels;
+  saveConfig(CFG);
+  applyHostelsVisibility();
+  if (CFG.showHostels) { switchToTab('hostels'); toast('Pestaña Albergues visible'); }
+  else toast('Pestaña Albergues oculta');
+});
 document.getElementById('btn-logout').addEventListener('click', logout);
 
 // Saldar cuentas — registro manual de pago
@@ -6062,6 +6093,7 @@ document.getElementById('notif-lineup').addEventListener('click', () => {
 ══════════════════════════════════ */
 applyTheme();
 applyI18n();
+applyHostelsVisibility();
 renderAuth();
 
 // Webhook field
