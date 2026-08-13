@@ -2021,6 +2021,7 @@ tbody tr:hover { background: var(--accent-soft); }
       <div class="chart-grid">
         <div class="chart-box"><div class="chart-title">Asistentes y recaudación por día</div><div class="chart-canvas-wrap"><canvas id="chart-attendance"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Panorama monetario (€)</div><div class="chart-canvas-wrap"><canvas id="chart-money"></canvas></div></div>
+        <div class="chart-box"><div class="chart-title">Cobertura: recaudado − gastos</div><div class="chart-canvas-wrap"><canvas id="chart-coverage"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Gastos por rama (real vs previsión)</div><div class="chart-canvas-wrap"><canvas id="chart-ramas"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Recaudado vs adelantado por persona</div><div class="chart-canvas-wrap"><canvas id="chart-collected"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Balance por persona (− le deben / + debe)</div><div class="chart-canvas-wrap"><canvas id="chart-balance"></canvas></div></div>
@@ -3887,28 +3888,53 @@ function renderInforme() {
   const scales = { x: { ticks: { color: txt }, grid: { color: grid } }, y: { ticks: { color: txt }, grid: { color: grid }, beginAtZero: true } };
   const mk = (id, cfg) => { const el = document.getElementById(id); if (el) informeCharts.push(new Chart(el, cfg)); };
 
-  // 0. Asistentes y recaudación por día
+  // 0. Asistentes y recaudación por día (color por día + línea roja de totales)
+  const DAY_COLORS = { viernes: '#2563eb', sabado: '#f59e0b', finde: '#8b5cf6' };
+  const DAY_SOFT = { viernes: 'rgba(37,99,235,.45)', sabado: 'rgba(245,158,11,.45)', finde: 'rgba(139,92,246,.45)' };
+  const dayBar = dayKeys.map(k => DAY_COLORS[k] || '#6b7280');
+  const daySoft = dayKeys.map(k => DAY_SOFT[k] || 'rgba(107,114,128,.45)');
+  const totalRev = dayRevenue.reduce((a, b) => a + b, 0);
+  const totalAtt = dayTickets.reduce((a, b) => a + b, 0);
+  const attTotalsPlugin = {
+    id: 'attTotals',
+    afterDatasetsDraw(chart) {
+      const s = chart.scales; if (!s.y || !s.y1) return;
+      const { ctx, chartArea: { left, right } } = chart;
+      const pyR = s.y.getPixelForValue(totalRev);
+      const pyA = s.y1.getPixelForValue(totalAtt);
+      ctx.save();
+      ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(left, pyR); ctx.lineTo(right, pyR); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ef4444'; ctx.font = '600 10px Inter, sans-serif';
+      ctx.textAlign = 'left'; ctx.fillText('Total ' + Math.round(totalRev) + ' €', left + 4, pyR - 4);
+      ctx.textAlign = 'right'; ctx.fillText('Total ' + totalAtt + ' asist.', right - 4, pyA - 4);
+      ctx.restore();
+    }
+  };
   mk('chart-attendance', {
     type: 'bar',
     data: { labels: dayNames,
       datasets: [
-        { label: 'Recaudado (€)', data: dayRevenue, backgroundColor: '#2563eb', yAxisID: 'y' },
-        { label: 'Asistentes', data: dayTickets, backgroundColor: '#0891b2', yAxisID: 'y1' },
+        { label: 'Recaudado (€)', data: dayRevenue, backgroundColor: dayBar, yAxisID: 'y' },
+        { label: 'Asistentes', data: dayTickets, backgroundColor: daySoft, borderColor: dayBar, borderWidth: 1, yAxisID: 'y1' },
       ] },
     options: baseOpts({
       scales: {
-        x: scales.x,
-        y: { type: 'linear', position: 'left', beginAtZero: true, ticks: { color: txt, callback: v => v + ' €' }, grid: { color: grid }, title: { display: true, text: '€ recaudado', color: txt } },
-        y1: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: txt, precision: 0 }, grid: { drawOnChartArea: false }, title: { display: true, text: 'asistentes', color: txt } },
+        x: { ticks: { color: txt, font: { size: 10 }, autoSkip: false, maxRotation: 30, minRotation: 0 }, grid: { color: grid } },
+        y: { type: 'linear', position: 'left', beginAtZero: true, suggestedMax: totalRev * 1.15, ticks: { color: txt, font: { size: 10 }, callback: v => v + ' €' }, grid: { color: grid }, title: { display: true, text: '€ recaudado', color: txt } },
+        y1: { type: 'linear', position: 'right', beginAtZero: true, suggestedMax: totalAtt * 1.15, ticks: { color: txt, font: { size: 10 }, precision: 0 }, grid: { drawOnChartArea: false }, title: { display: true, text: 'asistentes', color: txt } },
       },
       plugins: {
-        legend: { labels: { color: txt } },
+        legend: { display: false },
+        subtitle: { display: true, text: 'Barra fuerte = € · clara = asistentes · línea roja = total', color: txt, font: { size: 10 } },
         tooltip: { callbacks: { afterBody: items => {
           const i = items[0].dataIndex, tk = dayTickets[i], rv = dayRevenue[i];
           return tk > 0 ? '€/persona: ' + (rv / tk).toFixed(2) + ' €' : '';
         } } },
       },
-    })
+    }),
+    plugins: [attTotalsPlugin],
   });
 
   // 1. Panorama monetario
@@ -3918,6 +3944,25 @@ function renderInforme() {
       datasets: [{ data: [payTotal, incomeTotal, realTotal, prevTotal, boteTotal, caja],
         backgroundColor: ['#2563eb', '#0891b2', '#ef4444', '#f59e0b', '#8b5cf6', caja >= 0 ? '#10b981' : '#ef4444'] }] },
     options: baseOpts({ plugins: { legend: { display: false } }, scales })
+  });
+
+  // 1b. Cobertura: recaudado − gastos (déficit en negativo)
+  const ingresosTotal = payTotal + incomeTotal;
+  const covLabels = ['vs Previsto'];
+  const covData = [ingresosTotal - prevTotal];
+  if (realTotal > 0) { covLabels.push('vs Real'); covData.push(ingresosTotal - realTotal); }
+  mk('chart-coverage', {
+    type: 'bar',
+    data: { labels: covLabels,
+      datasets: [{ data: covData, backgroundColor: covData.map(v => v >= 0 ? '#10b981' : '#ef4444') }] },
+    options: baseOpts({
+      plugins: {
+        legend: { display: false },
+        subtitle: { display: true, text: 'Recaudado − gastos · negativo (rojo) = falta dinero', color: txt, font: { size: 10 } },
+        tooltip: { callbacks: { label: c => (c.raw >= 0 ? 'Superávit ' : 'Déficit ') + fmt(c.raw) } },
+      },
+      scales,
+    })
   });
 
   // 2. Gastos por rama (real vs previsión)
