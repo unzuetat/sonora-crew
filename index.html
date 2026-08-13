@@ -2019,6 +2019,7 @@ tbody tr:hover { background: var(--accent-soft); }
       </div>
       <div class="kpi-grid" id="report-kpis"></div>
       <div class="chart-grid">
+        <div class="chart-box"><div class="chart-title">Asistentes y recaudación por día</div><div class="chart-canvas-wrap"><canvas id="chart-attendance"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Panorama monetario (€)</div><div class="chart-canvas-wrap"><canvas id="chart-money"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Gastos por rama (real vs previsión)</div><div class="chart-canvas-wrap"><canvas id="chart-ramas"></canvas></div></div>
         <div class="chart-box"><div class="chart-title">Recaudado vs adelantado por persona</div><div class="chart-canvas-wrap"><canvas id="chart-collected"></canvas></div></div>
@@ -3835,6 +3836,26 @@ function renderInforme() {
   const caja = payTotal + incomeTotal - realTotal; // dinero real en caja
   const { rows, outstanding } = computeSettle();
 
+  // Asistentes y recaudación por día (viernes / sábado / finde completo)
+  const DAY_LABELS = { viernes: 'Viernes', sabado: 'Sábado', finde: 'Finde completo' };
+  const DAY_ORDER = ['viernes', 'sabado', 'finde'];
+  const dayAgg = {};
+  payments.forEach(p => {
+    const d = p.day || 'finde';
+    if (!dayAgg[d]) dayAgg[d] = { tickets: 0, amount: 0 };
+    dayAgg[d].tickets += Number(p.tickets) || 0;
+    dayAgg[d].amount += p.amount || 0;
+  });
+  const dayKeys = [...DAY_ORDER.filter(k => dayAgg[k]), ...Object.keys(dayAgg).filter(k => !DAY_ORDER.includes(k))];
+  const dayNames = dayKeys.map(k => DAY_LABELS[k] || k);
+  const dayTickets = dayKeys.map(k => dayAgg[k].tickets);
+  const dayRevenue = dayKeys.map(k => dayAgg[k].amount);
+
+  // Economía por asistente (el coste no está por día; se reparte de media)
+  const costPerAtt = tickets > 0 ? realTotal / tickets : 0;
+  const revPerAtt = tickets > 0 ? payTotal / tickets : 0;
+  const profitPerAtt = tickets > 0 ? caja / tickets : 0;
+
   const fmt = v => (Math.round(v * 100) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   const kpis = [
     { label: '💰 Caja real', value: fmt(caja), cls: caja >= 0 ? 'success' : 'accent' },
@@ -3842,6 +3863,9 @@ function renderInforme() {
     { label: 'Ingresos org', value: fmt(incomeTotal), cls: '' },
     { label: 'Gastado (real)', value: fmt(realTotal), cls: 'accent' },
     { label: 'Entradas vendidas', value: String(tickets), cls: '' },
+    { label: '€ por asistente', value: fmt(revPerAtt), cls: '' },
+    { label: 'Coste por asistente', value: fmt(costPerAtt), cls: 'accent' },
+    { label: 'Beneficio por asistente', value: fmt(profitPerAtt), cls: profitPerAtt >= 0 ? 'success' : 'accent' },
     { label: 'Previsto', value: fmt(prevTotal), cls: 'warn' },
     { label: 'Bote total', value: fmt(boteTotal), cls: 'purple' },
     { label: 'Pendiente de saldar', value: fmt(outstanding), cls: outstanding > 0.01 ? 'accent' : 'success' },
@@ -3862,6 +3886,30 @@ function renderInforme() {
   const baseOpts = (extra = {}) => ({ responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: txt } } }, ...extra });
   const scales = { x: { ticks: { color: txt }, grid: { color: grid } }, y: { ticks: { color: txt }, grid: { color: grid }, beginAtZero: true } };
   const mk = (id, cfg) => { const el = document.getElementById(id); if (el) informeCharts.push(new Chart(el, cfg)); };
+
+  // 0. Asistentes y recaudación por día
+  mk('chart-attendance', {
+    type: 'bar',
+    data: { labels: dayNames,
+      datasets: [
+        { label: 'Recaudado (€)', data: dayRevenue, backgroundColor: '#2563eb', yAxisID: 'y' },
+        { label: 'Asistentes', data: dayTickets, backgroundColor: '#0891b2', yAxisID: 'y1' },
+      ] },
+    options: baseOpts({
+      scales: {
+        x: scales.x,
+        y: { type: 'linear', position: 'left', beginAtZero: true, ticks: { color: txt, callback: v => v + ' €' }, grid: { color: grid }, title: { display: true, text: '€ recaudado', color: txt } },
+        y1: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: txt, precision: 0 }, grid: { drawOnChartArea: false }, title: { display: true, text: 'asistentes', color: txt } },
+      },
+      plugins: {
+        legend: { labels: { color: txt } },
+        tooltip: { callbacks: { afterBody: items => {
+          const i = items[0].dataIndex, tk = dayTickets[i], rv = dayRevenue[i];
+          return tk > 0 ? '€/persona: ' + (rv / tk).toFixed(2) + ' €' : '';
+        } } },
+      },
+    })
+  });
 
   // 1. Panorama monetario
   mk('chart-money', {
